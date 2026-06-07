@@ -36,10 +36,10 @@ export function NotificationsSheet({ open, onClose }: Props) {
   const iconFor: Record<string, JSX.Element> = {
     workout: <Dumbbell size={18} className="text-brand-400" />,
     nutrition: <Leaf size={18} className="text-brand-400" />,
-    streak: <Flame size={18} className="text-accent-orange" />,
-    social: <User size={18} className="text-accent-blue" />,
-    challenge: <Trophy size={18} className="text-accent-orange" />,
-    system: <Award size={18} className="text-accent-purple" />,
+    streak: <Flame size={18} className="text-brand-400" />,
+    social: <User size={18} className="text-brand-400" />,
+    challenge: <Trophy size={18} className="text-brand-400" />,
+    system: <Award size={18} className="text-brand-400" />,
   }
   return (
     <Sheet open={open} onClose={onClose} title="Notifications">
@@ -112,7 +112,7 @@ export function SettingsSheet({ open, onClose }: Props) {
         <Row icon={<GraduationCap size={18} className="text-accent-purple" />} title="Exam mode" sub="Shorter sessions during exams">
           <Toggle on={state.profile.examMode} onClick={() => dispatch({ type: 'SET_PROFILE', patch: { examMode: !state.profile.examMode } })} />
         </Row>
-        <Row icon={<Wallet size={18} className="text-accent-orange" />} title="Budget nutrition" sub="Prioritise cheap, high-protein meals">
+        <Row icon={<Wallet size={18} className="text-brand-400" />} title="Budget nutrition" sub="Prioritise cheap, high-protein meals">
           <Toggle on={state.profile.budgetMode} onClick={() => dispatch({ type: 'SET_PROFILE', patch: { budgetMode: !state.profile.budgetMode } })} />
         </Row>
       </Group>
@@ -230,7 +230,7 @@ export function AddFoodSheet({ open, onClose, params }: Props) {
         </button>
       </div>
 
-      <button onClick={() => setBudgetOnly((b) => !b)} className={`mb-3 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ${budgetOnly ? 'bg-accent-orange/20 text-accent-orange' : 'bg-ink-700 text-white/55'}`}>
+      <button onClick={() => setBudgetOnly((b) => !b)} className={`mb-3 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ${budgetOnly ? 'bg-brand-400/20 text-brand-400' : 'bg-ink-700 text-white/55'}`}>
         <Wallet size={13} /> Budget meals {budgetOnly ? 'on' : 'off'}
       </button>
 
@@ -259,7 +259,7 @@ function FoodRow({ id, onAdd }: { id: string; onAdd: (id: string) => void }) {
         <p className="truncate font-bold leading-tight">{f.name}</p>
         <p className="text-[12px] text-white/45">{f.serving} · {f.kcal} kcal · {f.p}P {f.c}C {f.f}F</p>
       </div>
-      {f.budget && <Wallet size={14} className="text-accent-orange" />}
+      {f.budget && <Wallet size={14} className="text-brand-400" />}
       <div className="grid h-7 w-7 place-items-center rounded-full bg-brand-400 text-black"><Plus size={16} strokeWidth={3} /></div>
     </button>
   )
@@ -328,13 +328,13 @@ export function LogHabitSheet({ open, onClose }: Props) {
       {/* Water quick logger */}
       <div className="mb-4 rounded-2xl border border-white/5 bg-ink-800 p-4">
         <div className="flex items-center gap-2">
-          <Droplet size={18} className="text-accent-blue" />
+          <Droplet size={18} className="text-brand-400" />
           <p className="flex-1 font-bold">Water</p>
           <p className="font-extrabold">{fmtFluid(h.waterL, units)}</p>
         </div>
         <div className="mt-3 flex gap-2">
           <button onClick={() => dispatch({ type: 'ADJUST_WATER', deltaL: -waterStep })} className="flex-1 rounded-xl bg-ink-700 py-2.5 font-bold active:bg-ink-600">−</button>
-          <button onClick={() => { dispatch({ type: 'ADJUST_WATER', deltaL: waterStep }); }} className="flex-[2] rounded-xl bg-accent-blue/20 py-2.5 font-bold text-accent-blue active:bg-accent-blue/30">
+          <button onClick={() => { dispatch({ type: 'ADJUST_WATER', deltaL: waterStep }); }} className="flex-[2] rounded-xl bg-brand-400/20 py-2.5 font-bold text-brand-400 active:bg-brand-400/30">
             + {units === 'imperial' ? '8 oz' : '250 ml'}
           </button>
         </div>
@@ -342,7 +342,7 @@ export function LogHabitSheet({ open, onClose }: Props) {
       </div>
 
       <Field icon={<Footprints size={18} className="text-brand-400" />} label="Steps" value={steps} onChange={setSteps} placeholder="8000" />
-      <Field icon={<BedDouble size={18} className="text-accent-purple" />} label="Sleep (hours)" value={sleep} onChange={setSleep} placeholder="8" />
+      <Field icon={<BedDouble size={18} className="text-brand-400" />} label="Sleep (hours)" value={sleep} onChange={setSleep} placeholder="8" />
       <Field icon={<Leaf size={18} className="text-brand-400" />} label="Mindset / meditation (min)" value={mindset} onChange={setMindset} placeholder="5" />
 
       <button onClick={save} className="btn-primary mt-6 w-full">Save habits</button>

@@ -252,10 +252,10 @@ export function ExerciseDetailSheet({ open, onClose, params }: Props) {
         ))}
       </div>
 
-      <div className="mt-4 flex gap-2.5 rounded-2xl border border-accent-orange/20 bg-accent-orange/10 p-4">
-        <Lightbulb size={18} className="shrink-0 text-accent-orange" />
+      <div className="mt-4 flex gap-2.5 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+        <Lightbulb size={18} className="shrink-0 text-white/60" />
         <div>
-          <p className="text-[13px] font-bold text-accent-orange">Most common mistake</p>
+          <p className="text-[13px] font-bold text-white/80">Most common mistake</p>
           <p className="text-[13px] leading-snug text-white/70">{detail.commonMistake}</p>
         </div>
       </div>

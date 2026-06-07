@@ -45,8 +45,8 @@ function OverviewTab() {
   const t = dailyTargets(state)
   const macros = [
     { label: 'Protein', value: Math.round(n.p), goal: t.protein, color: '#7ED957' },
-    { label: 'Carbs', value: Math.round(n.c), goal: t.carb, color: '#3B82F6' },
-    { label: 'Fats', value: Math.round(n.f), goal: t.fat, color: '#F5A524' },
+    { label: 'Carbs', value: Math.round(n.c), goal: t.carb, color: '#8C9AAE' },
+    { label: 'Fats', value: Math.round(n.f), goal: t.fat, color: '#C9A86A' },
   ]
   const macroPct = Math.round((pct(n.p, t.protein) + pct(n.c, t.carb) + pct(n.f, t.fat)) / 3)
   const onTrack = n.kcal <= t.calorie * 1.02
@@ -57,8 +57,8 @@ function OverviewTab() {
   const totalC = Math.max(1, pc + cc + fc)
   const breakdown = [
     { pct: Math.round((pc / totalC) * 100), grams: `${Math.round(n.p)}g`, label: 'Protein', goal: `Goal: ${t.protein}g`, color: '#7ED957' },
-    { pct: Math.round((cc / totalC) * 100), grams: `${Math.round(n.c)}g`, label: 'Carbs', goal: `Goal: ${t.carb}g`, color: '#3B82F6' },
-    { pct: Math.round((fc / totalC) * 100), grams: `${Math.round(n.f)}g`, label: 'Fats', goal: `Goal: ${t.fat}g`, color: '#F5A524' },
+    { pct: Math.round((cc / totalC) * 100), grams: `${Math.round(n.c)}g`, label: 'Carbs', goal: `Goal: ${t.carb}g`, color: '#8C9AAE' },
+    { pct: Math.round((fc / totalC) * 100), grams: `${Math.round(n.f)}g`, label: 'Fats', goal: `Goal: ${t.fat}g`, color: '#C9A86A' },
   ]
 
   const slots: MealName[] = ['Breakfast', 'Lunch', 'Snack', 'Dinner']
@@ -71,7 +71,7 @@ function OverviewTab() {
           {t.adjusted && <span className="rounded-full bg-accent-purple/15 px-2.5 py-1 text-[11px] font-semibold text-accent-purple">Exam: maintain</span>}
         </div>
         <p className="mt-0.5 text-[13px] text-white/55">
-          You're <span className={`font-semibold ${onTrack ? 'text-brand-400' : 'text-accent-orange'}`}>{onTrack ? 'on track' : 'over target'}</span> {onTrack ? 'for today' : 'today'}
+          You're <span className={`font-semibold ${onTrack ? 'text-brand-400' : 'text-white/70'}`}>{onTrack ? 'on track' : 'over target'}</span> {onTrack ? 'for today' : 'today'}
         </p>
         <div className="mt-4 flex items-center gap-5">
           <ProgressRing value={pct(n.kcal, t.calorie)} size={108} stroke={9}>
@@ -94,9 +94,9 @@ function OverviewTab() {
       </div>
 
       <div className="mt-4 grid grid-cols-4 gap-2 rounded-2xl border border-white/5 bg-ink-800 p-4">
-        <MiniStat icon="flame" color="#F5A524" value={remaining.toLocaleString()} label="kcal" sub="Remaining" subColor="#9AA0A6" />
-        <MiniStat icon="target" color="#3B82F6" value={`${macroPct}%`} label="Macros" sub={macroPct >= 80 ? 'On track' : 'Building'} subColor="#7ED957" />
-        <MiniStat icon="droplet" color="#3B82F6" value={fmtFluid(habit.waterL, units)} label="Water" sub={habit.waterL >= t.waterL * 0.8 ? 'Good' : 'Low'} subColor="#7ED957" />
+        <MiniStat icon="flame" color="#9AA0A6" value={remaining.toLocaleString()} label="kcal" sub="Remaining" subColor="#9AA0A6" />
+        <MiniStat icon="target" color="#9AA0A6" value={`${macroPct}%`} label="Macros" sub={macroPct >= 80 ? 'On track' : 'Building'} subColor="#7ED957" />
+        <MiniStat icon="droplet" color="#9AA0A6" value={fmtFluid(habit.waterL, units)} label="Water" sub={habit.waterL >= t.waterL * 0.8 ? 'Good' : 'Low'} subColor="#7ED957" />
         <MiniStat icon="utensils" color="#7ED957" value={`${Math.round(n.p)}g`} label="Protein" sub={n.p >= t.protein * 0.9 ? 'On track' : 'Push'} subColor="#7ED957" />
       </div>
 
@@ -223,7 +223,7 @@ function InsightsTab() {
     <div className="space-y-3">
       {items.map((i) => (
         <div key={i.title} className="flex items-start gap-3 rounded-2xl border border-white/5 bg-ink-800 p-4">
-          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-accent-blue/15"><Sparkles size={20} className="text-accent-blue" /></div>
+          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand-400/15"><Sparkles size={20} className="text-brand-400" /></div>
           <div className="flex-1">
             <div className="flex items-center justify-between">
               <p className="font-bold">{i.title}</p>

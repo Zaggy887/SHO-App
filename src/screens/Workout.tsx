@@ -73,8 +73,8 @@ function TodayTab() {
         <ProgressBar value={prog.pct} />
         <div className="mt-4 grid grid-cols-3 gap-3 rounded-2xl border border-white/5 bg-ink-800 p-4">
           <Stat icon="dumbbell" color="#7ED957" label="Volume" value={fmtVolume(session.volumeKg, units)} />
-          <Stat icon="clock" color="#3B82F6" label="Duration" value={`${session.durationMin} min`} />
-          <Stat icon="flame" color="#F5A524" label="Calories" value={`${session.calories} kcal`} />
+          <Stat icon="clock" color="#9AA0A6" label="Duration" value={`${session.durationMin} min`} />
+          <Stat icon="flame" color="#9AA0A6" label="Calories" value={`${session.calories} kcal`} />
         </div>
       </div>
 
@@ -155,7 +155,7 @@ function ExercisesTab() {
             <div className="p-3">
               <p className="truncate text-sm font-bold">{dorm && e.bodyweightAlt ? e.bodyweightAlt : e.name}</p>
               <p className="text-[12px] text-white/45">{e.muscle}</p>
-              {dorm && e.bodyweightAlt && <Chip color="orange" className="mt-1.5">Bodyweight</Chip>}
+              {dorm && e.bodyweightAlt && <Chip color="gray" className="mt-1.5">Bodyweight</Chip>}
             </div>
           </button>
         ))}

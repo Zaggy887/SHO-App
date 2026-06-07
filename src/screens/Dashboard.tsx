@@ -37,7 +37,7 @@ export default function Dashboard() {
     { icon: 'footprints', label: 'Steps', value: habit.steps.toLocaleString(), pct: pct(habit.steps, t.steps), color: '#7ED957' },
     { icon: 'bed', label: 'Sleep', value: `${habit.sleepH} hrs`, pct: pct(habit.sleepH, t.sleepH), color: '#7ED957' },
     { icon: 'droplet', label: 'Water', value: fmtFluid(habit.waterL, units), pct: pct(habit.waterL, t.waterL), color: '#7ED957' },
-    { icon: 'utensils', label: 'Nutrition', value: `${habit.nutritionScore}/10`, pct: habit.nutritionScore * 10, color: habit.nutritionScore >= 7 ? '#7ED957' : '#F5A524' },
+    { icon: 'utensils', label: 'Nutrition', value: `${habit.nutritionScore}/10`, pct: habit.nutritionScore * 10, color: '#7ED957' },
     { icon: 'leaf', label: 'Mindset', value: `${habit.mindsetMin} min`, pct: pct(habit.mindsetMin, 10), color: '#7ED957' },
   ]
 

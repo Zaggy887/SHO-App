@@ -38,16 +38,16 @@ export default function Progress() {
 
   const cards = [
     { icon: 'scale', label: 'Weight', value: fmtWeightNum(w.current, units), unit: weightUnit(units), delta: `${w.delta <= 0 ? '↓' : '↑'} ${fmtWeight(Math.abs(w.delta), units, 1)}`, color: '#7ED957', onClick: () => nav.open('logWeight') },
-    { icon: 'trending', label: 'Strength', value: `+${strengthAvg}%`, unit: '', delta: '↑ 4 wks', color: '#8B5CF6' },
-    { icon: 'footprints', label: 'Workouts', value: String(workouts4w), unit: '', delta: 'last 4 wks', color: '#3B82F6' },
-    { icon: 'flame', label: 'Calories', value: avgCals.toLocaleString(), unit: '', delta: 'avg / day', color: '#F5A524' },
+    { icon: 'trending', label: 'Strength', value: `+${strengthAvg}%`, unit: '', delta: '↑ 4 wks', color: '#9AA0A6' },
+    { icon: 'footprints', label: 'Workouts', value: String(workouts4w), unit: '', delta: 'last 4 wks', color: '#9AA0A6' },
+    { icon: 'flame', label: 'Calories', value: avgCals.toLocaleString(), unit: '', delta: 'avg / day', color: '#9AA0A6' },
   ]
 
   const habitRings = [
     { label: 'Workouts', value: `${hc.workouts}/${hc.total}`, sub: 'This week', pct: hc.total ? (hc.workouts / hc.total) * 100 : 0, color: '#7ED957' },
-    { label: 'Steps', value: `${hc.steps}/${hc.total}`, sub: `Avg ${hc.avgSteps.toLocaleString()}`, pct: hc.total ? (hc.steps / hc.total) * 100 : 0, color: '#3B82F6' },
-    { label: 'Sleep', value: `${hc.sleep}/${hc.total}`, sub: `Avg ${hc.avgSleep.toFixed(1)}h`, pct: hc.total ? (hc.sleep / hc.total) * 100 : 0, color: '#8B5CF6' },
-    { label: 'Nutrition', value: `${hc.nutrition}/${hc.total}`, sub: 'On Track', pct: hc.total ? (hc.nutrition / hc.total) * 100 : 0, color: '#F5A524' },
+    { label: 'Steps', value: `${hc.steps}/${hc.total}`, sub: `Avg ${hc.avgSteps.toLocaleString()}`, pct: hc.total ? (hc.steps / hc.total) * 100 : 0, color: '#7ED957' },
+    { label: 'Sleep', value: `${hc.sleep}/${hc.total}`, sub: `Avg ${hc.avgSleep.toFixed(1)}h`, pct: hc.total ? (hc.sleep / hc.total) * 100 : 0, color: '#7ED957' },
+    { label: 'Nutrition', value: `${hc.nutrition}/${hc.total}`, sub: 'On Track', pct: hc.total ? (hc.nutrition / hc.total) * 100 : 0, color: '#7ED957' },
   ]
 
   return (
@@ -139,7 +139,7 @@ export default function Progress() {
         </div>
         <div className="ml-1 border-l border-white/8 pl-4 text-center">
           <p className="text-[11px] text-white/45">Streak</p>
-          <p className="flex items-center justify-center gap-1 text-2xl font-extrabold">{streak.current} <Flame size={20} className="text-accent-orange" /></p>
+          <p className="flex items-center justify-center gap-1 text-2xl font-extrabold">{streak.current} <Flame size={20} className="text-brand-400" /></p>
           <p className="text-[11px] text-white/40">Best: {streak.best}d</p>
         </div>
       </div>
