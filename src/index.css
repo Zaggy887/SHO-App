@@ -45,6 +45,11 @@
     overscroll-behavior-y: none;
   }
 
+  /* Prevent iOS Safari from zooming in on focused inputs */
+  input, textarea, select {
+    font-size: max(16px, 1em);
+  }
+
   /* Hide scrollbars but keep scrolling */
   .no-scrollbar::-webkit-scrollbar {
     display: none;

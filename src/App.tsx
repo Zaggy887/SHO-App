@@ -74,7 +74,7 @@ function Shell() {
   return (
     <NavProvider value={nav}>
       <StatusBar />
-      <main key={tab} className="no-scrollbar flex-1 overflow-y-auto pb-28 animate-screen-in">
+      <main key={tab} className="no-scrollbar flex-1 overflow-y-auto animate-screen-in" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 7rem)' }}>
         <Screen />
       </main>
       <BottomNav active={tab} onChange={setTab} />
@@ -108,7 +108,7 @@ export default function App() {
   return (
     <StoreProvider>
       <div className="flex min-h-screen w-full items-center justify-center p-0 sm:p-6" style={{ background: 'var(--frame)' }}>
-        <div className="relative flex h-[100dvh] w-full max-w-[440px] flex-col overflow-hidden bg-ink-900 text-white sm:h-[920px] sm:rounded-[44px] sm:border-[10px] sm:border-zinc-800 sm:shadow-2xl">
+        <div className="relative flex h-[100dvh] w-full max-w-[440px] flex-col overflow-hidden bg-ink-900 text-white sm:h-[920px] sm:rounded-[44px] sm:border-[10px] sm:border-zinc-800 sm:shadow-2xl" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
           <ToastProvider>
             <Shell />
           </ToastProvider>
