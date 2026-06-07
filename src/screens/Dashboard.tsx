@@ -74,17 +74,17 @@ export default function Dashboard() {
       </button>
 
       {/* Week selector */}
-      <div className="no-scrollbar -mx-5 mt-5 flex gap-2.5 overflow-x-auto px-5">
+      <div className="-mx-1 mt-6 flex justify-between">
         {weekKeys.map((k, i) => {
           const active = k === todayKey
           const trained = state.sessions.some((s) => s.dateKey === k && s.completed)
           const logged = state.habits.some((h) => h.dateKey === k)
           const date = parseInt(k.slice(-2))
           return (
-            <div key={k} className={`flex h-[68px] w-[46px] shrink-0 flex-col items-center justify-center gap-1 rounded-2xl border ${active ? 'border-brand-400 bg-brand-400 text-black' : 'border-white/8 bg-ink-800 text-white/70'}`}>
-              <span className="text-[11px] font-semibold opacity-80">{WD[i]}</span>
-              <span className="text-lg font-bold">{date}</span>
-              {(trained || logged || active) && <span className={`h-1 w-1 rounded-full ${active ? 'bg-black/70' : 'bg-brand-400'}`} />}
+            <div key={k} className={`flex w-11 flex-col items-center gap-2 rounded-2xl py-2.5 transition ${active ? 'bg-brand-400 text-black' : 'text-white/70'}`}>
+              <span className={`text-[11px] font-semibold uppercase tracking-wide ${active ? 'text-black/55' : 'text-white/35'}`}>{WD[i]}</span>
+              <span className="text-[17px] font-bold leading-none">{date}</span>
+              <span className={`h-1.5 w-1.5 rounded-full ${active ? 'bg-black/60' : trained || logged ? 'bg-brand-400' : 'bg-transparent'}`} />
             </div>
           )
         })}
