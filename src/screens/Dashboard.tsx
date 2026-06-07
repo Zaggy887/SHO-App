@@ -78,12 +78,13 @@ export default function Dashboard() {
         {weekKeys.map((k, i) => {
           const active = k === todayKey
           const trained = state.sessions.some((s) => s.dateKey === k && s.completed)
+          const logged = state.habits.some((h) => h.dateKey === k)
           const date = parseInt(k.slice(-2))
           return (
             <div key={k} className={`flex h-[68px] w-[46px] shrink-0 flex-col items-center justify-center gap-1 rounded-2xl border ${active ? 'border-brand-400 bg-brand-400 text-black' : 'border-white/8 bg-ink-800 text-white/70'}`}>
               <span className="text-[11px] font-semibold opacity-80">{WD[i]}</span>
               <span className="text-lg font-bold">{date}</span>
-              {(trained || active) && <span className={`h-1 w-1 rounded-full ${active ? 'bg-black/70' : 'bg-brand-400'}`} />}
+              {(trained || logged || active) && <span className={`h-1 w-1 rounded-full ${active ? 'bg-black/70' : 'bg-brand-400'}`} />}
             </div>
           )
         })}
