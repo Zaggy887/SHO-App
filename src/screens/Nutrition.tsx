@@ -9,7 +9,9 @@ import { FOODS } from '../data/catalog'
 import { fmtFluid, pct } from '../lib/format'
 import { dayKey, longDate } from '../lib/date'
 import { nutritionForDay, todayHabit } from '../store/selectors'
+import { dailyTargets } from '../store/training'
 import type { MealName } from '../store/types'
+import { Wallet } from 'lucide-react'
 
 const TABS = ['Overview', 'Diary', 'Meals', 'Insights', 'Education']
 
@@ -40,22 +42,23 @@ function OverviewTab() {
   const units = state.settings.units
   const n = nutritionForDay(state)
   const habit = todayHabit(state)
-  const p = state.profile
+  const t = dailyTargets(state)
   const macros = [
-    { label: 'Protein', value: Math.round(n.p), goal: p.proteinTarget, color: '#7ED957' },
-    { label: 'Carbs', value: Math.round(n.c), goal: p.carbTarget, color: '#3B82F6' },
-    { label: 'Fats', value: Math.round(n.f), goal: p.fatTarget, color: '#F5A524' },
+    { label: 'Protein', value: Math.round(n.p), goal: t.protein, color: '#7ED957' },
+    { label: 'Carbs', value: Math.round(n.c), goal: t.carb, color: '#3B82F6' },
+    { label: 'Fats', value: Math.round(n.f), goal: t.fat, color: '#F5A524' },
   ]
-  const macroPct = Math.round((pct(n.p, p.proteinTarget) + pct(n.c, p.carbTarget) + pct(n.f, p.fatTarget)) / 3)
-  const onTrack = n.kcal <= p.calorieTarget * 1.02
+  const macroPct = Math.round((pct(n.p, t.protein) + pct(n.c, t.carb) + pct(n.f, t.fat)) / 3)
+  const onTrack = n.kcal <= t.calorie * 1.02
+  const remaining = Math.max(0, t.calorie - n.kcal)
 
   // calorie-share breakdown
   const pc = n.p * 4, cc = n.c * 4, fc = n.f * 9
   const totalC = Math.max(1, pc + cc + fc)
   const breakdown = [
-    { pct: Math.round((pc / totalC) * 100), grams: `${Math.round(n.p)}g`, label: 'Protein', goal: `Goal: ${p.proteinTarget}g`, color: '#7ED957' },
-    { pct: Math.round((cc / totalC) * 100), grams: `${Math.round(n.c)}g`, label: 'Carbs', goal: `Goal: ${p.carbTarget}g`, color: '#3B82F6' },
-    { pct: Math.round((fc / totalC) * 100), grams: `${Math.round(n.f)}g`, label: 'Fats', goal: `Goal: ${p.fatTarget}g`, color: '#F5A524' },
+    { pct: Math.round((pc / totalC) * 100), grams: `${Math.round(n.p)}g`, label: 'Protein', goal: `Goal: ${t.protein}g`, color: '#7ED957' },
+    { pct: Math.round((cc / totalC) * 100), grams: `${Math.round(n.c)}g`, label: 'Carbs', goal: `Goal: ${t.carb}g`, color: '#3B82F6' },
+    { pct: Math.round((fc / totalC) * 100), grams: `${Math.round(n.f)}g`, label: 'Fats', goal: `Goal: ${t.fat}g`, color: '#F5A524' },
   ]
 
   const slots: MealName[] = ['Breakfast', 'Lunch', 'Snack', 'Dinner']
@@ -63,15 +66,18 @@ function OverviewTab() {
   return (
     <>
       <div className="card p-5">
-        <h3 className="text-lg font-bold">Today's Summary</h3>
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-bold">Today's summary</h3>
+          {t.adjusted && <span className="rounded-full bg-accent-purple/15 px-2.5 py-1 text-[11px] font-semibold text-accent-purple">Exam: maintain</span>}
+        </div>
         <p className="mt-0.5 text-[13px] text-white/55">
-          You're <span className={`font-semibold ${onTrack ? 'text-brand-400' : 'text-accent-orange'}`}>{onTrack ? 'on track' : 'over target'}</span> {onTrack ? 'to hit your goals! 🚀' : 'today'}
+          You're <span className={`font-semibold ${onTrack ? 'text-brand-400' : 'text-accent-orange'}`}>{onTrack ? 'on track' : 'over target'}</span> {onTrack ? 'for today' : 'today'}
         </p>
         <div className="mt-4 flex items-center gap-5">
-          <ProgressRing value={pct(n.kcal, p.calorieTarget)} size={108} stroke={9}>
+          <ProgressRing value={pct(n.kcal, t.calorie)} size={108} stroke={9}>
             <span className="text-2xl font-extrabold">{n.kcal.toLocaleString()}</span>
             <span className="text-[11px] text-white/55">kcal</span>
-            <span className="text-[11px] text-white/40">/ {p.calorieTarget.toLocaleString()}</span>
+            <span className="text-[11px] text-white/40">/ {t.calorie.toLocaleString()}</span>
           </ProgressRing>
           <div className="flex-1 space-y-3">
             {macros.map((m) => (
@@ -88,11 +94,17 @@ function OverviewTab() {
       </div>
 
       <div className="mt-4 grid grid-cols-4 gap-2 rounded-2xl border border-white/5 bg-ink-800 p-4">
-        <MiniStat icon="flame" color="#F5A524" value={n.remaining.toLocaleString()} label="kcal" sub="Remaining" subColor="#9AA0A6" />
-        <MiniStat icon="target" color="#3B82F6" value={`${macroPct}%`} label="Macros" sub={macroPct >= 80 ? 'On Track' : 'Building'} subColor="#7ED957" />
-        <MiniStat icon="droplet" color="#3B82F6" value={fmtFluid(habit.waterL, units)} label="Water" sub={habit.waterL >= p.waterTargetL * 0.8 ? 'Good' : 'Low'} subColor="#7ED957" />
-        <MiniStat icon="utensils" color="#7ED957" value={`${Math.round(n.p)}g`} label="Protein" sub={n.p >= p.proteinTarget * 0.9 ? 'On Track' : 'Push'} subColor="#7ED957" />
+        <MiniStat icon="flame" color="#F5A524" value={remaining.toLocaleString()} label="kcal" sub="Remaining" subColor="#9AA0A6" />
+        <MiniStat icon="target" color="#3B82F6" value={`${macroPct}%`} label="Macros" sub={macroPct >= 80 ? 'On track' : 'Building'} subColor="#7ED957" />
+        <MiniStat icon="droplet" color="#3B82F6" value={fmtFluid(habit.waterL, units)} label="Water" sub={habit.waterL >= t.waterL * 0.8 ? 'Good' : 'Low'} subColor="#7ED957" />
+        <MiniStat icon="utensils" color="#7ED957" value={`${Math.round(n.p)}g`} label="Protein" sub={n.p >= t.protein * 0.9 ? 'On track' : 'Push'} subColor="#7ED957" />
       </div>
+
+      <button onClick={() => nav.open('budgetEats')} className="mt-4 flex w-full items-center gap-3 rounded-2xl border border-white/5 bg-ink-800 p-4 text-left active:scale-[0.99]">
+        <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-brand-400/15"><Wallet size={20} className="text-brand-400" /></div>
+        <div className="flex-1"><p className="font-bold leading-tight">Eat well for less</p><p className="text-[12px] text-white/50">Cheap high protein meals and a grocery list</p></div>
+        <ChevronRight size={18} className="text-white/30" />
+      </button>
 
       <div className="mt-6">
         <SectionHeader title="Today's Meals" right={<button onClick={() => nav.open('addFood')} className="flex items-center gap-1 text-sm font-semibold text-brand-400">Add <Plus size={15} /></button>} />

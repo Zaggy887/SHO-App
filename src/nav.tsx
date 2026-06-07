@@ -15,6 +15,12 @@ export type Overlay =
   | 'quick'
   | 'badges'
   | 'examMode'
+  | 'coach'
+  | 'beginner'
+  | 'budgetEats'
+  | 'exerciseDetail'
+  | 'partnerMatch'
+  | 'prCelebration'
 
 export type NavCtx = {
   open: (o: Overlay, params?: Record<string, unknown>) => void

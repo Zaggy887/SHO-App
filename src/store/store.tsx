@@ -38,6 +38,10 @@ export type Action =
   | { type: 'ADD_NOTIFICATION'; notif: Omit<AppNotification, 'id' | 'dateKey' | 'time' | 'read'> }
   | { type: 'ADD_PHOTO'; dataUrl: string; note?: string }
   | { type: 'REMOVE_PHOTO'; id: string }
+  | { type: 'SET_EXAM_DATES'; startKey: string; endKey: string }
+  | { type: 'COMPLETE_LESSON'; id: string }
+  | { type: 'GIVE_KUDOS'; postId: string }
+  | { type: 'CONNECT_PARTNER'; id: string }
   | { type: 'RESET_DEMO' }
   | { type: 'RESET_EMPTY' }
 
@@ -118,8 +122,8 @@ function reducer(state: AppState, action: Action): AppState {
       const notif: AppNotification = {
         id: `n-${Date.now()}`,
         type: 'workout',
-        title: 'Workout complete! 💪',
-        body: 'Nice work — your stats and streak have been updated.',
+        title: 'Workout logged',
+        body: 'Nice work. Your stats, streak and next session weights are updated.',
         dateKey: todayKey,
         time: nowTime(),
         read: false,
@@ -195,6 +199,26 @@ function reducer(state: AppState, action: Action): AppState {
 
     case 'REMOVE_PHOTO':
       return { ...state, photos: state.photos.filter((p) => p.id !== action.id) }
+
+    case 'SET_EXAM_DATES':
+      return { ...state, profile: { ...state.profile, examMode: true, examStartKey: action.startKey, examEndKey: action.endKey } }
+
+    case 'COMPLETE_LESSON':
+      return state.beginnerProgress.includes(action.id)
+        ? state
+        : { ...state, beginnerProgress: [...state.beginnerProgress, action.id] }
+
+    case 'GIVE_KUDOS': {
+      const posts = state.posts.map((p) =>
+        p.id === action.postId ? { ...p, gaveKudos: !p.gaveKudos, kudos: (p.kudos ?? 0) + (p.gaveKudos ? -1 : 1) } : p,
+      )
+      return { ...state, posts }
+    }
+
+    case 'CONNECT_PARTNER': {
+      const partners = state.partners.map((p) => (p.id === action.id ? { ...p, connected: !p.connected } : p))
+      return { ...state, partners }
+    }
 
     case 'RESET_DEMO':
       return buildSeed()

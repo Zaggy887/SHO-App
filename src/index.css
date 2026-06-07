@@ -66,7 +66,7 @@
 
   .btn-primary {
     @apply inline-flex items-center justify-center gap-2 rounded-full bg-brand-400 px-5 py-3
-           font-semibold text-black transition active:scale-[0.98] hover:bg-brand-300;
+           font-semibold text-black transition-transform duration-150 active:scale-[0.97] hover:bg-brand-300;
   }
 
   .section-title {
@@ -101,4 +101,16 @@
 }
 .ring-animate {
   animation: ring-fill 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Respect users who prefer less motion. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }

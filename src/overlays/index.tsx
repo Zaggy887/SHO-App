@@ -22,9 +22,13 @@ import {
   weightStats, workoutsThisWeek, totalVolumeRange, streakStats, todayHabit,
   habitConsistencyWeek, leaderboardSorted, strengthProgress,
 } from '../store/selectors'
+import { examState, dailyTargets, defaultExamWindow } from '../store/training'
 import type { MealName, Units, Theme } from '../store/types'
 
 type Props = { open: boolean; onClose: () => void; params?: Record<string, unknown> }
+
+// New feature sheets live in a sibling file and are surfaced through here.
+export * from './extra'
 
 /* ============================ Notifications ============================ */
 export function NotificationsSheet({ open, onClose }: Props) {
@@ -157,19 +161,23 @@ export function ProfileSheet({ open, onClose }: Props) {
         </div>
       </div>
 
-      <div className="mt-5 grid grid-cols-3 gap-3 text-center">
+      <p className="mt-3 text-[13px] text-white/45">{state.profile.dorm} · {state.profile.cohort}</p>
+
+      <div className="mt-4 grid grid-cols-3 gap-3 text-center">
         <Stat label="Workouts" value={String(totalWorkouts)} />
-        <Stat label="Day streak" value={`${streak.current} 🔥`} />
+        <Stat label="Day streak" value={`${streak.current}`} />
         <Stat label="Weight" value={fmtWeight(w.current, units, 1)} />
       </div>
 
       <div className="mt-4 space-y-2.5">
-        <LinkRow icon={<Award size={18} className="text-accent-purple" />} title="Badges" sub={`${earned} earned`} onClick={() => nav.open('badges')} />
+        <LinkRow icon={<Sparkles size={18} className="text-brand-400" />} title="Your coach" sub="Daily check ins and milestones" onClick={() => nav.open('coach')} />
+        <LinkRow icon={<Award size={18} className="text-brand-400" />} title="Badges" sub={`${earned} earned`} onClick={() => nav.open('badges')} />
         <LinkRow icon={<Camera size={18} className="text-brand-400" />} title="Progress photos" sub={`${state.photos.length} photos`} onClick={() => nav.open('photos')} />
-        <LinkRow icon={<Trophy size={18} className="text-accent-orange" />} title="Leaderboard" sub="See your friends" onClick={() => nav.open('leaderboard')} />
-        <LinkRow icon={<Sparkles size={18} className="text-accent-blue" />} title="Weekly recap" sub="Your week in numbers" onClick={() => nav.open('recap')} />
-        <LinkRow icon={<GraduationCap size={18} className="text-accent-purple" />} title="Exam Survival Protocol" sub={state.profile.examMode ? 'On' : 'Off'} onClick={() => nav.open('examMode')} />
-        <LinkRow icon={<User size={18} className="text-white/70" />} title="Settings" sub="Units, theme & data" onClick={() => nav.open('settings')} />
+        <LinkRow icon={<Trophy size={18} className="text-brand-400" />} title="Campus leaderboard" sub={state.profile.university} onClick={() => nav.open('leaderboard')} />
+        <LinkRow icon={<Sparkles size={18} className="text-brand-400" />} title="Weekly recap" sub="Your week in numbers" onClick={() => nav.open('recap')} />
+        <LinkRow icon={<GraduationCap size={18} className="text-brand-400" />} title="Exam Survival Protocol" sub={state.profile.examMode ? 'On' : 'Off'} onClick={() => nav.open('examMode')} />
+        {state.profile.newToGym && <LinkRow icon={<Leaf size={18} className="text-brand-400" />} title="New to the gym" sub="Your first 90 days" onClick={() => nav.open('beginner')} />}
+        <LinkRow icon={<User size={18} className="text-white/70" />} title="Settings" sub="Units, theme and data" onClick={() => nav.open('settings')} />
       </div>
     </Sheet>
   )
@@ -370,7 +378,7 @@ export function CreatePostSheet({ open, onClose }: Props) {
   function post() {
     if (!text.trim()) return
     dispatch({ type: 'ADD_POST', text: text.trim(), image })
-    toast('Posted to the community 🎉')
+    toast('Posted to your campus feed')
     setText(''); setImage(undefined)
     onClose()
   }
@@ -410,7 +418,7 @@ export function WeeklyRecapSheet({ open, onClose }: Props) {
   const top = strengthProgress(state)[0]
 
   async function share() {
-    const txt = `My StrengthHub week 💪\n${workouts} workouts · ${Math.round(vol).toLocaleString()} kg lifted · ${streak.current}-day streak 🔥`
+    const txt = `My StrengthHub week. ${workouts} workouts, ${Math.round(vol).toLocaleString()} kg lifted, a ${streak.current} day streak.`
     try {
       if (navigator.share) await navigator.share({ text: txt })
       else toast('Recap copied to share!')
@@ -470,7 +478,7 @@ export function LeaderboardSheet({ open, onClose }: Props) {
             <Avatar name={u.name} size={38} />
             <div className="flex-1">
               <p className="font-bold leading-tight">{u.name}</p>
-              <p className="text-[12px] text-white/45">{u.workouts} workouts · {u.streak}🔥</p>
+              <p className="text-[12px] text-white/45">{u.workouts} workouts · {u.streak} day streak</p>
             </div>
             <span className="font-extrabold text-brand-400">{u.points.toLocaleString()}</span>
           </div>
@@ -577,27 +585,76 @@ export function ExamModeSheet({ open, onClose }: Props) {
   const { state, dispatch } = useStore()
   const toast = useToast()
   const on = state.profile.examMode
+  const ex = examState(state)
+  const fallback = defaultExamWindow()
+  const [start, setStart] = useState(state.profile.examStartKey ?? fallback.startKey)
+  const [end, setEnd] = useState(state.profile.examEndKey ?? fallback.endKey)
+  const t = dailyTargets(state)
+  const p = state.profile
+
+  function save() {
+    if (end < start) { toast('End date is before the start'); return }
+    dispatch({ type: 'SET_EXAM_DATES', startKey: start, endKey: end })
+    toast('Exam plan set. I have your back.')
+    onClose()
+  }
+  function turnOff() {
+    dispatch({ type: 'SET_PROFILE', patch: { examMode: false } })
+    toast('Exam mode off')
+    onClose()
+  }
+
+  const phaseLabel: Record<string, string> = {
+    none: 'Not in your exam window yet',
+    approaching: ex.daysUntil ? `Exams start in ${ex.daysUntil} days` : 'Exams approaching',
+    during: ex.daysLeft != null ? `${ex.daysLeft} days of exams left` : 'In your exam window',
+    recovering: 'Exams done, ramping back up',
+  }
+
   return (
     <Sheet open={open} onClose={onClose} title="Exam Survival Protocol">
-      <div className="rounded-3xl bg-gradient-to-br from-accent-purple/30 to-accent-purple/10 p-5">
-        <GraduationCap size={32} className="text-accent-purple" />
-        <h3 className="mt-2 text-xl font-extrabold">Train through exam season</h3>
-        <p className="mt-1 text-[14px] text-white/60">When it's on, StrengthHub keeps you moving without adding stress.</p>
+      <div className="rounded-3xl border border-accent-purple/25 bg-accent-purple/10 p-5">
+        <GraduationCap size={30} className="text-accent-purple" />
+        <h3 className="mt-2 text-xl font-extrabold tracking-tight">Train through exam season</h3>
+        <p className="mt-1 text-[14px] leading-snug text-white/60">Tell me when your exams are. I will quietly adjust your plan so training supports your studying instead of competing with it.</p>
       </div>
-      <ul className="mt-4 space-y-2.5">
-        {['Workouts shortened to 20–30 min', 'Extra focus on sleep & recovery', 'Lower daily step & habit targets', 'Calming mindset prompts'].map((t) => (
-          <li key={t} className="flex items-center gap-2.5 rounded-xl border border-white/5 bg-ink-800 p-3 text-[14px]">
-            <Check size={16} className="text-brand-400" /> {t}
-          </li>
-        ))}
-      </ul>
-      <button
-        onClick={() => { dispatch({ type: 'SET_PROFILE', patch: { examMode: !on } }); toast(on ? 'Exam mode off' : 'Exam mode on — stay strong 📚'); }}
-        className={`mt-6 w-full rounded-full py-3.5 font-semibold transition active:scale-[0.98] ${on ? 'bg-ink-700 text-white' : 'bg-accent-purple text-white'}`}
-      >
-        {on ? 'Turn off exam mode' : 'Turn on exam mode'}
-      </button>
+
+      <div className="mt-4 grid grid-cols-2 gap-3">
+        <label className="rounded-2xl border border-white/8 bg-ink-800 p-3">
+          <span className="text-[12px] font-semibold text-white/50">Exams start</span>
+          <input type="date" value={start} onChange={(e) => setStart(e.target.value)} className="mt-1 w-full bg-transparent text-[15px] font-semibold focus:outline-none" />
+        </label>
+        <label className="rounded-2xl border border-white/8 bg-ink-800 p-3">
+          <span className="text-[12px] font-semibold text-white/50">Exams end</span>
+          <input type="date" value={end} onChange={(e) => setEnd(e.target.value)} className="mt-1 w-full bg-transparent text-[15px] font-semibold focus:outline-none" />
+        </label>
+      </div>
+
+      {on && (
+        <p className="mt-3 text-center text-[13px] font-semibold text-accent-purple">{phaseLabel[ex.phase]}</p>
+      )}
+
+      <p className="mt-5 mb-2 text-[12px] font-bold uppercase tracking-wide text-white/40">While exams are on</p>
+      <div className="space-y-2.5">
+        <AdaptRow label="Sessions" value="Trimmed to your 3 key lifts" />
+        <AdaptRow label="Calories" value={`${t.adjusted ? t.calorie.toLocaleString() : (p.calorieTarget + (p.goal === 'build-muscle' ? -250 : 0)).toLocaleString()} kcal, toward maintenance`} />
+        <AdaptRow label="Sleep target" value={`${Math.min(9, p.sleepTargetH + 0.5)} hours, prioritised`} />
+        <AdaptRow label="Step target" value={`${Math.round(p.stepTarget * 0.7).toLocaleString()}, eased off`} />
+      </div>
+
+      <button onClick={save} className="btn-primary mt-6 w-full">{on ? 'Update exam plan' : 'Turn on exam mode'}</button>
+      {on && <button onClick={turnOff} className="mt-2 w-full rounded-full bg-ink-700 py-3 text-sm font-semibold text-white/70 active:scale-[0.98]">Turn off</button>}
     </Sheet>
+  )
+}
+
+function AdaptRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center gap-2.5 rounded-xl border border-white/5 bg-ink-800 p-3 text-[14px]">
+      <Check size={16} className="shrink-0 text-brand-400" />
+      <span className="text-white/55">{label}</span>
+      <span className="ml-auto text-right font-semibold">{value}</span>
+    </div>
   )
 }
 

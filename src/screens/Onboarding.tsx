@@ -4,11 +4,11 @@ import { useDispatch } from '../store/store'
 import type { Equipment, Experience, Goal } from '../store/types'
 import { todayKey } from '../lib/date'
 
-const goals: { id: Goal; label: string; emoji: string; desc: string }[] = [
-  { id: 'build-muscle', label: 'Build Muscle', emoji: '💪', desc: 'Gain size & strength' },
-  { id: 'lose-fat', label: 'Lose Fat', emoji: '🔥', desc: 'Lean down, stay strong' },
-  { id: 'gain-strength', label: 'Get Stronger', emoji: '🏋️', desc: 'Focus on big lifts' },
-  { id: 'stay-healthy', label: 'Stay Healthy', emoji: '🌱', desc: 'Move, feel good, balance' },
+const goals: { id: Goal; label: string; desc: string }[] = [
+  { id: 'build-muscle', label: 'Build muscle', desc: 'Add size and strength' },
+  { id: 'lose-fat', label: 'Lose fat', desc: 'Lean down, keep strength' },
+  { id: 'gain-strength', label: 'Get stronger', desc: 'Focus on the big lifts' },
+  { id: 'stay-healthy', label: 'Stay healthy', desc: 'Move, feel good, balance' },
 ]
 
 const experiences: { id: Experience; label: string; desc: string }[] = [
@@ -60,6 +60,7 @@ export default function Onboarding() {
         experience: exp,
         daysPerWeek: days,
         equipment,
+        newToGym: exp === 'beginner',
         createdAtKey: todayKey,
         ...targetsFor(goal),
       },
@@ -121,7 +122,7 @@ export default function Onboarding() {
         {step === 2 && (
           <Picker title="What's your main goal?" sub="You can change this anytime.">
             {goals.map((g) => (
-              <OptionCard key={g.id} selected={goal === g.id} onClick={() => setGoal(g.id)} title={`${g.emoji}  ${g.label}`} desc={g.desc} />
+              <OptionCard key={g.id} selected={goal === g.id} onClick={() => setGoal(g.id)} title={g.label} desc={g.desc} />
             ))}
           </Picker>
         )}

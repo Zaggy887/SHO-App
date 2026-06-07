@@ -25,6 +25,12 @@ import {
   QuickWorkoutsSheet,
   BadgesSheet,
   ExamModeSheet,
+  CoachSheet,
+  BeginnerSheet,
+  BudgetEatsSheet,
+  ExerciseDetailSheet,
+  PartnerMatchSheet,
+  PRCelebrationSheet,
 } from './overlays'
 
 export type TabKey = 'dashboard' | 'workout' | 'nutrition' | 'progress' | 'community'
@@ -88,6 +94,12 @@ function Shell() {
       <QuickWorkoutsSheet open={overlay === 'quick'} onClose={nav.close} />
       <BadgesSheet open={overlay === 'badges'} onClose={nav.close} />
       <ExamModeSheet open={overlay === 'examMode'} onClose={nav.close} />
+      <CoachSheet open={overlay === 'coach'} onClose={nav.close} />
+      <BeginnerSheet open={overlay === 'beginner'} onClose={nav.close} />
+      <BudgetEatsSheet open={overlay === 'budgetEats'} onClose={nav.close} />
+      <ExerciseDetailSheet open={overlay === 'exerciseDetail'} onClose={nav.close} params={params} />
+      <PartnerMatchSheet open={overlay === 'partnerMatch'} onClose={nav.close} />
+      <PRCelebrationSheet open={overlay === 'prCelebration'} onClose={nav.close} params={params} />
     </NavProvider>
   )
 }

@@ -4,6 +4,7 @@ import {
   BASE_WEIGHTS,
   EXERCISES,
   FOODS,
+  PARTNER_CANDIDATES,
   PROGRAM,
   REP_TARGETS,
   SET_TARGETS,
@@ -17,6 +18,7 @@ import type {
   AppState,
   Badge,
   Challenge,
+  CoachMessage,
   CommunityEvent,
   Group,
   HabitDay,
@@ -29,7 +31,7 @@ import type {
   WorkoutSession,
 } from './types'
 
-export const SCHEMA_VERSION = 1
+export const SCHEMA_VERSION = 2
 const DAYS = 40 // 0..38 completed history, 39 = today (in progress)
 
 /* round to nearest 2.5 (plate increments) */
@@ -65,11 +67,14 @@ function buildSession(rng: () => number, i: number, completed: boolean): Workout
     const base = BASE_WEIGHTS[exId]
     const target = SET_TARGETS[exId]
     const repsTarget = REP_TARGETS[exId]
-    const repMid = parseInt(repsTarget) || 8
+    const repNums = (repsTarget.match(/\d+/g) ?? ['8']).map(Number)
+    const low = Math.min(...repNums)
+    const high = Math.max(...repNums)
     const weight = r25(base * (1 + GAIN[exId] * progress) * (1 + rand(rng, -0.015, 0.015)))
+    // log reps within the target range, usually at or near the top
     const sets = Array.from({ length: target }, () => ({
       weightKg: weight,
-      reps: repMid + randInt(rng, -1, 2),
+      reps: Math.max(low, high - randInt(rng, 0, 1)),
       done: completed,
     }))
     return {
@@ -159,6 +164,9 @@ export function buildSeed(): AppState {
     age: 21,
     sex: 'male',
     university: 'State University',
+    cohort: 'Class of 2027',
+    dorm: 'West Hall',
+    society: 'Lifting Society',
     goal: 'build-muscle',
     experience: 'intermediate',
     daysPerWeek: 5,
@@ -176,6 +184,7 @@ export function buildSeed(): AppState {
     onboarded: true,
     examMode: false,
     budgetMode: true,
+    newToGym: false,
     createdAtKey: dayKey(DAYS - 1),
   }
 
@@ -239,31 +248,40 @@ export function buildSeed(): AppState {
   for (let i = 0; i < DAYS - 1; i++) meals.push(...buildMeals(rng, i))
   meals.push(...todaysMeals())
 
-  /* -------- posts -------- */
+  /* -------- posts (campus scoped) -------- */
   const posts: Post[] = [
-    { id: 'post-1', authorId: 'you', author: 'Alex M.', dateKey: dayKey(0), time: '2h ago', text: 'Just hit a new bench PR! 92.5kg for 3 reps 💪 40 days in and feeling unstoppable.', image: img.postPR, likes: 24, comments: 8, liked: false, bookmarked: false },
-    { id: 'post-2', authorId: 'sophie', author: 'Sophie L.', dateKey: dayKey(0), time: '5h ago', text: 'Finished Week 3 of the 10 Week Challenge! 🎉', ring: 75, ringLabel: 'WEEK 3 PROGRESS', likes: 18, comments: 6, liked: true, bookmarked: false },
-    { id: 'post-3', authorId: 'jayden', author: 'Jayden K.', dateKey: dayKey(1), time: '1d ago', text: 'Sunday meal prep done — chicken, rice & veg for the week. Stayed under $25 total.', image: img.mealPrep, likes: 21, comments: 11, liked: false, bookmarked: true },
-    { id: 'post-4', authorId: 'mia', author: 'Mia R.', dateKey: dayKey(2), time: '2d ago', text: 'Anyone else find leg day way harder during exam week? 😅 Still showed up though.', likes: 32, comments: 14, liked: false, bookmarked: false },
+    { id: 'post-1', authorId: 'you', author: 'Alex M.', dateKey: dayKey(0), time: '2h ago', text: 'New bench best today. 92.5kg for 3, and it finally felt light. Forty days of just turning up.', image: img.postPR, likes: 24, comments: 8, liked: false, bookmarked: false, kudos: 16, gaveKudos: false, pr: { lift: 'Bench Press', weight: '92.5kg' }, scope: 'campus' },
+    { id: 'post-2', authorId: 'sophie', author: 'Sophie L.', dateKey: dayKey(0), time: '5h ago', text: 'Finished week 3 of the strength challenge. Halfway and still showing up.', ring: 75, ringLabel: 'WEEK 3 PROGRESS', likes: 18, comments: 6, liked: true, bookmarked: false, kudos: 9, scope: 'campus' },
+    { id: 'post-3', authorId: 'jayden', author: 'Jayden K.', dateKey: dayKey(1), time: '1d ago', text: 'Sunday meal prep done. Chicken, rice and veg for the week, stayed under 25 dollars total.', image: img.mealPrep, likes: 21, comments: 11, liked: false, bookmarked: true, kudos: 7, scope: 'campus' },
+    { id: 'post-4', authorId: 'mia', author: 'Mia R.', dateKey: dayKey(2), time: '2d ago', text: 'Leg day hits different during exam week. Kept it short and still got it done.', likes: 32, comments: 14, liked: false, bookmarked: false, kudos: 11, scope: 'campus' },
   ]
 
-  /* -------- leaderboard (friends) -------- */
+  /* -------- leaderboard (campus + cohort) -------- */
   const leaderboard: LeaderUser[] = [
-    { id: 'jayden', name: 'Jayden K.', university: 'State University', points: 4120, workouts: 34, streak: 22, friend: true },
-    { id: 'sophie', name: 'Sophie L.', university: 'City College', points: 3980, workouts: 31, streak: 19, friend: true },
-    { id: 'mia', name: 'Mia R.', university: 'State University', points: 3760, workouts: 30, streak: 16, friend: true },
-    { id: 'you', name: 'Alex M. (You)', university: 'State University', points: 3640, workouts: 30, streak: 14, isYou: true, friend: false },
-    { id: 'dan', name: 'Dan P.', university: 'Tech Institute', points: 3410, workouts: 28, streak: 9, friend: true },
-    { id: 'leo', name: 'Leo T.', university: 'State University', points: 3180, workouts: 26, streak: 12, friend: true },
-    { id: 'ana', name: 'Ana V.', university: 'Metro University', points: 2950, workouts: 24, streak: 7, friend: false },
-    { id: 'sam', name: 'Sam W.', university: 'City College', points: 2610, workouts: 22, streak: 5, friend: true },
+    { id: 'jayden', name: 'Jayden K.', university: 'State University', dorm: 'West Hall', society: 'Lifting Society', level: 'intermediate', points: 4120, workouts: 34, streak: 22, friend: true },
+    { id: 'sophie', name: 'Sophie L.', university: 'State University', dorm: 'East Hall', society: 'Run Club', level: 'beginner', points: 3980, workouts: 31, streak: 19, friend: true },
+    { id: 'mia', name: 'Mia R.', university: 'State University', dorm: 'West Hall', society: 'Climbing Society', level: 'beginner', points: 3760, workouts: 30, streak: 16, friend: true },
+    { id: 'you', name: 'Alex M. (You)', university: 'State University', dorm: 'West Hall', society: 'Lifting Society', level: 'intermediate', points: 3640, workouts: 30, streak: 14, isYou: true, friend: false },
+    { id: 'dan', name: 'Dan P.', university: 'State University', dorm: 'North Court', society: 'Football', level: 'intermediate', points: 3410, workouts: 28, streak: 9, friend: true },
+    { id: 'leo', name: 'Leo T.', university: 'State University', dorm: 'West Hall', society: 'Lifting Society', level: 'beginner', points: 3180, workouts: 26, streak: 12, friend: true },
+    { id: 'ana', name: 'Ana V.', university: 'State University', dorm: 'East Hall', society: 'Run Club', level: 'beginner', points: 2950, workouts: 24, streak: 7, friend: false },
+    { id: 'sam', name: 'Sam W.', university: 'State University', dorm: 'Riverside', society: 'Football', level: 'beginner', points: 2610, workouts: 22, streak: 5, friend: true },
   ]
 
-  /* -------- challenges -------- */
+  /* -------- challenges (belonging scoped) -------- */
   const challenges: Challenge[] = [
-    { id: 'c-strength', title: '10 Week Strength Challenge', weeks: 10, totalWeeks: 10, currentWeek: 3, participants: 342, joined: true, progressPct: 30, rank: 14 },
-    { id: 'c-steps', title: '30 Day Step Streak', weeks: 30, totalWeeks: 30, currentWeek: 0, participants: 218, joined: false, progressPct: 0 },
-    { id: 'c-shred', title: 'Summer Shred', weeks: 8, totalWeeks: 8, currentWeek: 0, participants: 540, joined: false, progressPct: 0 },
+    { id: 'c-strength', title: '10 Week Strength Challenge', weeks: 10, totalWeeks: 10, currentWeek: 3, participants: 342, joined: true, progressPct: 30, rank: 14, scope: 'campus' },
+    { id: 'c-dorm', title: 'Hall Wars: Weekly Sessions', weeks: 2, totalWeeks: 2, currentWeek: 1, participants: 210, joined: true, progressPct: 58, scope: 'dorm', vsLabel: 'West Hall vs East Hall', yourSide: 'West Hall', yourSidePct: 58, rivalSide: 'East Hall', rivalSidePct: 42 },
+    { id: 'c-society', title: 'Lifting Society Volume Cup', weeks: 4, totalWeeks: 4, currentWeek: 2, participants: 64, joined: false, progressPct: 0, scope: 'society', vsLabel: 'Lifting Society vs Run Club', yourSide: 'Lifting Society', yourSidePct: 51, rivalSide: 'Run Club', rivalSidePct: 49 },
+    { id: 'c-steps', title: '30 Day Step Streak', weeks: 30, totalWeeks: 30, currentWeek: 0, participants: 218, joined: false, progressPct: 0, scope: 'global' },
+    { id: 'c-shred', title: 'Summer Shred', weeks: 8, totalWeeks: 8, currentWeek: 0, participants: 540, joined: false, progressPct: 0, scope: 'global' },
+  ]
+
+  /* -------- coach thread (seeded history) -------- */
+  const coachThread: CoachMessage[] = [
+    { id: 'ct-1', dateKey: dayKey(1), kind: 'qa', title: 'How many days should I train?', body: 'You asked about frequency. For where you are, three to five days a week is the sweet spot. More only helps if your sleep and food keep up.' },
+    { id: 'ct-2', dateKey: dayKey(3), kind: 'celebration', title: 'Two clean weeks', body: 'You strung together two consistent weeks. That is the habit setting in. Keep the weights where they are and let it compound.' },
+    { id: 'ct-3', dateKey: dayKey(5), kind: 'checkin', title: 'Recovery signal', body: 'Sleep dipped midweek and your squats felt heavy. Not a problem, just a signal. An earlier night tonight will pay off tomorrow.' },
   ]
 
   /* -------- badges -------- */
@@ -282,11 +300,11 @@ export function buildSeed(): AppState {
 
   /* -------- notifications -------- */
   const notifications: AppNotification[] = [
-    { id: 'n-1', type: 'streak', title: 'Keep your streak alive! 🔥', body: "You're on a 14-day streak. Log today to keep it going.", dateKey: todayKey, time: '8:02 AM', read: false },
-    { id: 'n-2', type: 'social', title: 'Sophie L. commented', body: '"Beast mode! Congrats on the PR 💪"', dateKey: todayKey, time: '7:41 AM', read: false },
-    { id: 'n-3', type: 'challenge', title: '10 Week Challenge', body: "Week 3 leaderboard is out — you're ranked #14.", dateKey: dayKey(0), time: 'Yesterday', read: false },
-    { id: 'n-4', type: 'workout', title: 'Push Day is ready', body: "Today's plan: chest, shoulders & triceps. ~60 min.", dateKey: todayKey, time: '6:30 AM', read: true },
-    { id: 'n-5', type: 'system', title: 'Badge unlocked: Locked In', body: 'You earned the 14-day streak badge.', dateKey: dayKey(0), time: 'Yesterday', read: true },
+    { id: 'n-1', type: 'streak', title: 'Keep your streak alive', body: "You're on a 14 day streak. Logging today keeps it going.", dateKey: todayKey, time: '8:02 AM', read: false },
+    { id: 'n-2', type: 'social', title: 'Sophie gave you kudos', body: 'On your bench PR. Three people from West Hall cheered it.', dateKey: todayKey, time: '7:41 AM', read: false },
+    { id: 'n-3', type: 'challenge', title: 'Hall Wars update', body: 'West Hall leads East Hall 58 to 42 this week. Your session counts.', dateKey: dayKey(0), time: 'Yesterday', read: false },
+    { id: 'n-4', type: 'workout', title: 'Push day is ready', body: "Today: chest, shoulders and triceps. Your coach set the weights.", dateKey: todayKey, time: '6:30 AM', read: true },
+    { id: 'n-5', type: 'system', title: 'Badge unlocked: Locked In', body: 'You earned the 14 day streak badge.', dateKey: dayKey(0), time: 'Yesterday', read: true },
   ]
 
   /* -------- events / groups -------- */
@@ -327,6 +345,9 @@ export function buildSeed(): AppState {
     events,
     groups,
     photos,
+    partners: PARTNER_CANDIDATES,
+    coachThread,
+    beginnerProgress: [],
     v: SCHEMA_VERSION,
   }
 }
@@ -344,6 +365,8 @@ export function emptyState(): AppState {
     photos: [],
     posts: s.posts.filter((p) => p.authorId !== 'you'),
     notifications: [],
+    coachThread: [],
+    beginnerProgress: [],
     badges: s.badges.map((b) => ({ ...b, earned: false, earnedDateKey: undefined })),
   }
 }

@@ -10,6 +10,9 @@ export interface Profile {
   age: number
   sex: 'male' | 'female' | 'other'
   university: string
+  cohort: string
+  dorm: string
+  society: string
   goal: Goal
   experience: Experience
   daysPerWeek: number
@@ -26,7 +29,12 @@ export interface Profile {
   sleepTargetH: number
   onboarded: boolean
   examMode: boolean
+  /** inclusive exam window, 'YYYY-MM-DD' */
+  examStartKey?: string
+  examEndKey?: string
   budgetMode: boolean
+  /** opted into the New to the Gym first-90-days track */
+  newToGym: boolean
   createdAtKey: string
 }
 
@@ -63,6 +71,8 @@ export interface FoodItem {
   f: number
   barcode?: string
   budget?: boolean
+  /** rough cost per serving, in local currency units */
+  cost?: number
 }
 
 export interface LoggedMeal {
@@ -137,12 +147,23 @@ export interface Post {
   comments: number
   liked: boolean
   bookmarked: boolean
+  /** kudos are lightweight campus-scoped cheers, separate from likes */
+  kudos?: number
+  gaveKudos?: boolean
+  /** a PR celebration moment shared to the cohort */
+  pr?: { lift: string; weight: string }
+  scope?: CommunityScope
 }
+
+export type CommunityScope = 'campus' | 'dorm' | 'society' | 'global'
 
 export interface LeaderUser {
   id: string
   name: string
   university: string
+  dorm?: string
+  society?: string
+  level?: Experience
   points: number
   workouts: number
   streak: number
@@ -160,6 +181,14 @@ export interface Challenge {
   joined: boolean
   progressPct: number
   rank?: number
+  /** belonging-scoped: who you're really competing alongside */
+  scope?: CommunityScope
+  /** e.g. "West Hall vs East Hall" */
+  vsLabel?: string
+  yourSide?: string
+  yourSidePct?: number
+  rivalSide?: string
+  rivalSidePct?: number
 }
 
 export interface Badge {
@@ -216,6 +245,60 @@ export interface QuickWorkout {
   exercises: string[]
 }
 
+/** Cheap, high-protein meals built for a student budget. */
+export interface BudgetMeal {
+  id: string
+  name: string
+  image: string
+  cost: number
+  serves: number
+  kcal: number
+  p: number
+  c: number
+  f: number
+  ingredients: { item: string; cost: number }[]
+  steps: string[]
+  cookOnce?: string
+  tags: string[]
+}
+
+/** A lesson in the New to the Gym first-90-days track. */
+export interface BeginnerLesson {
+  id: string
+  category: 'gym' | 'app' | 'mindset' | 'machine'
+  title: string
+  summary: string
+  body: string[]
+  minutes: number
+  icon: string
+}
+
+/** A potential training partner on campus. */
+export interface PartnerCandidate {
+  id: string
+  name: string
+  level: Experience
+  dorm: string
+  society?: string
+  goal: Goal
+  availability: string
+  blurb: string
+  matchPct: number
+  connected: boolean
+}
+
+export type CoachKind = 'checkin' | 'nudge' | 'celebration' | 'exam' | 'qa'
+
+/** A short, human message from the user's coach. Rules-driven, no chatbot. */
+export interface CoachMessage {
+  id: string
+  dateKey: string
+  kind: CoachKind
+  title: string
+  body: string
+  cta?: { label: string; overlay: string }
+}
+
 export interface AppState {
   profile: Profile
   settings: Settings
@@ -233,6 +316,10 @@ export interface AppState {
   events: CommunityEvent[]
   groups: Group[]
   photos: ProgressPhoto[]
+  partners: PartnerCandidate[]
+  coachThread: CoachMessage[]
+  /** completed beginner-track lesson ids */
+  beginnerProgress: string[]
   /** schema version for migrations */
   v: number
 }
