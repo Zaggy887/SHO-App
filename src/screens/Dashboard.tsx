@@ -160,7 +160,7 @@ export default function Dashboard() {
 
 function Section({ title, action, onAction }: { title: string; action: string; onAction: () => void }) {
   return (
-    <div className="mb-3 mt-7 flex items-center justify-between">
+    <div className="mb-3 mt-9 flex items-center justify-between">
       <h2 className="section-title">{title}</h2>
       <button className="see-all" onClick={onAction}>{action}</button>
     </div>
