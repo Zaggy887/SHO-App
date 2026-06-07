@@ -8,7 +8,7 @@ export function ProgressRing({
   size = 64,
   stroke = 6,
   color = '#7ED957',
-  track = 'rgba(255,255,255,0.08)',
+  track = 'rgba(130,130,130,0.22)',
   children,
 }: {
   value: number // 0 - 100

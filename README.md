@@ -1,70 +1,71 @@
 # StrengthHub Online
 
-A professional, mobile-first fitness companion built with **React + TypeScript + Vite + Tailwind CSS**. It reproduces the full StrengthHub Online product experience across five sections, each matching the supplied design mockups.
+A fully functional, mobile-first fitness app for **university students** — built with **React + TypeScript + Vite + Tailwind CSS**. Train, eat, track progress and stay accountable with friends, all in one installable PWA.
 
-![Dark theme · lime-green accent](https://img.shields.io/badge/theme-dark-0A0A0B) ![Stack](https://img.shields.io/badge/stack-React%20%7C%20TS%20%7C%20Vite%20%7C%20Tailwind-7ED957)
+![Theme](https://img.shields.io/badge/theme-dark%20%2F%20light-0A0A0B) ![Stack](https://img.shields.io/badge/stack-React%20%7C%20TS%20%7C%20Vite%20%7C%20Tailwind-7ED957) ![PWA](https://img.shields.io/badge/PWA-installable%20%26%20offline-7ED957)
+
+## It's actually functional
+
+There's no fake data on screens — everything is driven by a persistent store (`localStorage`) seeded with a realistic **40-day history** for the demo user (*Alex, 21, university student, lean-recomp goal, PPL split*). Stats are computed live, so logging anything updates the whole app.
+
+Out of the box the demo shows: **26 completed workouts**, a **14-day streak** (best 21), bodyweight down **1.4 kg over 4 weeks**, computed 1RM strength gains, 160 logged meals, badges, friends leaderboard and more.
 
 ## Features
 
-The app ships with a bottom tab bar and five fully built sections:
+### Core
+- **Onboarding** — goal, experience, days/week & equipment → personalised targets
+- **Active workout logger** — set-by-set weight/reps entry, tick-off, **rest timer** (+15s/skip), live volume & duration, finish → saves to history + updates streak
+- **Nutrition logging** — searchable food database, **barcode-scan simulation**, budget-meal filter, per-meal logging, diary with remove, live calorie ring & macro bars
+- **Weight & habit logging** — quick-add water, steps, sleep, mindset; weight log with trend chart
+- **Progress** — interactive weight chart (4/12-week toggle), 1RM strength progression, habit-consistency rings, streaks
+- **Community** — working like/bookmark, **create a post** (with photo upload), join groups/challenges, RSVP to events
 
-| Section | Tabs | Highlights |
-| --- | --- | --- |
-| **Dashboard** | — | Greeting, week selector, today's plan, progress overview, habit rings, challenge cards |
-| **Workout** | Today · Program · Exercises · History | Live session tracking, checkable exercises, volume/duration/calorie stats, searchable exercise library |
-| **Nutrition** | Overview · Diary · Meals · Insights · Education | Calorie ring, macro bars, meal log, breakdown rings, insights & articles |
-| **Progress** | — | Quote hero, KPI cards, interactive weight-trend chart (Recharts), 1RM strength gains, habit consistency, streaks |
-| **Community** | Feed · Groups · Challenges · Events | Social feed, active challenges with rankings, groups, events |
+### Built for students
+- **Got 15 minutes?** express, no-equipment dorm workouts
+- **Exam Survival Protocol** — toggle a low-stress training mode for exam season
+- **Budget nutrition** — cheap, high-protein meal suggestions
+- **Friends leaderboard** by university, **badges/streaks** gamification
+- **Weekly recap** — shareable "your week in numbers"
+- **Progress photos** — private before/after timeline (camera/file upload)
 
-### Interactivity
-- Tab navigation between all five sections and within each section's sub-tabs
-- Selectable week-day strip on the Dashboard
-- Tap to complete/uncomplete exercises (progress bar updates live)
-- Live exercise search
-- Interactive weight-trend chart with range toggle and tooltips
-- Animated progress rings & bars, screen transitions
-
-## Design system
-- **Palette:** near-black surfaces (`ink`), lime-green brand accent (`#7ED957`), plus blue / purple / orange semantic accents
-- **Layout:** renders full-bleed on mobile and inside a phone frame on desktop for an authentic app preview
-- Reusable primitives in `src/components/ui.tsx` (`ProgressRing`, `ProgressBar`, `SegmentedTabs`, `SectionHeader`, `Chip`, `ScreenHeader`)
+### Platform
+- **Light & dark themes** (CSS-variable driven, flips every screen)
+- **Units toggle** — kg/lb & L/oz everywhere
+- **Notifications centre** with unread badges (+ optional browser notifications)
+- **Installable PWA** with offline service worker
+- **Reset / clear** demo data from Settings
 
 ## Getting started
 
 ```bash
-npm install      # install dependencies
-npm run dev      # start the dev server (http://localhost:5173)
-npm run build    # type-check + production build to /dist
-npm run preview  # preview the production build
+npm install
+npm run dev      # http://localhost:5173
+npm run build    # type-check + production build
+npm run preview  # preview the build
 ```
 
 ## Project structure
 
 ```
 src/
-├── App.tsx              # phone shell + screen routing
-├── components/
-│   ├── BottomNav.tsx    # 5-tab bottom navigation
-│   ├── StatusBar.tsx    # faux iOS status bar
-│   ├── Avatar.tsx       # initials avatars + stacks
-│   ├── Icon.tsx         # name → lucide icon mapper
-│   └── ui.tsx           # shared design-system primitives
-├── data/
-│   └── mockData.ts      # all domain/content data
-└── screens/
-    ├── Dashboard.tsx
-    ├── Workout.tsx
-    ├── Nutrition.tsx
-    ├── Progress.tsx
-    └── Community.tsx
+├── App.tsx                 # providers, onboarding gate, tab routing, overlays
+├── nav.tsx                 # overlay/navigation context
+├── lib/                    # rng, date, unit-format helpers
+├── store/
+│   ├── types.ts            # domain model
+│   ├── seed.ts             # deterministic 40-day history generator
+│   ├── store.tsx           # context + reducer + localStorage persistence
+│   └── selectors.ts        # live derived stats (streaks, 1RM, nutrition…)
+├── data/catalog.ts         # exercises, foods, program, quick workouts
+├── components/             # UI primitives, BottomNav, Sheet, Toast, Avatar…
+├── overlays/index.tsx      # all secondary flows (settings, logging, recap…)
+└── screens/                # Dashboard, Workout, Nutrition, Progress, Community,
+                            # Onboarding, ActiveWorkout
 ```
 
+## Notes for going production-live
+
+The store is fully isolated, so swapping `localStorage` for a real backend (auth + sync) means replacing the persistence layer in `store.tsx` and the seed with API calls. Barcode scanning, wearable sync and push are implemented as functional client-side simulations ready to wire to real services (a camera scanner library, Apple Health / Google Fit, and a push provider).
+
 ## Tech
-
-- [React 18](https://react.dev) + [TypeScript](https://www.typescriptlang.org)
-- [Vite 5](https://vite.dev) build tooling
-- [Tailwind CSS 3](https://tailwindcss.com) styling
-- [lucide-react](https://lucide.dev) icons
-- [Recharts](https://recharts.org) charts
-
-> Content is mock data wired through `src/data/mockData.ts` — swap it for a real API to make the app production-live.
+React 18 · TypeScript · Vite 5 · Tailwind CSS 3 · lucide-react · Recharts

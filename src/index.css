@@ -5,6 +5,31 @@
 @layer base {
   :root {
     color-scheme: dark;
+    /* foreground (text) + ink surface scale — flipped by .theme-light */
+    --fg: 255 255 255;
+    --ink-900: 10 10 11;
+    --ink-800: 18 18 20;
+    --ink-700: 26 27 30;
+    --ink-600: 34 35 38;
+    --ink-500: 43 45 49;
+    --track: rgba(255, 255, 255, 0.09);
+    --grid: rgba(148, 163, 184, 0.16);
+    --tick: rgba(148, 163, 184, 0.85);
+    --frame: #0a0a0b;
+  }
+
+  .theme-light {
+    color-scheme: light;
+    --fg: 17 18 22;
+    --ink-900: 244 245 248;
+    --ink-800: 255 255 255;
+    --ink-700: 238 240 244;
+    --ink-600: 226 229 234;
+    --ink-500: 214 218 224;
+    --track: rgba(15, 23, 42, 0.08);
+    --grid: rgba(100, 116, 139, 0.18);
+    --tick: rgba(71, 85, 105, 0.9);
+    --frame: #e9ebef;
   }
 
   html,
@@ -14,7 +39,7 @@
   }
 
   body {
-    @apply bg-black text-white antialiased;
+    @apply bg-ink-900 text-white antialiased;
     font-family: theme('fontFamily.sans');
     -webkit-tap-highlight-color: transparent;
     overscroll-behavior-y: none;

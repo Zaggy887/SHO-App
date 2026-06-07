@@ -1,4 +1,4 @@
-import { avatarColors } from '../data/mockData'
+const avatarColors = ['#7ED957', '#3B82F6', '#8B5CF6', '#F5A524', '#EC4899', '#06B6D4']
 
 function hash(str: string) {
   let h = 0

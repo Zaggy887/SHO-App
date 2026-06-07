@@ -4,6 +4,17 @@ export default {
   theme: {
     extend: {
       colors: {
+        // `white` and the `ink` surface scale are variable-driven so the
+        // light/dark theme toggle flips every screen automatically.
+        white: 'rgb(var(--fg) / <alpha-value>)',
+        ink: {
+          DEFAULT: 'rgb(var(--ink-900) / <alpha-value>)',
+          900: 'rgb(var(--ink-900) / <alpha-value>)',
+          800: 'rgb(var(--ink-800) / <alpha-value>)',
+          700: 'rgb(var(--ink-700) / <alpha-value>)',
+          600: 'rgb(var(--ink-600) / <alpha-value>)',
+          500: 'rgb(var(--ink-500) / <alpha-value>)',
+        },
         // Brand palette derived from the StrengthHub Online mockups
         brand: {
           DEFAULT: '#7ED957',
@@ -17,14 +28,6 @@ export default {
           700: '#377322',
           800: '#2e5b20',
           900: '#284d1f',
-        },
-        ink: {
-          DEFAULT: '#0A0A0B',
-          900: '#0A0A0B',
-          800: '#121214',
-          700: '#1A1B1E',
-          600: '#222326',
-          500: '#2B2D31',
         },
         accent: {
           blue: '#3B82F6',
