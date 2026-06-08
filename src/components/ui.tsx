@@ -88,7 +88,7 @@ export function SectionHeader({
   right?: ReactNode
 }) {
   return (
-    <div className="mb-3 flex items-center justify-between">
+    <div className="mb-3 mt-7 flex items-center justify-between">
       <h2 className="section-title">{title}</h2>
       {right
         ? right

@@ -106,7 +106,7 @@ function OverviewTab() {
         <ChevronRight size={18} className="text-white/30" />
       </button>
 
-      <div className="mt-6">
+      <div>
         <SectionHeader title="Today's Meals" right={<button onClick={() => nav.open('addFood')} className="flex items-center gap-1 text-sm font-semibold text-brand-400">Add <Plus size={15} /></button>} />
         <div className="space-y-2.5">
           {slots.map((slot) => {
@@ -138,7 +138,7 @@ function OverviewTab() {
         </div>
       </div>
 
-      <div className="mt-6">
+      <div>
         <SectionHeader title="Macros Breakdown" />
         <div className="grid grid-cols-3 gap-3 rounded-2xl border border-white/5 bg-ink-800 p-4">
           {breakdown.map((m) => (
