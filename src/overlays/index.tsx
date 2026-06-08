@@ -6,6 +6,7 @@ import {
 } from 'lucide-react'
 import { Sheet, EmptyState } from '../components/Sheet'
 import { Avatar } from '../components/Avatar'
+import { LogoMark } from '../components/Logo'
 import { Icon } from '../components/Icon'
 import { Chip } from '../components/ui'
 import { useStore } from '../store/store'
@@ -134,7 +135,10 @@ export function SettingsSheet({ open, onClose }: Props) {
         </button>
       </Group>
 
-      <p className="mt-6 text-center text-[12px] text-white/30">StrengthHub Online · v1.0</p>
+      <div className="mt-7 flex flex-col items-center gap-2">
+        <LogoMark size={34} />
+        <p className="text-[12px] text-white/30">StrengthHub Online · v1.0</p>
+      </div>
     </Sheet>
   )
 }

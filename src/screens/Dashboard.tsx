@@ -11,6 +11,7 @@ import {
 } from '../store/selectors'
 import { coachDaily } from '../store/coach'
 import { dailyTargets, examState } from '../store/training'
+import { Wordmark } from '../components/Logo'
 
 const WD = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
@@ -45,6 +46,7 @@ export default function Dashboard() {
     <div className="px-5 pt-2">
       <div className="mb-4 flex items-center justify-between">
         <button onClick={() => nav.open('profile')} className="grid h-10 w-10 place-items-center rounded-xl text-white/80 active:scale-90 active:bg-white/5"><Menu size={24} /></button>
+        <Wordmark size="sm" />
         <button onClick={() => nav.open('notifications')} className="relative grid h-10 w-10 place-items-center rounded-xl text-white/80 active:scale-90 active:bg-white/5">
           <Bell size={22} />
           {unread > 0 && <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-500 ring-2 ring-ink-900" />}

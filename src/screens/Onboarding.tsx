@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { ChevronRight, ChevronLeft, Dumbbell, Check } from 'lucide-react'
+import { ChevronRight, ChevronLeft, Check } from 'lucide-react'
 import { useDispatch } from '../store/store'
+import { LogoMark, Wordmark } from '../components/Logo'
 import type { Equipment, Experience, Goal } from '../store/types'
 import { todayKey } from '../lib/date'
 
@@ -82,16 +83,11 @@ export default function Onboarding() {
       <div className="flex-1">
         {step === 0 && (
           <div className="flex h-full flex-col items-center justify-center text-center">
-            <div className="mb-6 grid h-20 w-20 place-items-center rounded-3xl bg-brand-400 shadow-glow">
-              <Dumbbell size={40} className="text-black" />
-            </div>
-            <h1 className="text-3xl font-extrabold leading-tight">
-              Welcome to
-              <br />
-              <span className="text-brand-400">StrengthHub Online</span>
-            </h1>
-            <p className="mt-3 max-w-[280px] text-[15px] text-white/55">
-              Built for students. Train smarter, eat better, and stay consistent — even during exam season.
+            <LogoMark size={84} className="mb-7 shadow-glow" />
+            <p className="text-[13px] font-bold uppercase tracking-[0.18em] text-white/40">Welcome to</p>
+            <Wordmark size="lg" className="mt-2.5" />
+            <p className="mt-4 max-w-[280px] text-[15px] text-white/55">
+              Built for students. Train smarter, eat better, and stay consistent, even during exam season.
             </p>
           </div>
         )}
