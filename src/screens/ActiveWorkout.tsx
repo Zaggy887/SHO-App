@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Check, Plus, Flag, Info, ArrowUp, ArrowDown, ArrowRight } from 'lucide-react'
+import { Check, Plus, Flag, Info, ArrowUp, ArrowDown, ArrowRight, Clock } from 'lucide-react'
 import { Sheet } from '../components/Sheet'
 import { useStore } from '../store/store'
 import { useToast } from '../components/Toast'
@@ -20,6 +20,7 @@ export default function ActiveWorkout({ open, onClose }: { open: boolean; onClos
   const [elapsed, setElapsed] = useState(0)
   const [rest, setRest] = useState<number | null>(null)
   const [restTotal, setRestTotal] = useState(90)
+  const [restExIdx, setRestExIdx] = useState<number | null>(null)
   const startRef = useRef<number>(Date.now())
 
   useEffect(() => {
@@ -62,7 +63,7 @@ export default function ActiveWorkout({ open, onClose }: { open: boolean; onClos
       i !== exIdx ? ex : { ...ex, sets: ex.sets.map((s, j) => (j === setIdx ? { ...s, done: !s.done } : s)) },
     )
     patch({ ...session, exercises })
-    if (!wasDone) { setRestTotal(90); setRest(90) }
+    if (!wasDone) { setRestTotal(90); setRest(90); setRestExIdx(exIdx) }
   }
 
   function addSet(exIdx: number) {
@@ -98,6 +99,17 @@ export default function ActiveWorkout({ open, onClose }: { open: boolean; onClos
 
   const mins = Math.floor(elapsed / 60)
   const secs = String(elapsed % 60).padStart(2, '0')
+
+  const restEx = restExIdx !== null ? session.exercises[restExIdx] : null
+  const restInfo = restEx
+    ? {
+        name: restEx.name,
+        exIndex: restExIdx as number,
+        exTotal: session.exercises.length,
+        setsDone: restEx.sets.filter((s) => s.done).length,
+        setsTotal: restEx.sets.length,
+      }
+    : null
 
   const dirIcon = { up: <ArrowUp size={13} />, down: <ArrowDown size={13} />, hold: <ArrowRight size={13} /> }
 
@@ -183,23 +195,68 @@ export default function ActiveWorkout({ open, onClose }: { open: boolean; onClos
       <button onClick={finish} className="btn-primary mt-5 w-full"><Flag size={16} /> Finish Workout</button>
 
       {rest !== null && (
-        <div className="absolute inset-x-0 bottom-0 z-10 flex justify-center px-4 pb-4" style={{ animation: 'screen-in 0.22s ease-out' }}>
-          <div className="flex w-full max-w-sm flex-col items-center gap-5 rounded-3xl border border-white/8 bg-ink-800/95 p-6 shadow-card backdrop-blur-md">
-            <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-white/45">Rest</p>
-            <CountdownRing remaining={rest} total={restTotal} />
-            <div className="flex w-full items-center gap-2">
-              <button onClick={() => { setRest((r) => Math.max(0, (r ?? 30) - 15)) }} className="h-11 flex-1 rounded-full bg-white/8 text-sm font-bold text-white/80 active:scale-[0.98] active:bg-white/15">−15s</button>
-              <button onClick={() => setRest(null)} className="h-11 flex-[1.4] rounded-full bg-brand-400 text-sm font-bold text-black active:scale-[0.98]">Skip rest</button>
-              <button onClick={() => { setRestTotal((t) => t + 15); setRest((r) => (r ?? 0) + 15) }} className="h-11 flex-1 rounded-full bg-white/8 text-sm font-bold text-white/80 active:scale-[0.98] active:bg-white/15">+15s</button>
-            </div>
-          </div>
-        </div>
+        <RestScreen
+          remaining={rest}
+          total={restTotal}
+          elapsedLabel={`${mins}:${secs}`}
+          info={restInfo}
+          onSub={() => setRest((r) => Math.max(0, (r ?? 30) - 15))}
+          onSkip={() => setRest(null)}
+          onAdd={() => { setRestTotal((t) => t + 15); setRest((r) => (r ?? 0) + 15) }}
+        />
       )}
     </Sheet>
   )
 }
 
-function CountdownRing({ remaining, total, size = 168, stroke = 11 }: { remaining: number; total: number; size?: number; stroke?: number }) {
+type RestInfo = { name: string; exIndex: number; exTotal: number; setsDone: number; setsTotal: number }
+
+function RestScreen({ remaining, total, elapsedLabel, info, onSub, onSkip, onAdd }: {
+  remaining: number
+  total: number
+  elapsedLabel: string
+  info: RestInfo | null
+  onSub: () => void
+  onSkip: () => void
+  onAdd: () => void
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col bg-brand-400 text-black" style={{ animation: 'screen-in 0.25s ease-out' }}>
+      <div className="space-y-2.5 px-7 pt-12">
+        {info && <DotRow label="Exercise" total={info.exTotal} filled={info.exIndex + 1} />}
+        {info && <DotRow label="Set" total={info.setsTotal} filled={info.setsDone} />}
+      </div>
+
+      <div className="flex flex-1 items-center justify-center px-7">
+        <RestRing remaining={remaining} total={total} elapsedLabel={elapsedLabel} />
+      </div>
+
+      <div className="px-7 pb-12 text-center">
+        {info && <p className="text-lg font-extrabold uppercase tracking-[0.12em]">{info.name}</p>}
+        <div className="mt-5 flex items-center gap-3">
+          <button onClick={onSub} className="h-12 flex-1 rounded-full bg-black/10 text-sm font-bold active:scale-[0.98] active:bg-black/15">−15s</button>
+          <button onClick={onSkip} className="h-12 flex-[1.5] rounded-full bg-black text-sm font-extrabold text-brand-400 active:scale-[0.98]">Skip rest</button>
+          <button onClick={onAdd} className="h-12 flex-1 rounded-full bg-black/10 text-sm font-bold active:scale-[0.98] active:bg-black/15">+15s</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function DotRow({ label, total, filled }: { label: string; total: number; filled: number }) {
+  return (
+    <div className="flex items-center gap-3">
+      <span className="w-16 text-[12px] font-bold uppercase tracking-wide text-black/50">{label}</span>
+      <div className="flex flex-wrap items-center gap-1.5">
+        {Array.from({ length: total }).map((_, i) => (
+          <span key={i} className={`h-2 w-2 rounded-full ${i < filled ? 'bg-black' : 'bg-black/25'}`} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function RestRing({ remaining, total, elapsedLabel, size = 264, stroke = 12 }: { remaining: number; total: number; elapsedLabel: string; size?: number; stroke?: number }) {
   const radius = (size - stroke) / 2
   const circumference = 2 * Math.PI * radius
   const pct = total > 0 ? Math.max(0, Math.min(1, remaining / total)) : 0
@@ -207,13 +264,13 @@ function CountdownRing({ remaining, total, size = 168, stroke = 11 }: { remainin
   return (
     <div className="relative inline-flex items-center justify-center" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90">
-        <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="rgba(130,130,130,0.16)" strokeWidth={stroke} />
+        <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="rgba(0,0,0,0.12)" strokeWidth={stroke} />
         <circle
           cx={size / 2}
           cy={size / 2}
           r={radius}
           fill="none"
-          stroke="#7ED957"
+          stroke="rgba(0,0,0,0.88)"
           strokeWidth={stroke}
           strokeLinecap="round"
           strokeDasharray={circumference}
@@ -222,8 +279,9 @@ function CountdownRing({ remaining, total, size = 168, stroke = 11 }: { remainin
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center leading-none">
-        <span className="text-[44px] font-extrabold tabular-nums tracking-tight">{Math.floor(remaining / 60)}:{String(remaining % 60).padStart(2, '0')}</span>
-        <span className="mt-2 text-[11px] uppercase tracking-[0.14em] text-white/40">remaining</span>
+        <span className="text-[13px] font-extrabold uppercase tracking-[0.22em] text-black/45">Rest</span>
+        <span className="mt-2.5 text-6xl font-extrabold tabular-nums tracking-tight">{Math.floor(remaining / 60)}:{String(remaining % 60).padStart(2, '0')}</span>
+        <span className="mt-2.5 flex items-center gap-1.5 text-[13px] font-bold tabular-nums text-black/45"><Clock size={14} /> {elapsedLabel}</span>
       </div>
     </div>
   )
