@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Check, Plus, Minus, Timer, X, Flag, Info, ArrowUp, ArrowDown, ArrowRight } from 'lucide-react'
+import { Check, Plus, Flag, Info, ArrowUp, ArrowDown, ArrowRight } from 'lucide-react'
 import { Sheet } from '../components/Sheet'
 import { useStore } from '../store/store'
 import { useToast } from '../components/Toast'
@@ -19,6 +19,7 @@ export default function ActiveWorkout({ open, onClose }: { open: boolean; onClos
 
   const [elapsed, setElapsed] = useState(0)
   const [rest, setRest] = useState<number | null>(null)
+  const [restTotal, setRestTotal] = useState(90)
   const startRef = useRef<number>(Date.now())
 
   useEffect(() => {
@@ -61,7 +62,7 @@ export default function ActiveWorkout({ open, onClose }: { open: boolean; onClos
       i !== exIdx ? ex : { ...ex, sets: ex.sets.map((s, j) => (j === setIdx ? { ...s, done: !s.done } : s)) },
     )
     patch({ ...session, exercises })
-    if (!wasDone) setRest(90)
+    if (!wasDone) { setRestTotal(90); setRest(90) }
   }
 
   function addSet(exIdx: number) {
@@ -182,17 +183,48 @@ export default function ActiveWorkout({ open, onClose }: { open: boolean; onClos
       <button onClick={finish} className="btn-primary mt-5 w-full"><Flag size={16} /> Finish Workout</button>
 
       {rest !== null && (
-        <div className="absolute inset-x-0 bottom-0 z-10 m-3 flex items-center gap-3 rounded-2xl border border-brand-400/30 bg-ink-700/95 p-3.5 shadow-card backdrop-blur" style={{ animation: 'screen-in 0.2s ease-out' }}>
-          <div className="grid h-11 w-11 place-items-center rounded-xl bg-brand-400/15"><Timer size={22} className="text-brand-400" /></div>
-          <div className="flex-1">
-            <p className="text-[12px] text-white/50">Rest</p>
-            <p className="text-2xl font-extrabold tabular-nums leading-none">{Math.floor(rest / 60)}:{String(rest % 60).padStart(2, '0')}</p>
+        <div className="absolute inset-x-0 bottom-0 z-10 flex justify-center px-4 pb-4" style={{ animation: 'screen-in 0.22s ease-out' }}>
+          <div className="flex w-full max-w-sm flex-col items-center gap-5 rounded-3xl border border-white/8 bg-ink-800/95 p-6 shadow-card backdrop-blur-md">
+            <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-white/45">Rest</p>
+            <CountdownRing remaining={rest} total={restTotal} />
+            <div className="flex w-full items-center gap-2">
+              <button onClick={() => { setRest((r) => Math.max(0, (r ?? 30) - 15)) }} className="h-11 flex-1 rounded-full bg-white/8 text-sm font-bold text-white/80 active:scale-[0.98] active:bg-white/15">−15s</button>
+              <button onClick={() => setRest(null)} className="h-11 flex-[1.4] rounded-full bg-brand-400 text-sm font-bold text-black active:scale-[0.98]">Skip rest</button>
+              <button onClick={() => { setRestTotal((t) => t + 15); setRest((r) => (r ?? 0) + 15) }} className="h-11 flex-1 rounded-full bg-white/8 text-sm font-bold text-white/80 active:scale-[0.98] active:bg-white/15">+15s</button>
+            </div>
           </div>
-          <button onClick={() => setRest((r) => (r ?? 0) + 15)} className="rounded-full bg-white/8 px-3 py-2 text-xs font-bold active:bg-white/15">+15s</button>
-          <button onClick={() => setRest((r) => Math.max(0, (r ?? 30) - 15))} className="grid h-9 w-9 place-items-center rounded-full bg-white/8 active:bg-white/15"><Minus size={16} /></button>
-          <button onClick={() => setRest(null)} className="grid h-9 w-9 place-items-center rounded-full bg-white/8 active:bg-white/15"><X size={16} /></button>
         </div>
       )}
     </Sheet>
+  )
+}
+
+function CountdownRing({ remaining, total, size = 168, stroke = 11 }: { remaining: number; total: number; size?: number; stroke?: number }) {
+  const radius = (size - stroke) / 2
+  const circumference = 2 * Math.PI * radius
+  const pct = total > 0 ? Math.max(0, Math.min(1, remaining / total)) : 0
+  const offset = circumference - pct * circumference
+  return (
+    <div className="relative inline-flex items-center justify-center" style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="-rotate-90">
+        <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="rgba(130,130,130,0.16)" strokeWidth={stroke} />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke="#7ED957"
+          strokeWidth={stroke}
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          style={{ transition: 'stroke-dashoffset 1s linear' }}
+        />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center leading-none">
+        <span className="text-[44px] font-extrabold tabular-nums tracking-tight">{Math.floor(remaining / 60)}:{String(remaining % 60).padStart(2, '0')}</span>
+        <span className="mt-2 text-[11px] uppercase tracking-[0.14em] text-white/40">remaining</span>
+      </div>
+    </div>
   )
 }
