@@ -1,6 +1,6 @@
 // StrengthHub Online — minimal offline service worker.
 // Runtime "stale-while-revalidate" cache for the app shell & assets.
-const CACHE = 'sho-cache-v1'
+const CACHE = 'sho-cache-v2'
 
 self.addEventListener('install', (e) => {
   self.skipWaiting()
