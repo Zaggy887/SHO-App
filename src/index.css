@@ -108,6 +108,18 @@
   animation: ring-fill 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+/* Pop the "GO" end-of-rest cue. Neutralised by the reduced-motion block below. */
+@keyframes go-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 /* Respect users who prefer less motion. */
 @media (prefers-reduced-motion: reduce) {
   *,
