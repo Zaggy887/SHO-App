@@ -150,7 +150,7 @@ export default function Dashboard() {
 
       {/* Today's habits — your data at a glance */}
       <Reveal delay={120}>
-        <Section title="Today's habits" action="Log" onAction={() => nav.open('logHabit')} tight />
+        <Section title="Today's progress" action="Log" onAction={() => nav.open('logHabit')} tight />
         {t.adjusted && <p className="-mt-1 mb-3 text-[12px] text-accent-purple">Targets eased for exam season</p>}
         <div className="card p-4">
           <div className="mb-4 flex items-center gap-2 text-[13px]">
