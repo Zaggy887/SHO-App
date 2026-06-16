@@ -99,6 +99,21 @@
   animation: screen-in 0.28s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+/* Staggered section reveal on the dashboard. */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-rise {
+  animation: rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
 @keyframes ring-fill {
   from {
     stroke-dashoffset: var(--ring-start, 999);
@@ -126,6 +141,7 @@
   *::before,
   *::after {
     animation-duration: 0.001ms !important;
+    animation-delay: 0ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
