@@ -24,6 +24,7 @@ export type Action =
   | { type: 'PATCH_TODAY_HABIT'; patch: Partial<{ steps: number; sleepH: number; mindsetMin: number; waterL: number }> }
   | { type: 'ADD_MEAL'; meal: Omit<LoggedMeal, 'id' | 'dateKey'> }
   | { type: 'REMOVE_MEAL'; id: string }
+  | { type: 'SAVE_FOOD_REVIEW'; text: string; score: number }
   | { type: 'SAVE_SESSION'; session: WorkoutSession }
   | { type: 'TOGGLE_EXERCISE_DONE'; defId: string }
   | { type: 'COMPLETE_WORKOUT'; id: string }
@@ -92,6 +93,14 @@ function reducer(state: AppState, action: Action): AppState {
 
     case 'REMOVE_MEAL':
       return { ...state, meals: state.meals.filter((m) => m.id !== action.id) }
+
+    case 'SAVE_FOOD_REVIEW': {
+      const others = state.foodReviews.filter((r) => r.dateKey !== todayKey)
+      const review = action.text.trim() ? [{ dateKey: todayKey, text: action.text, score: action.score }] : []
+      // Reflect the day's food quality in today's habit ring too.
+      const habits = state.habits.map((h) => (h.dateKey === todayKey ? { ...h, nutritionScore: action.score } : h))
+      return { ...state, foodReviews: [...others, ...review], habits }
+    }
 
     case 'SAVE_SESSION': {
       const exists = state.sessions.some((s) => s.id === action.session.id)

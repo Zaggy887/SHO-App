@@ -87,6 +87,14 @@ export interface LoggedMeal {
   f: number
 }
 
+/** A free-text "what I ate today" entry plus the coach's computed quality score. */
+export interface FoodReview {
+  dateKey: string
+  text: string
+  /** 0..10 quality score from the on-device nutrition coach. */
+  score: number
+}
+
 export interface ExerciseDef {
   id: string
   name: string
@@ -260,6 +268,10 @@ export interface BudgetMeal {
   steps: string[]
   cookOnce?: string
   tags: string[]
+  /** Which goals this meal suits best, for filtering. */
+  goals?: Goal[]
+  /** One-line "why it tastes good / why it fits" note. */
+  flavour?: string
 }
 
 /** A lesson in the New to the Gym first-90-days track. */
@@ -305,6 +317,7 @@ export interface AppState {
   weights: WeightEntry[]
   habits: HabitDay[]
   meals: LoggedMeal[]
+  foodReviews: FoodReview[]
   foods: FoodItem[]
   sessions: WorkoutSession[]
   program: ProgramDay[]

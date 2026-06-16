@@ -31,7 +31,7 @@ import type {
   WorkoutSession,
 } from './types'
 
-export const SCHEMA_VERSION = 2
+export const SCHEMA_VERSION = 3
 const DAYS = 40 // 0..38 completed history, 39 = today (in progress)
 
 /* round to nearest 2.5 (plate increments) */
@@ -334,6 +334,7 @@ export function buildSeed(): AppState {
     weights,
     habits,
     meals,
+    foodReviews: [],
     foods: FOODS,
     sessions,
     program: PROGRAM,
@@ -361,6 +362,7 @@ export function emptyState(): AppState {
     weights: [],
     habits: [],
     meals: [],
+    foodReviews: [],
     sessions: [],
     photos: [],
     posts: s.posts.filter((p) => p.authorId !== 'you'),

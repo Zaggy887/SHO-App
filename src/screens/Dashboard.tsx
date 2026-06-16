@@ -8,7 +8,7 @@ import { currentWeekKeys, todayKey, longDate, TODAY } from '../lib/date'
 import { fmtFluid, fmtWeightNum, weightUnit, pct } from '../lib/format'
 import {
   todayHabit, todaySession, weightStats, workoutsThisWeek, workoutsInRange,
-  strengthProgress, unreadNotifs, streakStats, nutritionForDay,
+  strengthProgress, unreadNotifs, streakStats, foodReviewForDay,
 } from '../store/selectors'
 import { coachDaily } from '../store/coach'
 import { dailyTargets, examState } from '../store/training'
@@ -47,7 +47,7 @@ export default function Dashboard() {
   const t = dailyTargets(state)
   const exam = examState(state)
   const streak = streakStats(state)
-  const nut = nutritionForDay(state)
+  const foodReview = foodReviewForDay(state)
   const weightLoggedToday = state.weights.some((x) => x.dateKey === todayKey)
 
   const greeting = greetingFor(TODAY.getHours())
@@ -88,9 +88,9 @@ export default function Dashboard() {
   })
   tasks.push({
     id: 'meals', icon: 'utensils',
-    label: 'Log your meals',
-    hint: nut.meals.length ? `${nut.meals.length} logged · ${nut.kcal} kcal` : `Target ${t.calorie} kcal`,
-    done: nut.meals.length >= 3,
+    label: 'Review your food',
+    hint: foodReview ? `Reviewed · ${foodReview.score}/10` : 'Get coach feedback on today',
+    done: !!foodReview,
     onClick: () => nav.goTab('nutrition'),
   })
   tasks.push({

@@ -117,6 +117,10 @@ export function nutritionForDay(s: AppState, key: string = todayKey) {
   return { kcal, p, c, f, meals: dayMeals, remaining: Math.max(0, s.profile.calorieTarget - kcal) }
 }
 
+export function foodReviewForDay(s: AppState, key: string = todayKey) {
+  return s.foodReviews.find((r) => r.dateKey === key) ?? null
+}
+
 /* -------------------------- Strength progress -------------------------- */
 /** Epley 1RM estimate from a session's best set of an exercise. */
 function best1RM(session: WorkoutSession, defId: string): number | null {
