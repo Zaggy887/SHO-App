@@ -1,9 +1,11 @@
 import { createContext, useContext, useEffect, useReducer, type ReactNode } from 'react'
 import { todayKey } from '../lib/date'
 import { buildSeed, emptyState, SCHEMA_VERSION } from './seed'
+import { coachReply } from '../lib/coachChat'
 import type {
   AppNotification,
   AppState,
+  ChatMessage,
   LoggedExercise,
   LoggedMeal,
   Post,
@@ -25,6 +27,8 @@ export type Action =
   | { type: 'ADD_MEAL'; meal: Omit<LoggedMeal, 'id' | 'dateKey'> }
   | { type: 'REMOVE_MEAL'; id: string }
   | { type: 'SAVE_FOOD_REVIEW'; text: string; score: number }
+  | { type: 'SEND_CHAT'; text: string }
+  | { type: 'MARK_CHAT_READ' }
   | { type: 'SAVE_SESSION'; session: WorkoutSession }
   | { type: 'TOGGLE_EXERCISE_DONE'; defId: string }
   | { type: 'COMPLETE_WORKOUT'; id: string }
@@ -101,6 +105,18 @@ function reducer(state: AppState, action: Action): AppState {
       const habits = state.habits.map((h) => (h.dateKey === todayKey ? { ...h, nutritionScore: action.score } : h))
       return { ...state, foodReviews: [...others, ...review], habits }
     }
+
+    case 'SEND_CHAT': {
+      const text = action.text.trim()
+      if (!text) return state
+      const id = Date.now()
+      const userMsg: ChatMessage = { id: `c-${id}`, role: 'user', text, dateKey: todayKey, time: nowTime(), read: true }
+      const coachMsg: ChatMessage = { id: `c-${id + 1}`, role: 'coach', text: coachReply(state, text), dateKey: todayKey, time: nowTime(), read: false }
+      return { ...state, chat: [...state.chat, userMsg, coachMsg] }
+    }
+
+    case 'MARK_CHAT_READ':
+      return { ...state, chat: state.chat.map((m) => (m.read ? m : { ...m, read: true })) }
 
     case 'SAVE_SESSION': {
       const exists = state.sessions.some((s) => s.id === action.session.id)

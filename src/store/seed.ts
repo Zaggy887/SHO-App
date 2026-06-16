@@ -31,7 +31,7 @@ import type {
   WorkoutSession,
 } from './types'
 
-export const SCHEMA_VERSION = 3
+export const SCHEMA_VERSION = 4
 const DAYS = 40 // 0..38 completed history, 39 = today (in progress)
 
 /* round to nearest 2.5 (plate increments) */
@@ -185,6 +185,7 @@ export function buildSeed(): AppState {
     examMode: false,
     budgetMode: true,
     newToGym: false,
+    premium: false,
     createdAtKey: dayKey(DAYS - 1),
   }
 
@@ -335,6 +336,16 @@ export function buildSeed(): AppState {
     habits,
     meals,
     foodReviews: [],
+    chat: [
+      {
+        id: 'chat-welcome',
+        role: 'coach',
+        text: `Hi ${profile.name}, I'm your coach 👋 Message me anytime — about how a session felt, an exercise you'd like to change, a niggle, or staying on track. What's on your mind?`,
+        dateKey: todayKey,
+        time: '9:00 AM',
+        read: true,
+      },
+    ],
     foods: FOODS,
     sessions,
     program: PROGRAM,

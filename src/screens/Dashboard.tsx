@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { Menu, Bell, Clock, Play, GraduationCap, ChevronRight, Sparkles, Leaf, Check, Flame } from 'lucide-react'
+import { Menu, MessageCircle, Clock, Play, GraduationCap, ChevronRight, Sparkles, Leaf, Check, Flame } from 'lucide-react'
 import { Icon } from '../components/Icon'
 import { ProgressRing } from '../components/ui'
 import { useStore } from '../store/store'
@@ -8,7 +8,7 @@ import { currentWeekKeys, todayKey, longDate, TODAY } from '../lib/date'
 import { fmtFluid, fmtWeightNum, weightUnit, pct } from '../lib/format'
 import {
   todayHabit, todaySession, weightStats, workoutsThisWeek, workoutsInRange,
-  strengthProgress, unreadNotifs, streakStats, foodReviewForDay,
+  strengthProgress, unreadChat, streakStats, foodReviewForDay,
 } from '../store/selectors'
 import { coachDaily } from '../store/coach'
 import { dailyTargets, examState } from '../store/training'
@@ -42,7 +42,7 @@ export default function Dashboard() {
   const lastWeek = workoutsInRange(state, 14) - thisWeek
   const sp = strengthProgress(state)
   const strengthAvg = sp.length ? Math.round(sp.reduce((a, s) => a + s.pct, 0) / sp.length) : 0
-  const unread = unreadNotifs(state)
+  const unread = unreadChat(state)
   const coach = coachDaily(state)
   const t = dailyTargets(state)
   const exam = examState(state)
@@ -108,9 +108,9 @@ export default function Dashboard() {
       <div className="mb-4 flex items-center justify-between">
         <button onClick={() => nav.open('profile')} className="grid h-10 w-10 place-items-center rounded-xl text-white/80 active:scale-90 active:bg-white/5"><Menu size={24} /></button>
         <Wordmark size="sm" />
-        <button onClick={() => nav.open('notifications')} className="relative grid h-10 w-10 place-items-center rounded-xl text-white/80 active:scale-90 active:bg-white/5">
-          <Bell size={22} />
-          {unread > 0 && <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-500 ring-2 ring-ink-900" />}
+        <button onClick={() => nav.open('coachChat')} aria-label="Message your coach" className="relative grid h-10 w-10 place-items-center rounded-xl text-white/80 active:scale-90 active:bg-white/5">
+          <MessageCircle size={23} />
+          {unread > 0 && <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-brand-400 ring-2 ring-ink-900" />}
         </button>
       </div>
 

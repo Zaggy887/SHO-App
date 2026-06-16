@@ -183,6 +183,10 @@ export function unreadNotifs(s: AppState) {
   return s.notifications.filter((n) => !n.read).length
 }
 
+export function unreadChat(s: AppState) {
+  return s.chat.filter((m) => m.role === 'coach' && !m.read).length
+}
+
 export function leaderboardSorted(s: AppState) {
   return [...s.leaderboard].sort((a, b) => b.points - a.points)
 }

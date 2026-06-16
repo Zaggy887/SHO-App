@@ -16,6 +16,7 @@ export type Overlay =
   | 'badges'
   | 'examMode'
   | 'coach'
+  | 'coachChat'
   | 'beginner'
   | 'budgetEats'
   | 'exerciseDetail'

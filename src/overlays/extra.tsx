@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   Sparkles, Check, ChevronRight, ChevronDown, Wallet, Trophy, Flame,
   GraduationCap, Dumbbell, Lightbulb, ShieldQuestion, Share2, Plus, MapPin,
+  Send, Video, Lock, Crown, X, Clock,
 } from 'lucide-react'
 import { Sheet } from '../components/Sheet'
 import { Avatar } from '../components/Avatar'
@@ -16,6 +17,7 @@ import {
 } from '../data/catalog'
 import { nextSetRecommendation } from '../store/training'
 import { coachThreadView } from '../store/coach'
+import { CHAT_SUGGESTIONS } from '../lib/coachChat'
 import { todaySession } from '../store/selectors'
 import { relativeLabel } from '../lib/date'
 import type { CoachKind, MealName } from '../store/types'
@@ -362,5 +364,145 @@ export function PRCelebrationSheet({ open, onClose, params }: Props) {
       <button onClick={share} className="btn-primary w-full"><Share2 size={16} /> Share with your cohort</button>
       <button onClick={onClose} className="mt-2 w-full rounded-full bg-ink-700 py-3 text-sm font-semibold text-white/70 active:scale-[0.98]">Keep it to myself</button>
     </Sheet>
+  )
+}
+
+/* ===================== Coach messenger (1:1 chat) ================== */
+const BOOKING_SLOTS = ['Tomorrow · 6:00 PM', 'Thursday · 7:30 PM', 'Saturday · 10:00 AM']
+
+export function CoachChatSheet({ open, onClose }: Props) {
+  const { state, dispatch } = useStore()
+  const toast = useToast()
+  const [text, setText] = useState('')
+  const [showBook, setShowBook] = useState(false)
+  const [booked, setBooked] = useState<string | null>(null)
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const premium = state.profile.premium
+  const messages = state.chat
+  const showSuggestions = messages.filter((m) => m.role === 'user').length === 0
+
+  // Mark coach messages read whenever the thread is open and grows.
+  useEffect(() => {
+    if (open) dispatch({ type: 'MARK_CHAT_READ' })
+  }, [open, messages.length, dispatch])
+
+  // Keep the latest message in view.
+  useEffect(() => {
+    if (open) scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
+  }, [open, messages.length, showBook, booked])
+
+  if (!open) return null
+
+  function send(t?: string) {
+    const msg = (t ?? text).trim()
+    if (!msg) return
+    dispatch({ type: 'SEND_CHAT', text: msg })
+    setText('')
+  }
+
+  function unlock() {
+    dispatch({ type: 'SET_PROFILE', patch: { premium: true } })
+    toast('Premium unlocked — enjoy your calls')
+  }
+
+  function pickSlot(slot: string) {
+    setBooked(slot)
+    toast('Video call booked')
+  }
+
+  return (
+    <div className="absolute inset-0 z-50 flex flex-col bg-ink-900 text-white" style={{ paddingTop: 'env(safe-area-inset-top)', animation: 'screen-in 0.28s cubic-bezier(0.22,1,0.36,1)' }}>
+      {/* Header */}
+      <div className="flex items-center gap-3 border-b border-white/8 px-4 py-3">
+        <button onClick={onClose} className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/8 text-white/70 active:bg-white/15"><X size={18} /></button>
+        <div className="relative">
+          <div className="grid h-10 w-10 place-items-center rounded-full bg-brand-400 text-black"><Sparkles size={20} /></div>
+          <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-brand-400 ring-2 ring-ink-900" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="font-bold leading-tight">Coach</p>
+          <p className="text-[12px] text-brand-400">Online · usually replies instantly</p>
+        </div>
+        <button onClick={() => setShowBook((v) => !v)} className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand-400/15 text-brand-400 active:bg-brand-400/25">
+          <Video size={18} />
+        </button>
+      </div>
+
+      {/* Book-a-call panel */}
+      {showBook && (
+        <div className="border-b border-white/8 bg-ink-800 px-4 py-3.5">
+          {booked ? (
+            <div className="flex items-start gap-2.5">
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand-400 text-black"><Check size={18} strokeWidth={3} /></span>
+              <div>
+                <p className="font-bold leading-tight">Call booked</p>
+                <p className="text-[13px] text-white/60">{booked}. I'll send a video link to your email beforehand.</p>
+              </div>
+            </div>
+          ) : premium ? (
+            <>
+              <div className="mb-2.5 flex items-center gap-2">
+                <Video size={16} className="text-brand-400" />
+                <p className="text-sm font-bold">Book a 1:1 video call</p>
+                <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-brand-400/15 px-2 py-0.5 text-[10px] font-bold text-brand-400"><Crown size={11} /> Premium</span>
+              </div>
+              <div className="space-y-2">
+                {BOOKING_SLOTS.map((slot) => (
+                  <button key={slot} onClick={() => pickSlot(slot)} className="flex w-full items-center gap-2.5 rounded-xl border border-white/8 bg-ink-700 p-3 text-left text-[14px] font-semibold active:bg-ink-600">
+                    <Clock size={15} className="text-brand-400" /> {slot} <ChevronRight size={16} className="ml-auto text-white/30" />
+                  </button>
+                ))}
+              </div>
+            </>
+          ) : (
+            <div className="rounded-xl border border-brand-400/25 bg-brand-400/[0.06] p-4">
+              <div className="flex items-center gap-2">
+                <span className="grid h-8 w-8 place-items-center rounded-full bg-brand-400 text-black"><Crown size={16} /></span>
+                <p className="font-bold">Video calls are Premium</p>
+                <Lock size={15} className="ml-auto text-white/40" />
+              </div>
+              <p className="mt-2 text-[13px] leading-snug text-white/65">Go Premium to book live 1:1 video calls with your coach for form checks, plan reviews and accountability. Text coaching stays free, always.</p>
+              <button onClick={unlock} className="btn-primary mt-3 w-full py-2.5 text-sm"><Crown size={15} /> Unlock Premium</button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Messages */}
+      <div ref={scrollRef} className="no-scrollbar flex-1 space-y-3 overflow-y-auto px-4 py-4">
+        {messages.map((m) => (
+          <div key={m.id} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+            <div className={`max-w-[82%] rounded-2xl px-3.5 py-2.5 text-[14px] leading-snug ${m.role === 'user' ? 'rounded-br-md bg-brand-400 text-black' : 'rounded-bl-md border border-white/8 bg-ink-800 text-white/85'}`}>
+              {m.text}
+              <span className={`mt-1 block text-[10px] ${m.role === 'user' ? 'text-black/50' : 'text-white/35'}`}>{m.time}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Suggestions */}
+      {showSuggestions && (
+        <div className="no-scrollbar flex gap-2 overflow-x-auto px-4 pb-2">
+          {CHAT_SUGGESTIONS.map((s) => (
+            <button key={s} onClick={() => send(s)} className="shrink-0 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[12px] font-medium text-white/70 active:bg-white/[0.1]">{s}</button>
+          ))}
+        </div>
+      )}
+
+      {/* Input */}
+      <div className="flex items-end gap-2 border-t border-white/8 px-3 py-3" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 0.75rem)' }}>
+        <textarea
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }}
+          rows={1}
+          placeholder="Message your coach…"
+          className="max-h-28 min-h-[44px] flex-1 resize-none rounded-2xl border border-white/8 bg-ink-800 px-4 py-3 text-[15px] placeholder:text-white/30 focus:border-brand-400/60 focus:outline-none"
+        />
+        <button onClick={() => send()} disabled={!text.trim()} className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-brand-400 text-black transition active:scale-90 disabled:opacity-40">
+          <Send size={18} />
+        </button>
+      </div>
+    </div>
   )
 }

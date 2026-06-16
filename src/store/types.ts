@@ -35,7 +35,19 @@ export interface Profile {
   budgetMode: boolean
   /** opted into the New to the Gym first-90-days track */
   newToGym: boolean
+  /** premium unlocks 1:1 video calls with the coach */
+  premium: boolean
   createdAtKey: string
+}
+
+/** A single message in the 1:1 coach messenger. */
+export interface ChatMessage {
+  id: string
+  role: 'user' | 'coach'
+  text: string
+  dateKey: string
+  time: string
+  read: boolean
 }
 
 export interface Settings {
@@ -318,6 +330,7 @@ export interface AppState {
   habits: HabitDay[]
   meals: LoggedMeal[]
   foodReviews: FoodReview[]
+  chat: ChatMessage[]
   foods: FoodItem[]
   sessions: WorkoutSession[]
   program: ProgramDay[]

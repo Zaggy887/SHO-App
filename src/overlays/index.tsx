@@ -2,7 +2,7 @@ import { useMemo, useRef, useState } from 'react'
 import {
   Bell, Moon, Sun, GraduationCap, Wallet, RotateCcw, Trash2, Camera, Trophy,
   Flame, Search, ScanLine, Plus, Check, Share2, ChevronRight, User, Sparkles, Dumbbell,
-  Droplet, Footprints, BedDouble, Leaf, Clock, Play, Award, BellRing,
+  Droplet, Footprints, BedDouble, Leaf, Clock, Play, Award, BellRing, Crown,
 } from 'lucide-react'
 import { Sheet, EmptyState } from '../components/Sheet'
 import { Avatar } from '../components/Avatar'
@@ -116,6 +116,9 @@ export function SettingsSheet({ open, onClose }: Props) {
         <Row icon={<Wallet size={18} className="text-brand-400" />} title="Budget nutrition" sub="Prioritise cheap, high-protein meals">
           <Toggle on={state.profile.budgetMode} onClick={() => dispatch({ type: 'SET_PROFILE', patch: { budgetMode: !state.profile.budgetMode } })} />
         </Row>
+        <Row icon={<Crown size={18} className="text-brand-400" />} title="Premium" sub="1:1 video calls with your coach">
+          <Toggle on={state.profile.premium} onClick={() => dispatch({ type: 'SET_PROFILE', patch: { premium: !state.profile.premium } })} />
+        </Row>
       </Group>
 
       <Group label="Data">
@@ -175,6 +178,7 @@ export function ProfileSheet({ open, onClose }: Props) {
 
       <div className="mt-4 space-y-2.5">
         <LinkRow icon={<Sparkles size={18} className="text-brand-400" />} title="Your coach" sub="Daily check ins and milestones" onClick={() => nav.open('coach')} />
+        <LinkRow icon={<Bell size={18} className="text-brand-400" />} title="Notifications" sub="Reminders, streaks & social" onClick={() => nav.open('notifications')} />
         <LinkRow icon={<Award size={18} className="text-brand-400" />} title="Badges" sub={`${earned} earned`} onClick={() => nav.open('badges')} />
         <LinkRow icon={<Camera size={18} className="text-brand-400" />} title="Progress photos" sub={`${state.photos.length} photos`} onClick={() => nav.open('photos')} />
         <LinkRow icon={<Trophy size={18} className="text-brand-400" />} title="Campus leaderboard" sub={state.profile.university} onClick={() => nav.open('leaderboard')} />
