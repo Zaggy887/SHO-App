@@ -10,7 +10,7 @@ import { useToast } from '../components/Toast'
 import { useNav } from '../nav'
 import { todaySession, sessionProgress } from '../store/selectors'
 import { nextSetRecommendation, examState, examTrim } from '../store/training'
-import { prForSession } from '../store/coach'
+import { prForSession, type PR } from '../store/coach'
 import { exerciseDetail, incrementFor } from '../data/catalog'
 import { fmtWeightNum, weightUnit, fmtVolume, fmtWeight, toKg } from '../lib/format'
 import type { Units, WorkoutSession } from '../store/types'
@@ -46,6 +46,32 @@ function beep() {
     osc.start()
     osc.stop(ctx.currentTime + 0.16)
     osc.onended = () => ctx.close()
+  } catch {
+    /* Audio not available — silently ignore. */
+  }
+}
+
+/** A short rising two-note chime for the workout-complete moment. */
+function successChime() {
+  try {
+    const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
+    if (!Ctx) return
+    const ctx = new Ctx()
+    ;[660, 880, 1175].forEach((freq, i) => {
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+      const t0 = ctx.currentTime + i * 0.12
+      osc.type = 'sine'
+      osc.frequency.value = freq
+      gain.gain.setValueAtTime(0.0001, t0)
+      gain.gain.exponentialRampToValueAtTime(0.2, t0 + 0.01)
+      gain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.22)
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+      osc.start(t0)
+      osc.stop(t0 + 0.24)
+    })
+    setTimeout(() => ctx.close(), 700)
   } catch {
     /* Audio not available — silently ignore. */
   }
@@ -93,13 +119,26 @@ export default function ActiveWorkout({ open, onClose }: { open: boolean; onClos
   const [restTotal, setRestTotal] = useState(120)
   const [total, setTotal] = useState(0)
   const [howTo, setHowTo] = useState<Set<string>>(new Set())
+  const [finishing, setFinishing] = useState(false)
+  const [finishPR, setFinishPR] = useState<PR | null>(null)
+  const finishStatsRef = useRef<{ time: number; volume: number; sets: number } | null>(null)
+  const finishHandled = useRef(false)
   const startRef = useRef<number>(Date.now())
 
   // Fresh guided state every time the sheet opens.
   useEffect(() => {
     if (!open) return
     setMode('overview'); setCursor(null); setRest(null); setWorkElapsed(0); setTotal(0)
+    setFinishing(false); setFinishPR(null)
   }, [open])
+
+  // After the completion tick, hand off to a PR moment or close.
+  useEffect(() => {
+    if (!finishing) return
+    const t = setTimeout(() => afterFinish(), 2800)
+    return () => clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [finishing])
 
   // Overall session clock — runs the whole time the sheet is open.
   useEffect(() => {
@@ -231,11 +270,22 @@ export default function ActiveWorkout({ open, onClose }: { open: boolean; onClos
   }
 
   function finish() {
-    if (!session) return
-    const pr = prForSession(state, session)
+    if (!session || finishing) return
+    finishStatsRef.current = { time: total, volume: session.volumeKg, sets: sessionProgress(session).done }
+    setFinishPR(prForSession(state, session))
     dispatch({ type: 'COMPLETE_WORKOUT', id: session.id })
-    if (pr) {
-      nav.open('prCelebration', { lift: pr.name, weight: fmtWeight(pr.weightKg, units, units === 'imperial' ? 0 : 1), reps: pr.reps })
+    if (!prefersReducedMotion()) navigator.vibrate?.([0, 55, 45, 120])
+    successChime()
+    finishHandled.current = false
+    setFinishing(true)
+  }
+
+  function afterFinish() {
+    if (finishHandled.current) return
+    finishHandled.current = true
+    setFinishing(false)
+    if (finishPR) {
+      nav.open('prCelebration', { lift: finishPR.name, weight: fmtWeight(finishPR.weightKg, units, units === 'imperial' ? 0 : 1), reps: finishPR.reps })
     } else {
       toast('Workout logged. Streak updated.')
       onClose()
@@ -248,6 +298,10 @@ export default function ActiveWorkout({ open, onClose }: { open: boolean; onClos
   const allDone = prog.total > 0 && prog.done === prog.total
 
   /* ============================ Guided focus screens ============================ */
+  if (finishing) {
+    return <FinishScreen name={session.name} stats={finishStatsRef.current} units={units} onDone={afterFinish} />
+  }
+
   if (mode === 'work' && cursor && cursorEx && cursorSet) {
     return (
       <WorkScreen
@@ -577,6 +631,56 @@ function WorkScreen({
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+/* ============================ Finish screen ============================ */
+function FinishScreen({ name, stats, units, onDone }: {
+  name: string
+  stats: { time: number; volume: number; sets: number } | null
+  units: Units
+  onDone: () => void
+}) {
+  return (
+    <div className="fixed inset-0 z-[60] flex flex-col items-center justify-center px-8 text-center text-white" style={{ backgroundColor: '#0a0a0b', animation: 'screen-in 0.3s ease-out' }}>
+      <div className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(circle at 50% 38%, rgba(126,217,87,0.16), transparent 60%)' }} />
+
+      {/* The satisfying green tick */}
+      <div className="relative grid place-items-center">
+        <span className="burst-ring absolute h-44 w-44 rounded-full border-2 border-brand-400/50" />
+        <span className="burst-ring absolute h-44 w-44 rounded-full bg-brand-400/10" style={{ animationDelay: '0.45s' }} />
+        <div className="tick-pop relative grid h-36 w-36 place-items-center rounded-full bg-brand-400 shadow-glow">
+          <svg viewBox="0 0 56 56" className="h-[5.5rem] w-[5.5rem]">
+            <circle cx="28" cy="28" r="26" fill="none" stroke="rgba(0,0,0,0.16)" strokeWidth="3" className="tick-ring-circle" />
+            <path d="M16 29 l8 8 l16 -18" fill="none" stroke="#0a0a0b" strokeWidth="4.6" strokeLinecap="round" strokeLinejoin="round" className="tick-ring-check" />
+          </svg>
+        </div>
+      </div>
+
+      <h2 className="animate-fade-up relative mt-9 text-[28px] font-black tracking-tight" style={{ animationDelay: '0.5s' }}>Workout complete</h2>
+      <p className="animate-fade-up relative mt-1 text-[15px] text-white/55" style={{ animationDelay: '0.58s' }}>{name} · that's another one in the bank</p>
+
+      {stats && (
+        <div className="animate-fade-up relative mt-8 flex items-center gap-7" style={{ animationDelay: '0.66s' }}>
+          <FinishStat label="Time" value={mmss(stats.time)} />
+          <span className="h-8 w-px bg-white/10" />
+          <FinishStat label="Volume" value={fmtVolume(stats.volume, units)} />
+          <span className="h-8 w-px bg-white/10" />
+          <FinishStat label="Sets" value={String(stats.sets)} />
+        </div>
+      )}
+
+      <button onClick={onDone} className="animate-fade-up btn-primary relative mt-10 w-full max-w-xs" style={{ animationDelay: '0.82s' }}>Done</button>
+    </div>
+  )
+}
+
+function FinishStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="text-[20px] font-black tabular-nums leading-none">{value}</p>
+      <p className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-white/40">{label}</p>
     </div>
   )
 }

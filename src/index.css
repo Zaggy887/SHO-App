@@ -140,6 +140,38 @@
   animation: timer-in 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+/* Workout-complete celebration — a green tick that draws itself in. */
+@keyframes tick-pop {
+  0% { transform: scale(0.4); opacity: 0; }
+  55% { transform: scale(1.1); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.tick-pop { animation: tick-pop 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+@keyframes tick-draw { to { stroke-dashoffset: 0; } }
+.tick-ring-circle {
+  stroke-dasharray: 164;
+  stroke-dashoffset: 164;
+  animation: tick-draw 0.5s ease-out 0.15s forwards;
+}
+.tick-ring-check {
+  stroke-dasharray: 40;
+  stroke-dashoffset: 40;
+  animation: tick-draw 0.35s cubic-bezier(0.65, 0, 0.45, 1) 0.5s forwards;
+}
+
+@keyframes burst-ring {
+  0% { transform: scale(0.5); opacity: 0.5; }
+  100% { transform: scale(2.3); opacity: 0; }
+}
+.burst-ring { animation: burst-ring 0.9s ease-out 0.3s both; }
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-up { animation: fade-up 0.4s ease-out both; }
+
 /* Pop the "GO" end-of-rest cue. Neutralised by the reduced-motion block below. */
 @keyframes go-pop {
   from {
