@@ -135,7 +135,7 @@ export default function ActiveWorkout({ open, onClose }: { open: boolean; onClos
   // After the completion tick, hand off to a PR moment or close.
   useEffect(() => {
     if (!finishing) return
-    const t = setTimeout(() => afterFinish(), 2800)
+    const t = setTimeout(() => afterFinish(), 4500)
     return () => clearTimeout(t)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [finishing])
