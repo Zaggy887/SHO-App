@@ -148,44 +148,8 @@ export default function Dashboard() {
         </div>
       </Reveal>
 
-      {/* Today's habits — your data at a glance */}
-      <Reveal delay={120}>
-        <Section title="Today's progress" action="Log" onAction={() => nav.open('logHabit')} tight />
-        {t.adjusted && <p className="-mt-1 mb-3 text-[12px] text-accent-purple">Targets eased for exam season</p>}
-        <div className="card p-4">
-          <div className="mb-4 flex items-center gap-2 text-[13px]">
-            <span className="font-semibold text-white/55">{ringsOnTrack} of {habitRings.length} goals on track</span>
-            <span className="ml-auto text-white/30">Tap to update</span>
-          </div>
-          <button onClick={() => nav.open('logHabit')} className="flex w-full justify-between active:opacity-80">
-            {habitRings.map((h) => (
-              <div key={h.label} className="flex flex-col items-center gap-1.5">
-                <ProgressRing value={h.pct} size={54} stroke={4} color={h.color}><Icon name={h.icon} size={19} color={h.color} /></ProgressRing>
-                <span className="text-[11px] font-semibold text-white/80">{h.label}</span>
-                <span className="text-[11px] font-bold">{h.value}</span>
-              </div>
-            ))}
-          </button>
-        </div>
-      </Reveal>
-
-      {/* To-do today — the day's tasks */}
-      <Reveal delay={180}>
-        <Section
-          title="To-do today"
-          right={
-            <span className={`text-sm font-semibold ${remaining === 0 ? 'text-brand-400' : 'text-white/45'}`}>
-              {remaining === 0 ? 'All done 🎉' : `${remaining} left`}
-            </span>
-          }
-        />
-        <div className="card divide-y divide-white/[0.06] px-4">
-          {sortedTasks.map((task) => <TaskRow key={task.id} task={task} />)}
-        </div>
-      </Reveal>
-
       {/* Today's plan */}
-      <Reveal delay={240}>
+      <Reveal delay={120}>
         <Section title="Your plan" action="Workouts" onAction={() => nav.goTab('workout')} />
         <div className="relative overflow-hidden rounded-2xl border border-white/5">
           <img src={session?.image ?? ''} alt="" className="absolute inset-0 h-full w-full object-cover" loading="lazy" />
@@ -212,6 +176,42 @@ export default function Dashboard() {
           <div className="flex-1"><p className="font-bold leading-tight">Got 15 minutes?</p><p className="text-[12px] text-white/50">Express workouts between lectures</p></div>
           <ChevronRight size={18} className="text-white/30" />
         </button>
+      </Reveal>
+
+      {/* Today's habits — your data at a glance */}
+      <Reveal delay={180}>
+        <Section title="Today's progress" action="Log" onAction={() => nav.open('logHabit')} tight />
+        {t.adjusted && <p className="-mt-1 mb-3 text-[12px] text-accent-purple">Targets eased for exam season</p>}
+        <div className="card p-4">
+          <div className="mb-4 flex items-center gap-2 text-[13px]">
+            <span className="font-semibold text-white/55">{ringsOnTrack} of {habitRings.length} goals on track</span>
+            <span className="ml-auto text-white/30">Tap to update</span>
+          </div>
+          <button onClick={() => nav.open('logHabit')} className="flex w-full justify-between active:opacity-80">
+            {habitRings.map((h) => (
+              <div key={h.label} className="flex flex-col items-center gap-1.5">
+                <ProgressRing value={h.pct} size={54} stroke={4} color={h.color}><Icon name={h.icon} size={19} color={h.color} /></ProgressRing>
+                <span className="text-[11px] font-semibold text-white/80">{h.label}</span>
+                <span className="text-[11px] font-bold">{h.value}</span>
+              </div>
+            ))}
+          </button>
+        </div>
+      </Reveal>
+
+      {/* To-do today — the day's tasks */}
+      <Reveal delay={240}>
+        <Section
+          title="To-do today"
+          right={
+            <span className={`text-sm font-semibold ${remaining === 0 ? 'text-brand-400' : 'text-white/45'}`}>
+              {remaining === 0 ? 'All done 🎉' : `${remaining} left`}
+            </span>
+          }
+        />
+        <div className="card divide-y divide-white/[0.06] px-4">
+          {sortedTasks.map((task) => <TaskRow key={task.id} task={task} />)}
+        </div>
       </Reveal>
 
       {/* Coach presence — the human touch */}
