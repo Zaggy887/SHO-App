@@ -235,12 +235,14 @@ export function ExerciseDetailSheet({ open, onClose, params }: Props) {
   if (!def) return null
   return (
     <Sheet open={open} onClose={onClose} title={def.name}>
-      <TechniqueClip poster={def.image} videoUrl={undefined} label="Form clip coming soon" />
+      <TechniqueClip poster={def.image} videoUrl={detail.video} label="Form clip coming soon" />
 
       <div className="mt-3 flex items-center gap-2">
         <Chip color="gray">{def.muscle}</Chip>
         {detail.beginnerFriendly && <Chip color="green">Beginner friendly</Chip>}
       </div>
+
+      <p className="mt-4 text-[14px] leading-snug text-white/70">{detail.desc}</p>
 
       <p className="mb-2 mt-5 text-[12px] font-bold uppercase tracking-wide text-white/40">How to do it</p>
       <div className="space-y-2">

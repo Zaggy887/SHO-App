@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Check, Plus, Flag, Info, ArrowUp, ArrowDown, ArrowRight, ChevronDown, Bell, BookOpen } from 'lucide-react'
+import {
+  Check, Plus, Minus, Flag, Info, ChevronDown, Bell, BookOpen, Play,
+  ChevronLeft, Timer, Dumbbell,
+} from 'lucide-react'
 import { Sheet } from '../components/Sheet'
 import { TechniqueClip } from '../components/TechniqueClip'
 import { useStore } from '../store/store'
@@ -8,8 +11,8 @@ import { useNav } from '../nav'
 import { todaySession, sessionProgress } from '../store/selectors'
 import { nextSetRecommendation, examState, examTrim } from '../store/training'
 import { prForSession } from '../store/coach'
-import { exerciseDetail } from '../data/catalog'
-import { fmtWeightNum, toKg, weightUnit, fmtVolume, fmtWeight } from '../lib/format'
+import { exerciseDetail, incrementFor } from '../data/catalog'
+import { fmtWeightNum, weightUnit, fmtVolume, fmtWeight, toKg } from '../lib/format'
 import type { Units, WorkoutSession } from '../store/types'
 
 /* Compound lifts rest longer than isolation work. No rest field exists in the
@@ -48,23 +51,32 @@ function beep() {
   }
 }
 
-type UpNext = { name: string; setIdx: number; setsTotal: number; weightKg: number; reps: number }
+type Mode = 'overview' | 'work' | 'rest' | 'go'
+type Cursor = { exIdx: number; setIdx: number }
 
 /** First not-done set at or after fromExIdx, wrapping back to earlier exercises. */
-function findNextUndone(session: WorkoutSession, fromExIdx: number): UpNext | null {
+function nextUndoneCursor(s: WorkoutSession, fromExIdx: number): Cursor | null {
   const order = [
-    ...session.exercises.map((_, i) => i).filter((i) => i >= fromExIdx),
-    ...session.exercises.map((_, i) => i).filter((i) => i < fromExIdx),
+    ...s.exercises.map((_, i) => i).filter((i) => i >= fromExIdx),
+    ...s.exercises.map((_, i) => i).filter((i) => i < fromExIdx),
   ]
   for (const i of order) {
-    const ex = session.exercises[i]
-    const setIdx = ex.sets.findIndex((s) => !s.done)
-    if (setIdx >= 0) {
-      const set = ex.sets[setIdx]
-      return { name: ex.name, setIdx, setsTotal: ex.sets.length, weightKg: set.weightKg, reps: set.reps }
-    }
+    const setIdx = s.exercises[i].sets.findIndex((set) => !set.done)
+    if (setIdx >= 0) return { exIdx: i, setIdx }
   }
   return null
+}
+
+function mmss(total: number): string {
+  const m = Math.floor(total / 60)
+  const s = String(Math.max(0, total) % 60).padStart(2, '0')
+  return `${m}:${s}`
+}
+
+/** Rest ring colour: green at full → amber → red as it nears zero (hue 96 → 0). */
+function restColor(frac: number): string {
+  const f = Math.max(0, Math.min(1, frac))
+  return `hsl(${Math.round(96 * f)}, 82%, 52%)`
 }
 
 export default function ActiveWorkout({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -74,53 +86,55 @@ export default function ActiveWorkout({ open, onClose }: { open: boolean; onClos
   const units = state.settings.units
   const session = todaySession(state)
 
-  const [elapsed, setElapsed] = useState(0)
+  const [mode, setMode] = useState<Mode>('overview')
+  const [cursor, setCursor] = useState<Cursor | null>(null)
+  const [workElapsed, setWorkElapsed] = useState(0)
   const [rest, setRest] = useState<number | null>(null)
-  const [restTotal, setRestTotal] = useState(90)
-  const [restExIdx, setRestExIdx] = useState<number | null>(null)
-  const [go, setGo] = useState(false)
+  const [restTotal, setRestTotal] = useState(120)
+  const [total, setTotal] = useState(0)
   const [howTo, setHowTo] = useState<Set<string>>(new Set())
   const startRef = useRef<number>(Date.now())
 
+  // Fresh guided state every time the sheet opens.
   useEffect(() => {
     if (!open) return
-    startRef.current = Date.now() - elapsed * 1000
-    const t = setInterval(() => setElapsed(Math.floor((Date.now() - startRef.current) / 1000)), 1000)
-    return () => clearInterval(t)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    setMode('overview'); setCursor(null); setRest(null); setWorkElapsed(0); setTotal(0)
   }, [open])
 
-  // Countdown tick — paused once we reach the GO state.
+  // Overall session clock — runs the whole time the sheet is open.
   useEffect(() => {
-    if (rest === null || go || rest <= 0) return
+    if (!open) return
+    startRef.current = Date.now()
+    const t = setInterval(() => setTotal(Math.floor((Date.now() - startRef.current) / 1000)), 1000)
+    return () => clearInterval(t)
+  }, [open])
+
+  // Work clock — counts up while performing a set.
+  useEffect(() => {
+    if (!open || mode !== 'work') return
+    const t = setInterval(() => setWorkElapsed((e) => e + 1), 1000)
+    return () => clearInterval(t)
+  }, [open, mode, cursor])
+
+  // Rest clock — counts down.
+  useEffect(() => {
+    if (mode !== 'rest' || rest === null || rest <= 0) return
     const t = setTimeout(() => setRest((r) => (r === null ? null : r - 1)), 1000)
     return () => clearTimeout(t)
-  }, [rest, go])
+  }, [mode, rest])
 
-  // Rest hit zero: fire the alert and switch to the GO state.
+  // Rest reached zero → alert, then the GO cue.
   useEffect(() => {
-    if (rest === 0 && !go && restExIdx !== null) {
+    if (mode === 'rest' && rest === 0) {
       if (!prefersReducedMotion()) navigator.vibrate?.([200, 100, 200])
       beep()
       if (document.hidden && 'Notification' in window && Notification.permission === 'granted') {
-        try {
-          new Notification('Rest done — start your next set')
-        } catch {
-          /* ignore */
-        }
+        try { new Notification('Rest done — start your next set') } catch { /* ignore */ }
       }
-      setGo(true)
+      setMode('go')
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rest])
-
-  // GO auto-dismisses back to the logger after a few seconds.
-  useEffect(() => {
-    if (!go) return
-    const t = setTimeout(() => endRest(), 4000)
-    return () => clearTimeout(t)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [go])
+  }, [mode, rest])
 
   const prog = useMemo(() => sessionProgress(session), [session])
   const exam = examState(state)
@@ -132,34 +146,28 @@ export default function ActiveWorkout({ open, onClose }: { open: boolean; onClos
     dispatch({ type: 'SAVE_SESSION', session: next })
   }
 
-  function endRest() {
-    setRest(null)
-    setGo(false)
-    setRestExIdx(null)
-  }
-
   function setSet(exIdx: number, setIdx: number, field: 'weightKg' | 'reps', value: number) {
     if (!session) return
     const exercises = session.exercises.map((ex, i) =>
-      i !== exIdx ? ex : { ...ex, sets: ex.sets.map((s, j) => (j === setIdx ? { ...s, [field]: value } : s)) },
+      i !== exIdx ? ex : { ...ex, sets: ex.sets.map((s, j) => (j === setIdx ? { ...s, [field]: Math.max(0, value) } : s)) },
     )
     patch({ ...session, exercises })
+  }
+
+  function adjust(field: 'weightKg' | 'reps', dir: 1 | -1) {
+    if (!session || !cursor) return
+    const ex = session.exercises[cursor.exIdx]
+    const cur = ex.sets[cursor.setIdx][field]
+    const step = field === 'weightKg' ? incrementFor(ex.defId) : 1
+    setSet(cursor.exIdx, cursor.setIdx, field, cur + dir * step)
   }
 
   function toggleSet(exIdx: number, setIdx: number) {
     if (!session) return
-    const wasDone = session.exercises[exIdx].sets[setIdx].done
     const exercises = session.exercises.map((ex, i) =>
       i !== exIdx ? ex : { ...ex, sets: ex.sets.map((s, j) => (j === setIdx ? { ...s, done: !s.done } : s)) },
     )
     patch({ ...session, exercises })
-    if (!wasDone) {
-      const secs = restSecondsFor(session.exercises[exIdx].defId)
-      setRestTotal(secs)
-      setRest(secs)
-      setRestExIdx(exIdx)
-      setGo(false)
-    }
   }
 
   function addSet(exIdx: number) {
@@ -172,15 +180,6 @@ export default function ActiveWorkout({ open, onClose }: { open: boolean; onClos
     patch({ ...session, exercises })
   }
 
-  function applySuggestion(exIdx: number, weightKg: number, reps: number) {
-    if (!session) return
-    const exercises = session.exercises.map((ex, i) =>
-      i !== exIdx ? ex : { ...ex, sets: ex.sets.map((s) => (s.done ? s : { ...s, weightKg, reps })) },
-    )
-    patch({ ...session, exercises })
-    toast('Coach weights set. Adjust any time.')
-  }
-
   function toggleHowTo(defId: string) {
     setHowTo((prev) => {
       const next = new Set(prev)
@@ -188,6 +187,47 @@ export default function ActiveWorkout({ open, onClose }: { open: boolean; onClos
       else next.add(defId)
       return next
     })
+  }
+
+  /* ---- guided flow controls ---- */
+  function startGuided() {
+    if (!session) return
+    if (rest !== null) { setMode('rest'); return } // resume an in-progress rest
+    const c = nextUndoneCursor(session, 0)
+    if (!c) { toast('Every set is done. Finish when ready.'); return }
+    setCursor(c); setWorkElapsed(0); setRest(null); setMode('work')
+  }
+
+  function startAt(exIdx: number) {
+    if (!session) return
+    const found = session.exercises[exIdx].sets.findIndex((s) => !s.done)
+    setCursor({ exIdx, setIdx: found >= 0 ? found : 0 })
+    setWorkElapsed(0); setRest(null); setMode('work')
+  }
+
+  // Finish the current set → log it done, then rest before the next set.
+  function startRest() {
+    if (!session || !cursor) return
+    const { exIdx } = cursor
+    const exercises = session.exercises.map((ex, i) =>
+      i !== exIdx ? ex : { ...ex, sets: ex.sets.map((s, j) => (j === cursor.setIdx ? { ...s, done: true } : s)) },
+    )
+    const next = { ...session, exercises }
+    patch(next)
+
+    const upcoming = nextUndoneCursor(next, exIdx)
+    if (!upcoming) { setCursor(null); setRest(null); setMode('overview'); toast('All sets logged. Finish strong.'); return }
+    setCursor(upcoming)
+    const secs = restSecondsFor(session.exercises[exIdx].defId)
+    setRestTotal(secs); setRest(secs); setMode('rest')
+  }
+
+  function advance() {
+    setRest(null); setWorkElapsed(0); setMode('work')
+  }
+
+  function backToList() {
+    setMode('overview')
   }
 
   function finish() {
@@ -202,20 +242,80 @@ export default function ActiveWorkout({ open, onClose }: { open: boolean; onClos
     }
   }
 
-  const mins = Math.floor(elapsed / 60)
-  const secs = String(elapsed % 60).padStart(2, '0')
+  const cursorEx = cursor ? session.exercises[cursor.exIdx] : null
+  const cursorSet = cursor && cursorEx ? cursorEx.sets[cursor.setIdx] : null
+  const rec = cursorEx ? nextSetRecommendation(state, cursorEx.defId, cursorEx.targetReps, Math.max(...cursorEx.sets.map((s) => s.weightKg))) : null
+  const allDone = prog.total > 0 && prog.done === prog.total
 
-  const upNext = rest !== null && restExIdx !== null ? findNextUndone(session, restExIdx) : null
+  /* ============================ Guided focus screens ============================ */
+  if (mode === 'work' && cursor && cursorEx && cursorSet) {
+    return (
+      <WorkScreen
+        ex={cursorEx}
+        cursor={cursor}
+        set={cursorSet}
+        elapsed={workElapsed}
+        sessionTotal={total}
+        units={units}
+        coachHint={rec?.hasHistory ? rec : null}
+        onBack={backToList}
+        onAdjust={adjust}
+        onApplyCoach={() => { if (rec) { setSet(cursor.exIdx, cursor.setIdx, 'weightKg', rec.suggestedWeightKg); setSet(cursor.exIdx, cursor.setIdx, 'reps', rec.suggestedReps) } }}
+        onStartRest={startRest}
+      />
+    )
+  }
 
-  const dirIcon = { up: <ArrowUp size={12} />, down: <ArrowDown size={12} />, hold: <ArrowRight size={12} /> }
+  if ((mode === 'rest' || mode === 'go') && cursor && cursorEx && cursorSet && rest !== null) {
+    return (
+      <RestScreen
+        go={mode === 'go'}
+        remaining={Math.max(0, rest)}
+        total={restTotal}
+        nextEx={cursorEx}
+        nextCursor={cursor}
+        nextSet={cursorSet}
+        units={units}
+        onSub={() => setRest((r) => Math.max(0, (r ?? 30) - 15))}
+        onAdd={() => { setRestTotal((t) => t + 15); setRest((r) => (r ?? 0) + 15) }}
+        onSkip={advance}
+        onGo={advance}
+        onBack={backToList}
+      />
+    )
+  }
 
+  /* ================================ Overview ================================ */
   return (
     <Sheet open={open} onClose={onClose} title={session.name} full>
+      {/* Live session stat strip */}
       <div className="mb-4 grid grid-cols-3 gap-3 rounded-2xl border border-white/5 bg-ink-800 p-4 text-center">
-        <div><p className="text-[11px] text-white/45">Time</p><p className="text-xl font-extrabold tabular-nums">{mins}:{secs}</p></div>
-        <div><p className="text-[11px] text-white/45">Volume</p><p className="text-xl font-extrabold">{fmtVolume(session.volumeKg, units)}</p></div>
-        <div><p className="text-[11px] text-white/45">Sets done</p><p className="text-xl font-extrabold text-brand-400">{prog.done}/{prog.total}</p></div>
+        <div><p className="text-[11px] uppercase tracking-wide text-white/40">Time</p><p className="text-xl font-extrabold tabular-nums">{mmss(total)}</p></div>
+        <div><p className="text-[11px] uppercase tracking-wide text-white/40">Volume</p><p className="text-xl font-extrabold">{fmtVolume(session.volumeKg, units)}</p></div>
+        <div><p className="text-[11px] uppercase tracking-wide text-white/40">Sets</p><p className="text-xl font-extrabold text-brand-400">{prog.done}/{prog.total}</p></div>
       </div>
+
+      {/* The bold primary CTA — launches the follow-along flow */}
+      {!allDone && (
+        <button
+          onClick={startGuided}
+          className="group relative mb-5 w-full overflow-hidden rounded-2xl bg-brand-400 p-5 text-left text-black shadow-glow transition active:scale-[0.99]"
+        >
+          <div className="absolute -right-6 -top-8 h-32 w-32 rounded-full bg-black/10" />
+          <div className="absolute -bottom-10 right-10 h-24 w-24 rounded-full bg-white/10" />
+          <p className="relative text-[11px] font-black uppercase tracking-[0.2em] text-black/55">
+            {rest !== null ? 'Resume — resting' : prog.done > 0 ? 'Pick up where you left off' : "Let's move"}
+          </p>
+          <div className="relative mt-1 flex items-center justify-between">
+            <span className="text-[26px] font-black leading-none tracking-tight">
+              {rest !== null ? 'Resume rest' : prog.done > 0 ? 'Resume workout' : 'Start workout'}
+            </span>
+            <span className="grid h-12 w-12 place-items-center rounded-full bg-black text-brand-400 transition group-active:scale-90">
+              <Play size={22} fill="currentColor" />
+            </span>
+          </div>
+        </button>
+      )}
 
       {exam.active && (
         <div className="mb-4 flex items-start gap-2.5 rounded-2xl border border-accent-purple/25 bg-accent-purple/10 p-3.5">
@@ -226,41 +326,67 @@ export default function ActiveWorkout({ open, onClose }: { open: boolean; onClos
         </div>
       )}
 
-      <div className="space-y-4">
+      <p className="mb-3 text-[12px] font-bold uppercase tracking-[0.18em] text-white/35">{session.exercises.length} exercises</p>
+
+      <div className="space-y-3">
         {session.exercises.map((ex, exIdx) => {
           const isOptional = trim?.optionalIds.has(ex.defId)
-          const undone = ex.sets.some((s) => !s.done)
-          const nextSetIdx = ex.sets.findIndex((s) => !s.done)
-          const rec = nextSetRecommendation(state, ex.defId, ex.targetReps, Math.max(...ex.sets.map((s) => s.weightKg)))
+          const exDone = ex.sets.length > 0 && ex.sets.every((s) => s.done)
           const detail = exerciseDetail(ex.defId)
           const howToOpen = howTo.has(ex.defId)
           return (
-            <div key={ex.defId} className={`overflow-hidden rounded-2xl border border-white/5 bg-ink-800 ${isOptional ? 'opacity-70' : ''}`}>
-              {/* Header — name reads at a glance, target right under it. */}
-              <div className="flex items-center gap-3 p-3.5 pb-2.5">
-                <img src={ex.image} alt="" className="h-11 w-11 rounded-xl object-cover" loading="lazy" />
+            <div key={ex.defId} className={`overflow-hidden rounded-2xl border bg-ink-800 transition ${exDone ? 'border-brand-400/30' : 'border-white/5'} ${isOptional ? 'opacity-70' : ''}`}>
+              {/* Header */}
+              <div className="flex items-center gap-3 p-3.5">
+                <div className="relative">
+                  <img src={ex.image} alt="" className="h-14 w-14 rounded-xl object-cover" loading="lazy" />
+                  <span className="absolute -left-1.5 -top-1.5 grid h-6 w-6 place-items-center rounded-lg bg-ink-900 text-[11px] font-black text-brand-400 ring-1 ring-white/10">
+                    {String(exIdx + 1).padStart(2, '0')}
+                  </span>
+                  {exDone && (
+                    <span className="absolute -bottom-1.5 -right-1.5 grid h-6 w-6 place-items-center rounded-full bg-brand-400 ring-2 ring-ink-800">
+                      <Check size={13} strokeWidth={3.5} className="text-black" />
+                    </span>
+                  )}
+                </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <p className="truncate font-bold leading-tight">{ex.name}</p>
-                    {isOptional && <span className="shrink-0 rounded-full bg-white/8 px-2 py-0.5 text-[10px] font-semibold text-white/55">Optional today</span>}
+                    {isOptional && <span className="shrink-0 rounded-full bg-white/8 px-2 py-0.5 text-[10px] font-semibold text-white/55">Optional</span>}
                   </div>
-                  <p className="text-[12px] text-white/45">{ex.targetSets} sets · {ex.targetReps} reps</p>
+                  <p className="mt-0.5 text-[12px] font-semibold text-brand-400">{ex.targetSets} sets · {ex.targetReps} reps</p>
+                  <p className="mt-1 line-clamp-2 text-[12px] leading-snug text-white/45">{detail.desc}</p>
                 </div>
               </div>
 
-              {/* Inline actions: expand How to in place, or jump to the full guide. */}
-              <div className="flex items-center gap-4 px-3.5 pb-2.5">
-                <button onClick={() => toggleHowTo(ex.defId)} className="flex items-center gap-1 text-[12px] font-semibold text-white/55 active:opacity-70">
-                  <ChevronDown size={14} className={`transition-transform ${howToOpen ? 'rotate-180' : ''}`} /> How to
+              {/* Set chips */}
+              <div className="flex flex-wrap gap-1.5 px-3.5 pb-3">
+                {ex.sets.map((set, i) => (
+                  <span
+                    key={i}
+                    className={`rounded-lg px-2 py-1 text-[11px] font-bold tabular-nums ${
+                      set.done ? 'bg-brand-400/15 text-brand-300' : 'bg-white/[0.06] text-white/60'
+                    }`}
+                  >
+                    {fmtWeightNum(set.weightKg, units, units === 'imperial' ? 0 : 1)}{weightUnit(units)} × {set.reps}
+                  </span>
+                ))}
+              </div>
+
+              {/* Actions */}
+              <div className="flex items-stretch gap-2 border-t border-white/5 p-2.5">
+                <button onClick={() => toggleHowTo(ex.defId)} className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-white/[0.04] py-2.5 text-[12px] font-semibold text-white/65 active:bg-white/[0.08]">
+                  <ChevronDown size={14} className={`transition-transform ${howToOpen ? 'rotate-180' : ''}`} /> Form & video
                 </button>
-                <button onClick={() => nav.open('exerciseDetail', { defId: ex.defId })} className="flex items-center gap-1 text-[12px] font-semibold text-white/55 active:opacity-70">
-                  <BookOpen size={13} /> Full guide
+                <button onClick={() => startAt(exIdx)} className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-brand-400/15 py-2.5 text-[12px] font-bold text-brand-400 active:bg-brand-400/25">
+                  <Play size={13} fill="currentColor" /> {exDone ? 'Redo' : 'Start'}
                 </button>
               </div>
 
               {howToOpen && (
-                <div className="px-3.5 pb-3">
-                  <TechniqueClip poster={ex.image} videoUrl={undefined} label="Form clip coming soon" />
+                <div className="border-t border-white/5 px-3.5 pb-4 pt-3.5">
+                  <TechniqueClip poster={ex.image} videoUrl={detail.video} label="Form clip coming soon" />
+                  <p className="mt-3 text-[13px] leading-snug text-white/70">{detail.desc}</p>
                   <ol className="mt-3 space-y-2">
                     {detail.cues.map((c, i) => (
                       <li key={i} className="flex items-start gap-2.5 text-[13px]">
@@ -272,178 +398,263 @@ export default function ActiveWorkout({ open, onClose }: { open: boolean; onClos
                   <p className="mt-3 rounded-xl border border-white/8 bg-white/[0.03] p-2.5 text-[12px] leading-snug text-white/55">
                     <span className="font-semibold text-white/70">Common mistake · </span>{detail.commonMistake}
                   </p>
+                  <button onClick={() => nav.open('exerciseDetail', { defId: ex.defId })} className="mt-3 flex items-center gap-1.5 text-[12px] font-semibold text-brand-400 active:opacity-70">
+                    <BookOpen size={13} /> Open full guide
+                  </button>
+                  {/* Manual set editor stays available for tweaks */}
+                  <div className="mt-4 space-y-1.5">
+                    <p className="mb-1 text-[11px] font-bold uppercase tracking-wide text-white/35">Log manually</p>
+                    {ex.sets.map((set, setIdx) => (
+                      <div key={setIdx} className="grid grid-cols-[24px_1fr_1fr_40px] items-center gap-2">
+                        <span className="text-[12px] font-bold text-white/45">{setIdx + 1}</span>
+                        <input
+                          key={`w-${exIdx}-${setIdx}-${set.weightKg}`}
+                          inputMode="decimal"
+                          defaultValue={fmtWeightNum(set.weightKg, units, units === 'imperial' ? 0 : 1)}
+                          onBlur={(e) => setSet(exIdx, setIdx, 'weightKg', toKg(parseFloat(e.target.value) || 0, units))}
+                          className="rounded-lg border border-white/8 bg-ink-700 px-2 py-1.5 text-center text-[13px] font-semibold focus:outline-none"
+                        />
+                        <input
+                          key={`r-${exIdx}-${setIdx}-${set.reps}`}
+                          inputMode="numeric"
+                          defaultValue={set.reps}
+                          onBlur={(e) => setSet(exIdx, setIdx, 'reps', parseInt(e.target.value) || 0)}
+                          className="rounded-lg border border-white/8 bg-ink-700 px-2 py-1.5 text-center text-[13px] font-semibold focus:outline-none"
+                        />
+                        <button onClick={() => toggleSet(exIdx, setIdx)} className={`ml-auto grid h-7 w-7 place-items-center rounded-lg border-2 transition active:scale-90 ${set.done ? 'border-brand-400 bg-brand-400' : 'border-white/20'}`}>
+                          {set.done && <Check size={14} strokeWidth={3} className="text-black" />}
+                        </button>
+                      </div>
+                    ))}
+                    <button onClick={() => addSet(exIdx)} className="mt-1 flex w-full items-center justify-center gap-1 rounded-lg border border-dashed border-white/12 py-1.5 text-[12px] font-semibold text-white/55 active:bg-white/5">
+                      <Plus size={13} /> Add set
+                    </button>
+                  </div>
                 </div>
               )}
-
-              <div className="px-3.5 pb-3.5">
-                {/* Quiet coach nudge — a chip, not a banner. */}
-                {undone && rec.hasHistory && (
-                  <button onClick={() => applySuggestion(exIdx, rec.suggestedWeightKg, rec.suggestedReps)} className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-brand-400/25 bg-brand-400/[0.06] py-1 pl-2 pr-2.5 text-[11px] font-semibold text-brand-400 active:scale-95">
-                    {dirIcon[rec.direction]}
-                    Use {fmtWeightNum(rec.suggestedWeightKg, units, units === 'imperial' ? 0 : 1)} {weightUnit(units)} × {rec.suggestedReps}
-                  </button>
-                )}
-
-                <div className="mb-1.5 grid grid-cols-[28px_1fr_1fr_44px] items-center gap-2 px-1 text-[11px] font-semibold uppercase tracking-wide text-white/35">
-                  <span>Set</span><span>{weightUnit(units)}</span><span>Reps</span><span className="text-right">Done</span>
-                </div>
-
-                {ex.sets.map((set, setIdx) => {
-                  const isNext = !set.done && setIdx === nextSetIdx
-                  return (
-                    <div
-                      key={setIdx}
-                      className={`mb-1.5 grid grid-cols-[28px_1fr_1fr_44px] items-center gap-2 rounded-xl border-l-2 py-0.5 pl-1 transition ${
-                        isNext ? 'border-brand-400 bg-brand-400/[0.06]' : set.done ? 'border-transparent opacity-55' : 'border-transparent'
-                      }`}
-                    >
-                      <span className={`text-sm font-bold ${isNext ? 'text-brand-400' : 'text-white/50'}`}>{setIdx + 1}</span>
-                      <input
-                        key={`w-${exIdx}-${setIdx}-${set.weightKg}`}
-                        inputMode="decimal"
-                        defaultValue={fmtWeightNum(set.weightKg, units, units === 'imperial' ? 0 : 1)}
-                        onBlur={(e) => setSet(exIdx, setIdx, 'weightKg', toKg(parseFloat(e.target.value) || 0, units))}
-                        className={`rounded-lg border px-2 py-2 text-center text-sm font-semibold focus:outline-none ${set.done ? 'border-white/8 bg-ink-700/60' : 'border-white/8 bg-ink-700'}`}
-                      />
-                      <input
-                        key={`r-${exIdx}-${setIdx}-${set.reps}`}
-                        inputMode="numeric"
-                        defaultValue={set.reps}
-                        onBlur={(e) => setSet(exIdx, setIdx, 'reps', parseInt(e.target.value) || 0)}
-                        className={`rounded-lg border px-2 py-2 text-center text-sm font-semibold focus:outline-none ${set.done ? 'border-white/8 bg-ink-700/60' : 'border-white/8 bg-ink-700'}`}
-                      />
-                      <button onClick={() => toggleSet(exIdx, setIdx)} className={`ml-auto grid h-8 w-8 place-items-center rounded-lg border-2 transition active:scale-90 ${set.done ? 'border-brand-400 bg-brand-400' : isNext ? 'border-brand-400' : 'border-white/20'}`}>
-                        {set.done && <Check size={16} strokeWidth={3} className="text-black" />}
-                      </button>
-                    </div>
-                  )
-                })}
-
-                <button onClick={() => addSet(exIdx)} className="mt-1.5 flex w-full items-center justify-center gap-1 rounded-lg border border-dashed border-white/12 py-2 text-[13px] font-semibold text-white/55 active:bg-white/5">
-                  <Plus size={14} /> Add set
-                </button>
-              </div>
             </div>
           )
         })}
       </div>
 
-      <button onClick={finish} className="btn-primary mt-5 w-full"><Flag size={16} /> Finish Workout</button>
-
-      {rest !== null && (
-        <RestTimer
-          remaining={rest}
-          total={restTotal}
-          go={go}
-          upNext={upNext}
-          units={units}
-          onSub={() => setRest((r) => Math.max(0, (r ?? 30) - 15))}
-          onSkip={endRest}
-          onAdd={() => { setRestTotal((t) => t + 15); setRest((r) => (r ?? 0) + 15) }}
-          onDismiss={endRest}
-        />
-      )}
+      <button onClick={finish} className={`mt-5 flex w-full items-center justify-center gap-2 rounded-full py-3.5 font-bold transition active:scale-[0.98] ${allDone ? 'bg-brand-400 text-black shadow-glow' : 'border border-white/10 bg-white/[0.04] text-white'}`}>
+        <Flag size={16} /> Finish workout
+      </button>
+      <div className="h-2" />
     </Sheet>
   )
 }
 
-function fmtClock(d: Date): string {
-  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })
-}
-
-function RestTimer({ remaining, total, go, upNext, units, onSub, onSkip, onAdd, onDismiss }: {
-  remaining: number
-  total: number
-  go: boolean
-  upNext: UpNext | null
+/* ============================ Work screen ============================ */
+function WorkScreen({
+  ex, cursor, set, elapsed, sessionTotal, units, coachHint, onBack, onAdjust, onApplyCoach, onStartRest,
+}: {
+  ex: WorkoutSession['exercises'][number]
+  cursor: Cursor
+  set: { weightKg: number; reps: number; done: boolean }
+  elapsed: number
+  sessionTotal: number
   units: Units
-  onSub: () => void
-  onSkip: () => void
-  onAdd: () => void
-  onDismiss: () => void
+  coachHint: { suggestedWeightKg: number; suggestedReps: number } | null
+  onBack: () => void
+  onAdjust: (field: 'weightKg' | 'reps', dir: 1 | -1) => void
+  onApplyCoach: () => void
+  onStartRest: () => void
 }) {
-  // GO state — ring/background fill brand-400 with the next set's target.
-  if (go) {
-    return (
-      <button
-        onClick={onDismiss}
-        className="fixed inset-0 z-50 flex w-full flex-col items-center justify-center bg-brand-400 text-black"
-        style={{ animation: 'screen-in 0.2s ease-out' }}
-      >
-        <span className="text-8xl font-black tracking-tight" style={{ animation: 'go-pop 0.3s cubic-bezier(0.22,1,0.36,1)' }}>GO</span>
-        {upNext && (
-          <div className="mt-4 text-center">
-            <p className="text-2xl font-extrabold tabular-nums">{fmtWeightNum(upNext.weightKg, units, units === 'imperial' ? 0 : 1)} {weightUnit(units)} × {upNext.reps}</p>
-            <p className="mt-1 text-sm font-bold uppercase tracking-[0.12em] text-black/60">{upNext.name}</p>
-          </div>
-        )}
-        <span className="absolute bottom-12 text-[13px] font-semibold text-black/50">Tap to start</span>
-      </button>
-    )
-  }
-
-  const endTime = fmtClock(new Date(Date.now() + remaining * 1000))
-
-  // Near-black background, kept dark regardless of theme for an immersive feel.
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-ink-900 text-white" style={{ animation: 'screen-in 0.25s ease-out', backgroundColor: '#0a0a0b' }}>
-      <div className="flex flex-1 items-center justify-center px-7">
-        <RestRing remaining={remaining} total={total} endTime={endTime} />
+    <div className="fixed inset-0 z-50 flex flex-col text-white" style={{ backgroundColor: '#0a0a0b', animation: 'screen-in 0.25s ease-out' }}>
+      {/* Faint exercise backdrop for context */}
+      <img src={ex.image} alt="" className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-[0.10]" style={{ filter: 'grayscale(1) contrast(1.1)' }} />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-ink-900/40 via-transparent to-ink-900" />
+
+      <div className="relative flex flex-col" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+        {/* Top bar */}
+        <div className="flex items-center justify-between px-5 pb-2 pt-4">
+          <button onClick={onBack} className="flex items-center gap-1 rounded-full bg-white/[0.06] py-2 pl-2 pr-3.5 text-[13px] font-semibold text-white/80 active:bg-white/[0.12]">
+            <ChevronLeft size={16} /> List
+          </button>
+          <span className="flex items-center gap-1.5 text-[13px] font-semibold tabular-nums text-white/45">
+            <Timer size={14} /> {mmss(sessionTotal)}
+          </span>
+        </div>
+
+        {/* Exercise + set position */}
+        <div className="px-6 text-center">
+          <p className="text-[11px] font-black uppercase tracking-[0.28em] text-brand-400">Now · Set {cursor.setIdx + 1} of {ex.sets.length}</p>
+          <h2 className="mt-1 text-[26px] font-black leading-tight tracking-tight">{ex.name}</h2>
+          <SetDots sets={ex.sets} current={cursor.setIdx} />
+        </div>
       </div>
 
-      <div className="px-7 text-center">
-        {upNext && (
-          <p className="text-[15px] font-semibold text-white/45">
-            Up next · Set {upNext.setIdx + 1} of {upNext.setsTotal}
-            <span className="block text-white/70">{upNext.name}</span>
-          </p>
+      {/* Big count-up timer — plain number, faint static green ring */}
+      <div className="relative flex flex-1 items-center justify-center">
+        <div className="relative grid place-items-center" style={{ width: 'min(80vw, 340px)', aspectRatio: '1 / 1' }}>
+          <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full -rotate-90">
+            <circle cx="50" cy="50" r="47.6" fill="none" stroke="rgba(126,217,87,0.14)" strokeWidth="1.6" />
+            <circle cx="50" cy="50" r="47.6" fill="none" stroke="#7ED957" strokeWidth="1.6" strokeLinecap="round" strokeDasharray="2 7" opacity="0.7" />
+          </svg>
+          <div className="animate-timer-in text-center leading-none">
+            <p className="text-[13px] font-black uppercase tracking-[0.3em] text-brand-400">Work</p>
+            <p className="mt-2 text-[68px] font-black tabular-nums tracking-tight text-white" style={{ textShadow: '0 0 40px rgba(126,217,87,0.25)' }}>
+              {mmss(elapsed)}
+            </p>
+            <p className="mt-1 text-[13px] font-semibold text-white/40">Target {ex.targetReps} reps</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Editable target: weight × reps */}
+      <div className="relative px-6">
+        <div className="grid grid-cols-2 gap-3">
+          <Stepper label={weightUnit(units)} value={fmtWeightNum(set.weightKg, units, units === 'imperial' ? 0 : 1)} onMinus={() => onAdjust('weightKg', -1)} onPlus={() => onAdjust('weightKg', 1)} />
+          <Stepper label="reps" value={String(set.reps)} onMinus={() => onAdjust('reps', -1)} onPlus={() => onAdjust('reps', 1)} />
+        </div>
+        {coachHint && (
+          <button onClick={onApplyCoach} className="mx-auto mt-3 flex items-center gap-1.5 rounded-full border border-brand-400/25 bg-brand-400/[0.06] py-1.5 pl-3 pr-3.5 text-[12px] font-semibold text-brand-400 active:scale-95">
+            <Dumbbell size={13} /> Coach: {fmtWeightNum(coachHint.suggestedWeightKg, units, units === 'imperial' ? 0 : 1)} {weightUnit(units)} × {coachHint.suggestedReps}
+          </button>
         )}
       </div>
 
-      <div className="px-7 pb-14 pt-8">
-        <div className="flex items-center justify-center gap-7">
-          <button onClick={onSub} className="grid h-[68px] w-[68px] place-items-center rounded-full bg-white/[0.08] text-sm font-bold active:scale-95 active:bg-white/[0.14]">−15s</button>
-          <button onClick={onSkip} className="grid h-[68px] w-[68px] place-items-center rounded-full bg-brand-400/15 text-sm font-bold text-brand-400 active:scale-95 active:bg-brand-400/25">Skip</button>
-          <button onClick={onAdd} className="grid h-[68px] w-[68px] place-items-center rounded-full bg-white/[0.08] text-sm font-bold active:scale-95 active:bg-white/[0.14]">+15s</button>
-        </div>
+      {/* Primary action */}
+      <div className="relative px-6 pb-12 pt-6" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 2.5rem)' }}>
+        <button onClick={onStartRest} className="flex w-full items-center justify-center gap-2.5 rounded-2xl bg-brand-400 py-5 text-[18px] font-black uppercase tracking-wide text-black shadow-glow transition active:scale-[0.98]">
+          <Check size={20} strokeWidth={3} /> Done — start rest
+        </button>
       </div>
     </div>
   )
 }
 
-/** iOS Clock-style countdown ring. Resolution-independent via a 100×100 viewBox. */
-function RestRing({ remaining, total, endTime }: { remaining: number; total: number; endTime: string }) {
-  const stroke = 2.4 // viewBox units → ~7px on a ~300px ring
+/* ============================ Rest screen ============================ */
+function fmtClock(d: Date): string {
+  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })
+}
+
+function RestScreen({
+  go, remaining, total, nextEx, nextCursor, nextSet, units, onSub, onAdd, onSkip, onGo, onBack,
+}: {
+  go: boolean
+  remaining: number
+  total: number
+  nextEx: WorkoutSession['exercises'][number]
+  nextCursor: Cursor
+  nextSet: { weightKg: number; reps: number }
+  units: Units
+  onSub: () => void
+  onAdd: () => void
+  onSkip: () => void
+  onGo: () => void
+  onBack: () => void
+}) {
+  // GO flash when rest hits zero.
+  if (go) {
+    return (
+      <button onClick={onGo} className="fixed inset-0 z-50 flex w-full flex-col items-center justify-center bg-brand-400 text-black" style={{ animation: 'screen-in 0.2s ease-out' }}>
+        <span className="text-8xl font-black tracking-tight" style={{ animation: 'go-pop 0.3s cubic-bezier(0.22,1,0.36,1)' }}>GO</span>
+        <div className="mt-4 text-center">
+          <p className="text-2xl font-extrabold tabular-nums">{fmtWeightNum(nextSet.weightKg, units, units === 'imperial' ? 0 : 1)} {weightUnit(units)} × {nextSet.reps}</p>
+          <p className="mt-1 text-sm font-black uppercase tracking-[0.14em] text-black/60">{nextEx.name} · Set {nextCursor.setIdx + 1}</p>
+        </div>
+        <span className="absolute bottom-12 text-[13px] font-semibold text-black/50">Tap to begin</span>
+      </button>
+    )
+  }
+
+  const frac = total > 0 ? Math.max(0, Math.min(1, remaining / total)) : 0
+  const color = restColor(frac)
+  const endTime = fmtClock(new Date(Date.now() + remaining * 1000))
+  const stroke = 3.4
   const radius = (100 - stroke) / 2
   const circumference = 2 * Math.PI * radius
-  const pct = total > 0 ? Math.max(0, Math.min(1, remaining / total)) : 0
-  const offset = circumference - pct * circumference
-  // Swap to '#F5A524' (accent-orange) here to match the orange reference.
-  const arcColor = '#7ED957' // brand-400
+  const offset = circumference - frac * circumference
+
   return (
-    <div className="relative" style={{ width: 'min(78vw, 360px)', aspectRatio: '1 / 1' }}>
-      <svg viewBox="0 0 100 100" className="h-full w-full -rotate-90">
-        <circle cx="50" cy="50" r={radius} fill="none" stroke="rgba(255,255,255,0.10)" strokeWidth={stroke} />
-        <circle
-          cx="50"
-          cy="50"
-          r={radius}
-          fill="none"
-          stroke={arcColor}
-          strokeWidth={stroke}
-          strokeLinecap="round"
-          strokeDasharray={circumference}
-          strokeDashoffset={offset}
-          style={{ transition: 'stroke-dashoffset 1s linear' }}
+    <div className="fixed inset-0 z-50 flex flex-col text-white" style={{ backgroundColor: '#0a0a0b', animation: 'screen-in 0.25s ease-out' }}>
+      <div className="flex flex-col" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+        <div className="flex items-center justify-between px-5 pb-2 pt-4">
+          <button onClick={onBack} className="flex items-center gap-1 rounded-full bg-white/[0.06] py-2 pl-2 pr-3.5 text-[13px] font-semibold text-white/80 active:bg-white/[0.12]">
+            <ChevronLeft size={16} /> List
+          </button>
+          <span className="text-[11px] font-black uppercase tracking-[0.28em]" style={{ color }}>Rest</span>
+          <button onClick={onSkip} className="rounded-full bg-white/[0.06] px-3.5 py-2 text-[13px] font-semibold text-white/80 active:bg-white/[0.12]">Skip</button>
+        </div>
+      </div>
+
+      {/* Countdown ring, green → red */}
+      <div className="flex flex-1 items-center justify-center px-7">
+        <div className="relative" style={{ width: 'min(80vw, 360px)', aspectRatio: '1 / 1' }}>
+          <svg viewBox="0 0 100 100" className="h-full w-full -rotate-90">
+            <circle cx="50" cy="50" r={radius} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth={stroke} />
+            <circle
+              cx="50" cy="50" r={radius} fill="none" stroke={color} strokeWidth={stroke} strokeLinecap="round"
+              strokeDasharray={circumference} strokeDashoffset={offset}
+              style={{ transition: 'stroke-dashoffset 1s linear, stroke 1s linear', filter: `drop-shadow(0 0 6px ${color})` }}
+            />
+          </svg>
+          <div className="absolute inset-0 flex flex-col items-center justify-center leading-none">
+            <span className="flex items-center gap-1.5 text-[14px] font-medium tabular-nums text-white/40"><Bell size={13} /> {endTime}</span>
+            <span className="mt-3 text-[72px] font-black tabular-nums tracking-tight" style={{ color }}>{mmss(remaining)}</span>
+            <span className="mt-2 text-[12px] font-bold uppercase tracking-[0.2em] text-white/35">until next set</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Up next */}
+      <div className="px-7 text-center">
+        <div className="mx-auto inline-flex items-center gap-3 rounded-2xl border border-white/8 bg-white/[0.04] px-4 py-3">
+          <img src={nextEx.image} alt="" className="h-10 w-10 rounded-lg object-cover" loading="lazy" />
+          <div className="text-left">
+            <p className="text-[11px] font-bold uppercase tracking-wide text-white/40">Up next · Set {nextCursor.setIdx + 1} of {nextEx.sets.length}</p>
+            <p className="text-[15px] font-extrabold leading-tight">{nextEx.name}</p>
+            <p className="text-[12px] font-semibold text-brand-400">{fmtWeightNum(nextSet.weightKg, units, units === 'imperial' ? 0 : 1)} {weightUnit(units)} × {nextSet.reps}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Controls */}
+      <div className="px-7 pt-7" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 3rem)' }}>
+        <div className="flex items-center justify-center gap-5">
+          <button onClick={onSub} className="grid h-16 w-16 place-items-center rounded-full bg-white/[0.08] text-sm font-bold active:scale-95 active:bg-white/[0.14]">−15s</button>
+          <button onClick={onSkip} className="grid h-20 w-20 place-items-center rounded-full bg-brand-400 text-[15px] font-black uppercase text-black shadow-glow active:scale-95">
+            <span className="flex flex-col items-center leading-none"><Play size={20} fill="currentColor" /></span>
+          </button>
+          <button onClick={onAdd} className="grid h-16 w-16 place-items-center rounded-full bg-white/[0.08] text-sm font-bold active:scale-95 active:bg-white/[0.14]">+15s</button>
+        </div>
+        <p className="mt-3 text-center text-[12px] font-semibold text-white/35">Tap the centre to start now</p>
+      </div>
+    </div>
+  )
+}
+
+/* Small set-progress segments. */
+function SetDots({ sets, current }: { sets: { done: boolean }[]; current: number }) {
+  return (
+    <div className="mt-3 flex items-center justify-center gap-1.5">
+      {sets.map((s, i) => (
+        <span
+          key={i}
+          className="h-1.5 rounded-full transition-all"
+          style={{
+            width: i === current ? 26 : 14,
+            backgroundColor: s.done ? '#7ED957' : i === current ? 'rgba(126,217,87,0.55)' : 'rgba(255,255,255,0.16)',
+          }}
         />
-      </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center leading-none">
-        <span className="flex items-center gap-1.5 text-[15px] font-medium tabular-nums text-white/40">
-          <Bell size={14} /> {endTime}
-        </span>
-        <span className="mt-3 text-8xl tabular-nums tracking-tight text-white" style={{ fontWeight: 200 }}>
-          {Math.floor(remaining / 60)}:{String(remaining % 60).padStart(2, '0')}
-        </span>
+      ))}
+    </div>
+  )
+}
+
+function Stepper({ label, value, onMinus, onPlus }: { label: string; value: string; onMinus: () => void; onPlus: () => void }) {
+  return (
+    <div className="rounded-2xl border border-white/8 bg-white/[0.04] p-2">
+      <div className="flex items-center justify-between gap-1">
+        <button onClick={onMinus} className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/[0.06] active:scale-90 active:bg-white/[0.12]"><Minus size={18} /></button>
+        <div className="min-w-0 text-center">
+          <p className="truncate text-[22px] font-black leading-none tabular-nums">{value}</p>
+          <p className="mt-0.5 text-[11px] font-semibold uppercase tracking-wide text-white/40">{label}</p>
+        </div>
+        <button onClick={onPlus} className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/[0.06] active:scale-90 active:bg-white/[0.12]"><Plus size={18} /></button>
       </div>
     </div>
   )

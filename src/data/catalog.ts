@@ -59,92 +59,110 @@ export const exById = (id: string) => EXERCISES.find((e) => e.id === id)
 /* ---------------------- Technique cue cards ---------------------- */
 /* Short, plain-language coaching for nervous beginners. */
 export interface ExerciseDetail {
+  /** One-line plain-language summary of what the movement is and trains. */
+  desc: string
   cues: string[]
   commonMistake: string
   ifTaken: string
   beginnerFriendly: boolean
+  /** Optional looping form clip. Drop a hosted url here and it plays in place of the poster slot. */
+  video?: string
 }
 
 export const EXERCISE_DETAIL: Record<string, ExerciseDetail> = {
   bench: {
+    desc: 'A barbell press from your chest that builds the chest, front shoulders and triceps.',
     cues: ['Plant your feet and squeeze the bar tight', 'Lower to mid chest, elbows tucked a little', 'Press up and slightly back toward your face'],
     commonMistake: 'Flaring elbows straight out to the sides, which stresses the shoulders.',
     ifTaken: 'No free bench? Use a dumbbell press on any flat bench, or push ups as a clean stand in.',
     beginnerFriendly: false,
   },
   incline: {
+    desc: 'An angled dumbbell press that biases the upper chest.',
     cues: ['Set the bench to a low incline, around 30 degrees', 'Press the dumbbells up and slightly together', 'Control the way down, no bouncing'],
     commonMistake: 'Setting the incline too steep and turning it into a shoulder press.',
     ifTaken: 'Any adjustable bench works. If all are busy, do incline push ups with hands on a bench.',
     beginnerFriendly: true,
   },
   shoulder: {
+    desc: 'A seated overhead press that builds round, strong shoulders.',
     cues: ['Start with dumbbells at ear height', 'Press up without shrugging', 'Stop just short of locking out'],
     commonMistake: 'Leaning back and turning it into an incline press.',
     ifTaken: 'Pike push ups against a wall hit the same muscles with no equipment.',
     beginnerFriendly: true,
   },
   cablefly: {
+    desc: 'A cable isolation move that stretches and squeezes the chest.',
     cues: ['Soft bend in the elbows, hold it the whole set', 'Bring your hands together in front of your chest', 'Feel the stretch, then squeeze'],
     commonMistake: 'Bending the elbows more as you pull, which turns it into a press.',
     ifTaken: 'A resistance band anchored behind you does the same job.',
     beginnerFriendly: true,
   },
   tricep: {
+    desc: 'A cable push-down that isolates and grows the triceps.',
     cues: ['Keep elbows pinned to your sides', 'Push the rope down and slightly apart at the bottom', 'Control it back to chest height'],
     commonMistake: 'Letting the elbows drift forward so the shoulders take over.',
     ifTaken: 'Bench dips with your hands behind you work well anywhere.',
     beginnerFriendly: true,
   },
   squat: {
+    desc: 'A loaded full-depth squat driven by the quads and glutes.',
     cues: ['Brace your core before you go down', 'Sit between your hips, knees track over toes', 'Drive up through mid foot'],
     commonMistake: 'Letting the heels lift or the knees cave inward.',
     ifTaken: 'Goblet squats with one dumbbell, or bodyweight squats, are a great swap.',
     beginnerFriendly: false,
   },
   deadlift: {
+    desc: 'A hinge that pulls the bar from the floor and trains the whole posterior chain.',
     cues: ['Bar over mid foot, shins almost touching', 'Flat back, take the slack out of the bar', 'Stand up tall, push the floor away'],
     commonMistake: 'Rounding the lower back or jerking the bar off the floor.',
     ifTaken: 'Romanian deadlifts with dumbbells let you train the same pattern lighter.',
     beginnerFriendly: false,
   },
   pulldown: {
+    desc: 'A vertical pull that builds a wider, stronger back.',
     cues: ['Set the thigh pad so you stay seated', 'Pull the bar to your upper chest', 'Lead with the elbows, not the hands'],
     commonMistake: 'Leaning way back and using momentum instead of your back.',
     ifTaken: 'Assisted pull ups or a band around a bar gives the same movement.',
     beginnerFriendly: true,
   },
   row: {
+    desc: 'A horizontal pull for back thickness and better posture.',
     cues: ['Sit tall with a slight lean back', 'Pull the handle to your belly button', 'Squeeze your shoulder blades together'],
     commonMistake: 'Rounding forward and yanking with the arms only.',
     ifTaken: 'A single arm dumbbell row on a bench is an easy alternative.',
     beginnerFriendly: true,
   },
   curl: {
+    desc: 'A dumbbell curl that isolates and builds the biceps.',
     cues: ['Elbows stay by your sides', 'Curl up under control', 'Lower slowly, all the way down'],
     commonMistake: 'Swinging the body to throw the weight up.',
     ifTaken: 'Any dumbbells or a band work. No swap needed.',
     beginnerFriendly: true,
   },
   ohp: {
+    desc: 'A standing overhead press for shoulder and core strength.',
     cues: ['Bar on your front shoulders, core braced', 'Press up and move your head through at the top', 'Lock out with the bar over your mid foot'],
     commonMistake: 'Overarching the lower back to lean into the press.',
     ifTaken: 'Seated dumbbell press or pike push ups cover the same muscles.',
     beginnerFriendly: false,
   },
   legpress: {
+    desc: 'A machine press that loads the legs heavily while keeping you supported.',
     cues: ['Feet shoulder width on the platform', 'Lower until knees reach about 90 degrees', 'Press through your whole foot, no locking hard'],
     commonMistake: 'Letting the lower back round off the pad at the bottom.',
     ifTaken: 'Goblet squats or walking lunges are a strong substitute.',
     beginnerFriendly: true,
   },
   rdl: {
+    desc: 'A hip hinge that targets the hamstrings and glutes.',
     cues: ['Soft knees, push your hips back', 'Keep the weights close to your legs', 'Feel the hamstrings, stand up tall'],
     commonMistake: 'Turning it into a squat by bending the knees too much.',
     ifTaken: 'Dumbbells or a single barbell both work. Pick whatever is free.',
     beginnerFriendly: true,
   },
   lateral: {
+    desc: 'A raise that builds the side delts for shoulder width.',
     cues: ['Tiny bend in the elbows', 'Lead with your elbows out to the sides', 'Stop at shoulder height, lower slowly'],
     commonMistake: 'Going too heavy and shrugging the weight up.',
     ifTaken: 'A band under your feet gives smooth resistance with no dumbbells.',
@@ -154,6 +172,7 @@ export const EXERCISE_DETAIL: Record<string, ExerciseDetail> = {
 
 export const exerciseDetail = (id: string): ExerciseDetail =>
   EXERCISE_DETAIL[id] ?? {
+    desc: 'A strength movement. Move with control through a full range of motion.',
     cues: ['Move under control', 'Full range of motion', 'Breathe out on the effort'],
     commonMistake: 'Rushing the reps instead of staying controlled.',
     ifTaken: 'Pick a similar machine or a dumbbell variation that is free.',

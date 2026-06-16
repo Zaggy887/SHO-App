@@ -123,6 +123,23 @@
   animation: ring-fill 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+/* Active-workout focus mode: soft breathing pulse + entrance for big timers. */
+@keyframes breathe {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.62; }
+}
+.animate-breathe {
+  animation: breathe 2.4s ease-in-out infinite;
+}
+
+@keyframes timer-in {
+  from { opacity: 0; transform: scale(0.94); }
+  to { opacity: 1; transform: scale(1); }
+}
+.animate-timer-in {
+  animation: timer-in 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
 /* Pop the "GO" end-of-rest cue. Neutralised by the reduced-motion block below. */
 @keyframes go-pop {
   from {
