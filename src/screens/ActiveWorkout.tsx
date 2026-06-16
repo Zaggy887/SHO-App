@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   Check, Plus, Minus, Flag, Info, ChevronDown, Bell, BookOpen, Play,
-  ChevronLeft, Timer, Dumbbell,
+  ChevronLeft, Timer, Dumbbell, ListChecks, HelpCircle, X,
 } from 'lucide-react'
 import { Sheet } from '../components/Sheet'
 import { TechniqueClip } from '../components/TechniqueClip'
@@ -258,6 +258,10 @@ export default function ActiveWorkout({ open, onClose }: { open: boolean; onClos
         sessionTotal={total}
         units={units}
         coachHint={rec?.hasHistory ? rec : null}
+        exIndex={cursor.exIdx}
+        exTotal={session.exercises.length}
+        nextExName={session.exercises[cursor.exIdx + 1]?.name}
+        detail={exerciseDetail(cursorEx.defId)}
         onBack={backToList}
         onAdjust={adjust}
         onApplyCoach={() => { if (rec) { setSet(cursor.exIdx, cursor.setIdx, 'weightKg', rec.suggestedWeightKg); setSet(cursor.exIdx, cursor.setIdx, 'reps', rec.suggestedReps) } }}
@@ -447,7 +451,8 @@ export default function ActiveWorkout({ open, onClose }: { open: boolean; onClos
 
 /* ============================ Work screen ============================ */
 function WorkScreen({
-  ex, cursor, set, elapsed, sessionTotal, units, coachHint, onBack, onAdjust, onApplyCoach, onStartRest,
+  ex, cursor, set, elapsed, sessionTotal, units, coachHint, exIndex, exTotal, nextExName, detail,
+  onBack, onAdjust, onApplyCoach, onStartRest,
 }: {
   ex: WorkoutSession['exercises'][number]
   cursor: Cursor
@@ -456,11 +461,18 @@ function WorkScreen({
   sessionTotal: number
   units: Units
   coachHint: { suggestedWeightKg: number; suggestedReps: number } | null
+  exIndex: number
+  exTotal: number
+  nextExName?: string
+  detail: { desc: string; cues: string[]; commonMistake: string; video?: string }
   onBack: () => void
   onAdjust: (field: 'weightKg' | 'reps', dir: 1 | -1) => void
   onApplyCoach: () => void
   onStartRest: () => void
 }) {
+  const [showHow, setShowHow] = useState(false)
+  const lastSet = cursor.setIdx + 1 >= ex.sets.length
+
   return (
     <div className="fixed inset-0 z-50 flex flex-col text-white" style={{ backgroundColor: '#0a0a0b', animation: 'screen-in 0.25s ease-out' }}>
       {/* Faint exercise backdrop for context */}
@@ -468,60 +480,103 @@ function WorkScreen({
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-ink-900/40 via-transparent to-ink-900" />
 
       <div className="relative flex flex-col" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
-        {/* Top bar */}
+        {/* Top bar — clear way back to the full list */}
         <div className="flex items-center justify-between px-5 pb-2 pt-4">
-          <button onClick={onBack} className="flex items-center gap-1 rounded-full bg-white/[0.06] py-2 pl-2 pr-3.5 text-[13px] font-semibold text-white/80 active:bg-white/[0.12]">
-            <ChevronLeft size={16} /> List
+          <button onClick={onBack} className="flex items-center gap-1.5 rounded-full bg-white/[0.06] py-2 pl-2.5 pr-3.5 text-[13px] font-semibold text-white/80 active:bg-white/[0.12]">
+            <ListChecks size={15} /> All exercises
           </button>
           <span className="flex items-center gap-1.5 text-[13px] font-semibold tabular-nums text-white/45">
             <Timer size={14} /> {mmss(sessionTotal)}
           </span>
         </div>
 
-        {/* Exercise + set position */}
+        {/* Where am I — exercise position, name, what it is */}
         <div className="px-6 text-center">
-          <p className="text-[11px] font-black uppercase tracking-[0.28em] text-brand-400">Now · Set {cursor.setIdx + 1} of {ex.sets.length}</p>
-          <h2 className="mt-1 text-[26px] font-black leading-tight tracking-tight">{ex.name}</h2>
+          <p className="text-[11px] font-black uppercase tracking-[0.24em] text-brand-400">
+            Exercise {exIndex + 1} of {exTotal} · Set {cursor.setIdx + 1} of {ex.sets.length}
+          </p>
+          <h2 className="mt-1.5 text-[26px] font-black leading-tight tracking-tight">{ex.name}</h2>
+          <p className="mx-auto mt-1.5 max-w-[19rem] text-[13px] leading-snug text-white/55">{detail.desc}</p>
           <SetDots sets={ex.sets} current={cursor.setIdx} />
+          <button
+            onClick={() => setShowHow(true)}
+            className="mx-auto mt-3 flex items-center gap-1.5 rounded-full border border-white/12 bg-white/[0.05] py-1.5 pl-3 pr-3.5 text-[12px] font-semibold text-white/75 active:bg-white/[0.1]"
+          >
+            <HelpCircle size={14} /> Not sure how? Show me
+          </button>
         </div>
       </div>
 
       {/* Big count-up timer — plain number, faint static green ring */}
       <div className="relative flex flex-1 items-center justify-center">
-        <div className="relative grid place-items-center" style={{ width: 'min(80vw, 340px)', aspectRatio: '1 / 1' }}>
+        <div className="relative grid place-items-center" style={{ width: 'min(74vw, 320px)', aspectRatio: '1 / 1' }}>
           <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full -rotate-90">
             <circle cx="50" cy="50" r="47.6" fill="none" stroke="rgba(126,217,87,0.14)" strokeWidth="1.6" />
             <circle cx="50" cy="50" r="47.6" fill="none" stroke="#7ED957" strokeWidth="1.6" strokeLinecap="round" strokeDasharray="2 7" opacity="0.7" />
           </svg>
           <div className="animate-timer-in text-center leading-none">
             <p className="text-[13px] font-black uppercase tracking-[0.3em] text-brand-400">Work</p>
-            <p className="mt-2 text-[68px] font-black tabular-nums tracking-tight text-white" style={{ textShadow: '0 0 40px rgba(126,217,87,0.25)' }}>
+            <p className="mt-2 text-[64px] font-black tabular-nums tracking-tight text-white" style={{ textShadow: '0 0 40px rgba(126,217,87,0.25)' }}>
               {mmss(elapsed)}
             </p>
-            <p className="mt-1 text-[13px] font-semibold text-white/40">Target {ex.targetReps} reps</p>
+            <p className="mt-1 text-[13px] font-semibold text-white/40">Aim for {ex.targetReps} reps</p>
           </div>
         </div>
       </div>
 
       {/* Editable target: weight × reps */}
       <div className="relative px-6">
+        <p className="mb-2 text-center text-[11px] font-bold uppercase tracking-[0.16em] text-white/35">Log this set</p>
         <div className="grid grid-cols-2 gap-3">
           <Stepper label={weightUnit(units)} value={fmtWeightNum(set.weightKg, units, units === 'imperial' ? 0 : 1)} onMinus={() => onAdjust('weightKg', -1)} onPlus={() => onAdjust('weightKg', 1)} />
           <Stepper label="reps" value={String(set.reps)} onMinus={() => onAdjust('reps', -1)} onPlus={() => onAdjust('reps', 1)} />
         </div>
         {coachHint && (
           <button onClick={onApplyCoach} className="mx-auto mt-3 flex items-center gap-1.5 rounded-full border border-brand-400/25 bg-brand-400/[0.06] py-1.5 pl-3 pr-3.5 text-[12px] font-semibold text-brand-400 active:scale-95">
-            <Dumbbell size={13} /> Coach: {fmtWeightNum(coachHint.suggestedWeightKg, units, units === 'imperial' ? 0 : 1)} {weightUnit(units)} × {coachHint.suggestedReps}
+            <Dumbbell size={13} /> Coach suggests {fmtWeightNum(coachHint.suggestedWeightKg, units, units === 'imperial' ? 0 : 1)} {weightUnit(units)} × {coachHint.suggestedReps}
           </button>
         )}
       </div>
 
-      {/* Primary action */}
-      <div className="relative px-6 pb-12 pt-6" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 2.5rem)' }}>
+      {/* Primary action + what's coming */}
+      <div className="relative px-6 pb-12 pt-5" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 2.25rem)' }}>
         <button onClick={onStartRest} className="flex w-full items-center justify-center gap-2.5 rounded-2xl bg-brand-400 py-5 text-[18px] font-black uppercase tracking-wide text-black shadow-glow transition active:scale-[0.98]">
-          <Check size={20} strokeWidth={3} /> Done — start rest
+          <Check size={20} strokeWidth={3} /> {lastSet ? 'Done — finish exercise' : 'Done — start rest'}
         </button>
+        <p className="mt-3 text-center text-[12px] font-semibold text-white/40">
+          {lastSet
+            ? (nextExName ? <>Up next: <span className="text-white/70">{nextExName}</span></> : <span className="text-brand-400">Last exercise — finish strong</span>)
+            : <>Then: <span className="text-white/70">Set {cursor.setIdx + 2} of {ex.sets.length}</span></>}
+        </p>
       </div>
+
+      {/* On-demand "how to do this" — keeps the main screen simple */}
+      {showHow && (
+        <div className="absolute inset-0 z-10 flex flex-col bg-ink-900/98 backdrop-blur-sm" style={{ animation: 'screen-in 0.2s ease-out', paddingTop: 'env(safe-area-inset-top)' }}>
+          <div className="flex items-center justify-between px-5 pb-3 pt-4">
+            <p className="text-[15px] font-bold">How to: {ex.name}</p>
+            <button onClick={() => setShowHow(false)} className="grid h-8 w-8 place-items-center rounded-full bg-white/8 text-white/70 active:bg-white/15"><X size={18} /></button>
+          </div>
+          <div className="no-scrollbar flex-1 overflow-y-auto px-5 pb-8">
+            <TechniqueClip poster={ex.image} videoUrl={detail.video} label="Form clip coming soon" />
+            <p className="mt-3 text-[14px] leading-snug text-white/75">{detail.desc}</p>
+            <p className="mb-2 mt-5 text-[12px] font-bold uppercase tracking-wide text-white/40">Step by step</p>
+            <ol className="space-y-2.5">
+              {detail.cues.map((c, i) => (
+                <li key={i} className="flex items-start gap-3 text-[14px]">
+                  <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-brand-400/15 text-[12px] font-bold text-brand-400">{i + 1}</span>
+                  <span className="text-white/80">{c}</span>
+                </li>
+              ))}
+            </ol>
+            <div className="mt-4 flex gap-2.5 rounded-2xl border border-white/10 bg-white/[0.04] p-3.5">
+              <Info size={17} className="mt-0.5 shrink-0 text-accent-orange" />
+              <p className="text-[13px] leading-snug text-white/70"><span className="font-semibold text-white/85">Avoid: </span>{detail.commonMistake}</p>
+            </div>
+            <button onClick={() => setShowHow(false)} className="btn-primary mt-5 w-full">Got it</button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
