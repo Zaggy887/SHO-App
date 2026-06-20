@@ -1,3 +1,5 @@
+import type { Language } from '../lib/i18n'
+
 export type Units = 'metric' | 'imperial'
 export type Theme = 'dark' | 'light'
 export type Goal = 'build-muscle' | 'lose-fat' | 'gain-strength' | 'stay-healthy'
@@ -54,6 +56,10 @@ export interface Settings {
   units: Units
   theme: Theme
   notificationsEnabled: boolean
+  /** UI language. Defaults to English when absent (older saves). */
+  language?: Language
+  /** Connected third-party integrations, e.g. { strava: true }. */
+  connections?: Record<string, boolean>
 }
 
 export interface WeightEntry {

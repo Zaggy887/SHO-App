@@ -331,7 +331,7 @@ export function buildSeed(): AppState {
 
   return {
     profile,
-    settings: { units: 'metric', theme: 'dark', notificationsEnabled: true },
+    settings: { units: 'metric', theme: 'dark', notificationsEnabled: true, language: 'en', connections: {} },
     weights,
     habits,
     meals,

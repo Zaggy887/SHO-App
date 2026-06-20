@@ -290,6 +290,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     root.classList.toggle('theme-light', state.settings.theme === 'light')
   }, [state.settings.theme])
 
+  // keep <html> lang + text direction in sync (Arabic is right-to-left)
+  useEffect(() => {
+    const lang = state.settings.language ?? 'en'
+    const root = document.documentElement
+    root.lang = lang
+    root.dir = lang === 'ar' ? 'rtl' : 'ltr'
+  }, [state.settings.language])
+
   return <StoreCtx.Provider value={{ state, dispatch }}>{children}</StoreCtx.Provider>
 }
 

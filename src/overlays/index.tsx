@@ -3,6 +3,7 @@ import {
   Bell, Moon, Sun, GraduationCap, Wallet, RotateCcw, Trash2, Camera, Trophy,
   Flame, Search, ScanLine, Plus, Check, Share2, ChevronRight, User, Sparkles, Dumbbell,
   Droplet, Footprints, BedDouble, Leaf, Clock, Play, Award, BellRing, Crown,
+  HeartPulse, Activity, Zap,
 } from 'lucide-react'
 import { Sheet, EmptyState } from '../components/Sheet'
 import { Avatar } from '../components/Avatar'
@@ -24,7 +25,14 @@ import {
   habitConsistencyWeek, leaderboardSorted, strengthProgress,
 } from '../store/selectors'
 import { examState, dailyTargets, defaultExamWindow } from '../store/training'
+import { translator, LANGUAGES, type Language } from '../lib/i18n'
 import type { MealName, Units, Theme } from '../store/types'
+
+const INTEGRATIONS: { id: string; name: string; sub: string; icon: JSX.Element }[] = [
+  { id: 'appleHealth', name: 'Apple Health', sub: 'Steps, workouts, sleep & heart rate', icon: <HeartPulse size={18} className="text-red-400" /> },
+  { id: 'healthConnect', name: 'Health Connect', sub: 'Sync Android health data', icon: <Activity size={18} className="text-brand-400" /> },
+  { id: 'strava', name: 'Strava', sub: 'Import runs and rides', icon: <Zap size={18} className="text-accent-orange" /> },
+]
 
 type Props = { open: boolean; onClose: () => void; params?: Record<string, unknown> }
 
@@ -78,6 +86,9 @@ export function SettingsSheet({ open, onClose }: Props) {
   const { state, dispatch } = useStore()
   const toast = useToast()
   const { units, theme, notificationsEnabled } = state.settings
+  const lang = state.settings.language ?? 'en'
+  const t = translator(lang)
+  const connections = state.settings.connections ?? {}
 
   async function toggleNotifs() {
     const next = !notificationsEnabled
@@ -85,55 +96,104 @@ export function SettingsSheet({ open, onClose }: Props) {
     if (next && 'Notification' in window && Notification.permission === 'default') {
       try { await Notification.requestPermission() } catch { /* ignore */ }
     }
-    toast(next ? 'Notifications on' : 'Notifications off')
+    toast(next ? t('toast.notifsOn') : t('toast.notifsOff'))
+  }
+
+  function setLang(code: Language) {
+    dispatch({ type: 'SET_SETTINGS', patch: { language: code } })
+    toast(translator(code)('toast.langSet'))
+  }
+
+  function toggleConnection(id: string, name: string) {
+    const on = !connections[id]
+    dispatch({ type: 'SET_SETTINGS', patch: { connections: { ...connections, [id]: on } } })
+    toast(`${name} ${on ? t('toast.connected') : t('toast.disconnected')}`)
   }
 
   return (
-    <Sheet open={open} onClose={onClose} title="Settings">
-      <Group label="Units">
+    <Sheet open={open} onClose={onClose} title={t('settings.title')}>
+      <Group label={t('settings.language')}>
+        <div className="grid grid-cols-2 gap-2">
+          {LANGUAGES.map((l) => {
+            const active = l.code === lang
+            return (
+              <button
+                key={l.code}
+                onClick={() => setLang(l.code)}
+                className={`flex items-center justify-between rounded-2xl border p-3 text-left transition active:scale-[0.98] ${active ? 'border-brand-400 bg-brand-400/10' : 'border-white/8 bg-ink-800'}`}
+              >
+                <div className="min-w-0">
+                  <p className="truncate font-bold leading-tight" style={l.rtl ? { direction: 'rtl' } : undefined}>{l.native}</p>
+                  <p className="text-[11px] text-white/45">{l.english}</p>
+                </div>
+                {active && <Check size={16} strokeWidth={3} className="shrink-0 text-brand-400" />}
+              </button>
+            )
+          })}
+        </div>
+      </Group>
+
+      <Group label={t('settings.units')}>
         <Segmented<Units>
           value={units}
-          options={[{ v: 'metric', l: 'Metric (kg)' }, { v: 'imperial', l: 'Imperial (lb)' }]}
+          options={[{ v: 'metric', l: t('settings.metric') }, { v: 'imperial', l: t('settings.imperial') }]}
           onChange={(v) => dispatch({ type: 'SET_SETTINGS', patch: { units: v } })}
         />
       </Group>
 
-      <Group label="Appearance">
+      <Group label={t('settings.appearance')}>
         <Segmented<Theme>
           value={theme}
-          options={[{ v: 'dark', l: 'Dark', icon: <Moon size={15} /> }, { v: 'light', l: 'Light', icon: <Sun size={15} /> }]}
+          options={[{ v: 'dark', l: t('settings.dark'), icon: <Moon size={15} /> }, { v: 'light', l: t('settings.light'), icon: <Sun size={15} /> }]}
           onChange={(v) => dispatch({ type: 'SET_SETTINGS', patch: { theme: v } })}
         />
       </Group>
 
-      <Group label="Preferences">
-        <Row icon={<BellRing size={18} className="text-brand-400" />} title="Push notifications" sub="Reminders, streaks & social">
+      {/* Connected apps / integrations */}
+      <Group label={t('settings.connected')}>
+        {INTEGRATIONS.map((it) => {
+          const on = !!connections[it.id]
+          return (
+            <Row key={it.id} icon={it.icon} title={it.name} sub={it.sub}>
+              <button
+                onClick={() => toggleConnection(it.id, it.name)}
+                className={`rounded-full px-3.5 py-1.5 text-sm font-bold transition active:scale-95 ${on ? 'bg-ink-700 text-brand-400' : 'bg-brand-400 text-black'}`}
+              >
+                {on ? t('settings.connectedLabel') : t('settings.connect')}
+              </button>
+            </Row>
+          )
+        })}
+      </Group>
+
+      <Group label={t('settings.preferences')}>
+        <Row icon={<BellRing size={18} className="text-brand-400" />} title={t('settings.pushNotifs')} sub={t('settings.pushNotifsSub')}>
           <Toggle on={notificationsEnabled} onClick={toggleNotifs} />
         </Row>
-        <Row icon={<GraduationCap size={18} className="text-accent-purple" />} title="Exam mode" sub="Shorter sessions during exams">
+        <Row icon={<GraduationCap size={18} className="text-accent-purple" />} title={t('settings.examMode')} sub={t('settings.examModeSub')}>
           <Toggle on={state.profile.examMode} onClick={() => dispatch({ type: 'SET_PROFILE', patch: { examMode: !state.profile.examMode } })} />
         </Row>
-        <Row icon={<Wallet size={18} className="text-brand-400" />} title="Budget nutrition" sub="Prioritise cheap, high-protein meals">
+        <Row icon={<Wallet size={18} className="text-brand-400" />} title={t('settings.budget')} sub={t('settings.budgetSub')}>
           <Toggle on={state.profile.budgetMode} onClick={() => dispatch({ type: 'SET_PROFILE', patch: { budgetMode: !state.profile.budgetMode } })} />
         </Row>
-        <Row icon={<Crown size={18} className="text-brand-400" />} title="Premium" sub="1:1 video calls with your coach">
+        <Row icon={<Crown size={18} className="text-brand-400" />} title={t('settings.premium')} sub={t('settings.premiumSub')}>
           <Toggle on={state.profile.premium} onClick={() => dispatch({ type: 'SET_PROFILE', patch: { premium: !state.profile.premium } })} />
         </Row>
       </Group>
 
-      <Group label="Data">
+      <Group label={t('settings.data')}>
         <button onClick={() => { dispatch({ type: 'RESET_DEMO' }); toast('Demo data restored'); onClose() }} className="flex w-full items-center gap-3 rounded-2xl border border-white/5 bg-ink-800 p-4 text-left active:scale-[0.99]">
           <RotateCcw size={18} className="text-brand-400" />
           <div className="flex-1">
-            <p className="font-bold">Reset demo data</p>
-            <p className="text-[12px] text-white/50">Restore the 40-day sample history</p>
+            <p className="font-bold">{t('settings.resetDemo')}</p>
+            <p className="text-[12px] text-white/50">{t('settings.resetDemoSub')}</p>
           </div>
         </button>
         <button onClick={() => { if (confirm('Clear all data and start fresh?')) { dispatch({ type: 'RESET_EMPTY' }); onClose() } }} className="flex w-full items-center gap-3 rounded-2xl border border-red-500/20 bg-red-500/5 p-4 text-left active:scale-[0.99]">
           <Trash2 size={18} className="text-red-400" />
           <div className="flex-1">
-            <p className="font-bold text-red-300">Clear & start fresh</p>
-            <p className="text-[12px] text-white/50">Wipe data and run onboarding</p>
+            <p className="font-bold text-red-300">{t('settings.clear')}</p>
+            <p className="text-[12px] text-white/50">{t('settings.clearSub')}</p>
           </div>
         </button>
       </Group>
