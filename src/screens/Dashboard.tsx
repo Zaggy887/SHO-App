@@ -152,20 +152,29 @@ export default function Dashboard() {
         </div>
       </Reveal>
 
-      {/* Week selector */}
+      {/* Week strip — slim, tappable, with clear activity dots */}
       <Reveal delay={60}>
-        <div className="-mx-1 mt-5 flex justify-between">
+        <div className="mt-5 flex justify-between">
           {weekKeys.map((k, i) => {
             const active = k === todayKey
+            const future = k > todayKey
             const trained = state.sessions.some((s) => s.dateKey === k && s.completed)
             const logged = state.habits.some((h) => h.dateKey === k)
             const date = parseInt(k.slice(-2))
             return (
-              <div key={k} className={`flex w-11 flex-col items-center gap-2 rounded-2xl py-2.5 transition ${active ? 'bg-brand-400 text-black' : 'text-white/70'}`}>
-                <span className={`text-[11px] font-semibold uppercase tracking-wide ${active ? 'text-black/55' : 'text-white/35'}`}>{WD[i]}</span>
-                <span className="text-[17px] font-bold leading-none">{date}</span>
-                <span className={`h-1.5 w-1.5 rounded-full ${active ? 'bg-black/60' : trained || logged ? 'bg-brand-400' : 'bg-transparent'}`} />
-              </div>
+              <button
+                key={k}
+                disabled={future}
+                onClick={() => nav.goTab('progress')}
+                aria-label={`${WD[i]} ${date}${active ? ', today' : ''}${trained ? ', trained' : logged ? ', logged' : ''}`}
+                className={`flex w-10 flex-col items-center gap-1.5 rounded-xl py-1.5 transition active:scale-95 ${future ? 'opacity-30' : 'active:bg-white/5'}`}
+              >
+                <span className={`text-[10px] font-semibold uppercase tracking-wide ${active ? 'text-brand-400' : 'text-white/35'}`}>{WD[i]}</span>
+                <span className={`grid h-7 w-7 place-items-center rounded-full text-[15px] font-bold leading-none ${active ? 'bg-brand-400/15 text-brand-400 ring-1 ring-brand-400' : 'text-white/75'}`}>{date}</span>
+                <span
+                  className={`h-1.5 w-1.5 rounded-full ${trained ? 'bg-brand-400' : logged ? 'bg-white/30' : future ? 'bg-transparent' : 'bg-white/10'}`}
+                />
+              </button>
             )
           })}
         </div>
