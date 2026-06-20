@@ -8,6 +8,7 @@ export type Overlay =
   | 'addFood'
   | 'logWeight'
   | 'logHabit'
+  | 'logActivity'
   | 'createPost'
   | 'recap'
   | 'leaderboard'

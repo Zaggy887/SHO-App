@@ -179,6 +179,30 @@ export const exerciseDetail = (id: string): ExerciseDetail =>
     beginnerFriendly: true,
   }
 
+/* --------------- Self-logged activity presets ------------------- */
+/* Common activities with a rough kcal/min (at moderate effort). The user can
+ * also log any custom activity, so this list is a convenience, not a limit. */
+export const ACTIVITY_PRESETS: { key: string; name: string; kcalPerMin: number }[] = [
+  { key: 'run', name: 'Run', kcalPerMin: 11 },
+  { key: 'walk', name: 'Walk', kcalPerMin: 4 },
+  { key: 'cycle', name: 'Cycling', kcalPerMin: 8 },
+  { key: 'swim', name: 'Swim', kcalPerMin: 9 },
+  { key: 'football', name: 'Football', kcalPerMin: 9 },
+  { key: 'basketball', name: 'Basketball', kcalPerMin: 8 },
+  { key: 'tennis', name: 'Tennis', kcalPerMin: 7 },
+  { key: 'pickleball', name: 'Pickleball', kcalPerMin: 6 },
+  { key: 'climb', name: 'Climbing', kcalPerMin: 9 },
+  { key: 'hike', name: 'Hike', kcalPerMin: 6 },
+  { key: 'row', name: 'Rowing', kcalPerMin: 10 },
+  { key: 'hiit', name: 'HIIT', kcalPerMin: 12 },
+  { key: 'yoga', name: 'Yoga', kcalPerMin: 3 },
+  { key: 'dance', name: 'Dance', kcalPerMin: 7 },
+  { key: 'boxing', name: 'Boxing', kcalPerMin: 10 },
+  { key: 'other', name: 'Other', kcalPerMin: 7 },
+]
+export const activityPreset = (key: string) => ACTIVITY_PRESETS.find((a) => a.key === key)
+export const INTENSITY_MULT: Record<'easy' | 'moderate' | 'hard', number> = { easy: 0.8, moderate: 1, hard: 1.25 }
+
 /* Plate increments for adaptive progression (kg) */
 export const INCREMENT: Record<string, number> = {
   bench: 2.5, squat: 5, deadlift: 5, ohp: 2.5, row: 2.5, pulldown: 2.5, legpress: 5, rdl: 2.5,

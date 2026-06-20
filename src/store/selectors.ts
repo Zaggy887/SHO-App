@@ -121,6 +121,16 @@ export function foodReviewForDay(s: AppState, key: string = todayKey) {
   return s.foodReviews.find((r) => r.dateKey === key) ?? null
 }
 
+/* -------------------------- Self-logged activities -------------------------- */
+export function activitiesForDay(s: AppState, key: string = todayKey) {
+  return (s.activities ?? []).filter((a) => a.dateKey === key)
+}
+
+export function activitiesInRange(s: AppState, days: number) {
+  const cutoff = dayKey(days)
+  return (s.activities ?? []).filter((a) => a.dateKey >= cutoff)
+}
+
 /* -------------------------- Strength progress -------------------------- */
 /** Epley 1RM estimate from a session's best set of an exercise. */
 function best1RM(session: WorkoutSession, defId: string): number | null {
@@ -207,7 +217,8 @@ export function weeklyIndex(s: AppState): WeeklyIndex {
   const n = Math.max(1, days.length)
 
   const avg = (sel: (h: HabitDay) => number) => days.reduce((a, h) => a + sel(h), 0) / n
-  const workouts = workoutsInRange(s, 7)
+  // Count prescribed sessions and self-logged activities — all fitness counts.
+  const workouts = workoutsInRange(s, 7) + activitiesInRange(s, 7).length
 
   // Each ratio: 1.0 means the target was met across the week.
   const r = {

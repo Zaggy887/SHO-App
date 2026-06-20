@@ -18,6 +18,7 @@ import {
   AddFoodSheet,
   LogWeightSheet,
   LogHabitSheet,
+  LogActivitySheet,
   CreatePostSheet,
   WeeklyRecapSheet,
   LeaderboardSheet,
@@ -88,6 +89,7 @@ function Shell() {
       <AddFoodSheet open={overlay === 'addFood'} onClose={nav.close} params={params} />
       <LogWeightSheet open={overlay === 'logWeight'} onClose={nav.close} />
       <LogHabitSheet open={overlay === 'logHabit'} onClose={nav.close} params={params} />
+      <LogActivitySheet open={overlay === 'logActivity'} onClose={nav.close} />
       <CreatePostSheet open={overlay === 'createPost'} onClose={nav.close} />
       <WeeklyRecapSheet open={overlay === 'recap'} onClose={nav.close} />
       <LeaderboardSheet open={overlay === 'leaderboard'} onClose={nav.close} />

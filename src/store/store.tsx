@@ -6,6 +6,7 @@ import type {
   AppNotification,
   AppState,
   ChatMessage,
+  LoggedActivity,
   LoggedExercise,
   LoggedMeal,
   Post,
@@ -26,6 +27,8 @@ export type Action =
   | { type: 'PATCH_TODAY_HABIT'; patch: Partial<{ steps: number; sleepH: number; mindsetMin: number; waterL: number }> }
   | { type: 'ADD_MEAL'; meal: Omit<LoggedMeal, 'id' | 'dateKey'> }
   | { type: 'REMOVE_MEAL'; id: string }
+  | { type: 'ADD_ACTIVITY'; activity: Omit<LoggedActivity, 'id' | 'dateKey' | 'time'> }
+  | { type: 'REMOVE_ACTIVITY'; id: string }
   | { type: 'SAVE_FOOD_REVIEW'; text: string; score: number }
   | { type: 'SEND_CHAT'; text: string }
   | { type: 'MARK_CHAT_READ' }
@@ -97,6 +100,20 @@ function reducer(state: AppState, action: Action): AppState {
 
     case 'REMOVE_MEAL':
       return { ...state, meals: state.meals.filter((m) => m.id !== action.id) }
+
+    case 'ADD_ACTIVITY': {
+      const activity: LoggedActivity = { ...action.activity, id: `act-${Date.now()}`, dateKey: todayKey, time: nowTime() }
+      const activities = [activity, ...(state.activities ?? [])]
+      // Recognise any logged activity as training for the day.
+      const has = state.habits.some((h) => h.dateKey === todayKey)
+      const habits = has
+        ? state.habits.map((h) => (h.dateKey === todayKey ? { ...h, workout: true } : h))
+        : [...state.habits, { dateKey: todayKey, steps: 0, sleepH: 0, waterL: 0, mindsetMin: 0, nutritionScore: 0, workout: true }]
+      return { ...state, activities, habits }
+    }
+
+    case 'REMOVE_ACTIVITY':
+      return { ...state, activities: (state.activities ?? []).filter((a) => a.id !== action.id) }
 
     case 'SAVE_FOOD_REVIEW': {
       const others = state.foodReviews.filter((r) => r.dateKey !== todayKey)

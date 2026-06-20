@@ -1,13 +1,14 @@
 import { useMemo, useState } from 'react'
-import { CalendarDays, Clock, Play, ChevronRight, Check, CheckSquare, Leaf } from 'lucide-react'
+import { CalendarDays, Clock, Play, ChevronRight, Check, Leaf, Plus, Trash2, Activity } from 'lucide-react'
 import { Icon } from '../components/Icon'
+import { ActivityIcon } from '../components/ActivityIcon'
 import { ProgressBar, SegmentedTabs, ScreenHeader, Chip } from '../components/ui'
 import { useStore } from '../store/store'
 import { useNav } from '../nav'
 import { EXERCISES } from '../data/catalog'
 import { fmtVolume, fmtWeight } from '../lib/format'
 import { relativeLabel } from '../lib/date'
-import { todaySession, sessionProgress, completedSessions } from '../store/selectors'
+import { todaySession, sessionProgress, completedSessions, activitiesForDay } from '../store/selectors'
 
 const TABS = ['Today', 'Program', 'Exercises', 'History']
 
@@ -37,81 +38,119 @@ function TodayTab() {
   const session = todaySession(state)
   const prog = sessionProgress(session)
 
-  if (!session) {
-    return (
-      <div className="rounded-2xl border border-white/5 bg-ink-800 p-8 text-center">
-        <p className="text-2xl">😌</p>
-        <p className="mt-2 font-bold">Rest Day</p>
-        <p className="mt-1 text-[13px] text-white/50">Recovery is where you grow. Try a mobility flow or a walk.</p>
-        <button onClick={() => nav.open('quick')} className="btn-primary mx-auto mt-4">Quick mobility</button>
-      </div>
-    )
-  }
-
   return (
     <>
-      <div className="relative overflow-hidden rounded-2xl border border-white/5">
-        <img src={session.image} alt="" className="absolute inset-0 h-full w-full object-cover" loading="lazy" />
-        <div className="relative bg-gradient-to-r from-ink-900 via-ink-900/92 to-ink-900/30 p-5">
-          <p className="text-sm font-semibold text-brand-400">{session.focus}</p>
-          <h3 className="mt-1 text-3xl font-extrabold">{session.name}</h3>
-          <div className="mt-2 flex items-center gap-1.5 text-sm text-white/65">
-            <Clock size={15} /> {session.exercises.length} exercises • ~{session.durationMin} min
-          </div>
-          <button onClick={() => nav.open('activeWorkout')} className="btn-primary mt-4">
-            {session.completed ? 'Review Workout' : prog.done > 0 ? 'Resume Workout' : 'Start Workout'} <Play size={16} fill="currentColor" />
-          </button>
-        </div>
-      </div>
-
-      <div className="mt-6">
-        <h2 className="section-title mb-2">Today's Progress</h2>
-        <div className="mb-1.5 flex items-center justify-between text-[13px] text-white/55">
-          <span>{prog.done}/{prog.total} exercises completed</span>
-          <span className="font-semibold text-white">{prog.pct}%</span>
-        </div>
-        <ProgressBar value={prog.pct} />
-        <div className="mt-4 grid grid-cols-3 gap-3 rounded-2xl border border-white/5 bg-ink-800 p-4">
-          <Stat icon="dumbbell" color="#7ED957" label="Volume" value={fmtVolume(session.volumeKg, units)} />
-          <Stat icon="clock" color="#9AA0A6" label="Duration" value={`${session.durationMin} min`} />
-          <Stat icon="flame" color="#9AA0A6" label="Calories" value={`${session.calories} kcal`} />
-        </div>
-      </div>
-
-      <div className="mt-6">
-        <h2 className="section-title mb-3">Exercises</h2>
-        <div className="space-y-3">
-          {session.exercises.map((e) => {
-            const done = e.sets.length > 0 && e.sets.every((s) => s.done)
-            const topWeight = Math.max(...e.sets.map((s) => s.weightKg))
-            return (
-              <div key={e.defId} className="flex items-center gap-3 rounded-2xl border border-white/5 bg-ink-800 p-3">
-                <button onClick={() => dispatch({ type: 'TOGGLE_EXERCISE_DONE', defId: e.defId })} className={`grid h-6 w-6 shrink-0 place-items-center rounded-full border-2 transition ${done ? 'border-brand-400 bg-brand-400' : 'border-white/25'}`}>
-                  {done && <Check size={14} strokeWidth={3} className="text-black" />}
-                </button>
-                <img src={e.image} alt="" className="h-12 w-12 rounded-xl object-cover" loading="lazy" />
-                <button onClick={() => nav.open('exerciseDetail', { defId: e.defId })} className="min-w-0 flex-1 text-left">
-                  <p className="truncate font-bold leading-tight">{e.name}</p>
-                  <p className="text-[12px] text-white/50">{e.targetSets} sets • {e.targetReps} reps · how to</p>
-                </button>
-                <Chip color={done ? 'green' : 'gray'}>{fmtWeight(topWeight, units, units === 'imperial' ? 0 : 1)}</Chip>
-                <button onClick={() => nav.open('exerciseDetail', { defId: e.defId })}><ChevronRight size={18} className="text-white/30" /></button>
+      {session ? (
+        <>
+          <div className="relative overflow-hidden rounded-2xl border border-white/5">
+            <img src={session.image} alt="" className="absolute inset-0 h-full w-full object-cover" loading="lazy" />
+            <div className="relative bg-gradient-to-r from-ink-900 via-ink-900/92 to-ink-900/30 p-5">
+              <p className="text-sm font-semibold text-brand-400">{session.focus}</p>
+              <h3 className="mt-1 text-3xl font-extrabold">{session.name}</h3>
+              <div className="mt-2 flex items-center gap-1.5 text-sm text-white/65">
+                <Clock size={15} /> {session.exercises.length} exercises • ~{session.durationMin} min
               </div>
-            )
-          })}
-        </div>
-      </div>
+              <button onClick={() => nav.open('activeWorkout')} className="btn-primary mt-4">
+                {session.completed ? 'Review Workout' : prog.done > 0 ? 'Resume Workout' : 'Start Workout'} <Play size={16} fill="currentColor" />
+              </button>
+            </div>
+          </div>
 
-      <button onClick={() => nav.open('activeWorkout')} className="mt-5 flex w-full items-center gap-3 rounded-2xl border border-white/5 bg-ink-800 p-4 text-left active:scale-[0.99]">
-        <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand-400/15"><CheckSquare size={20} className="text-brand-400" /></div>
-        <div className="flex-1">
-          <p className="font-bold">Finish Strong</p>
-          <p className="text-[13px] text-white/55">You're one step closer to your goal.</p>
+          <div className="mt-6">
+            <h2 className="section-title mb-2">Today's Progress</h2>
+            <div className="mb-1.5 flex items-center justify-between text-[13px] text-white/55">
+              <span>{prog.done}/{prog.total} exercises completed</span>
+              <span className="font-semibold text-white">{prog.pct}%</span>
+            </div>
+            <ProgressBar value={prog.pct} />
+            <div className="mt-4 grid grid-cols-3 gap-3 rounded-2xl border border-white/5 bg-ink-800 p-4">
+              <Stat icon="dumbbell" color="#7ED957" label="Volume" value={fmtVolume(session.volumeKg, units)} />
+              <Stat icon="clock" color="#9AA0A6" label="Duration" value={`${session.durationMin} min`} />
+              <Stat icon="flame" color="#9AA0A6" label="Calories" value={`${session.calories} kcal`} />
+            </div>
+          </div>
+
+          <div className="mt-6">
+            <h2 className="section-title mb-3">Exercises</h2>
+            <div className="space-y-3">
+              {session.exercises.map((e) => {
+                const done = e.sets.length > 0 && e.sets.every((s) => s.done)
+                const topWeight = Math.max(...e.sets.map((s) => s.weightKg))
+                return (
+                  <div key={e.defId} className="flex items-center gap-3 rounded-2xl border border-white/5 bg-ink-800 p-3">
+                    <button onClick={() => dispatch({ type: 'TOGGLE_EXERCISE_DONE', defId: e.defId })} className={`grid h-6 w-6 shrink-0 place-items-center rounded-full border-2 transition ${done ? 'border-brand-400 bg-brand-400' : 'border-white/25'}`}>
+                      {done && <Check size={14} strokeWidth={3} className="text-black" />}
+                    </button>
+                    <img src={e.image} alt="" className="h-12 w-12 rounded-xl object-cover" loading="lazy" />
+                    <button onClick={() => nav.open('exerciseDetail', { defId: e.defId })} className="min-w-0 flex-1 text-left">
+                      <p className="truncate font-bold leading-tight">{e.name}</p>
+                      <p className="text-[12px] text-white/50">{e.targetSets} sets • {e.targetReps} reps · how to</p>
+                    </button>
+                    <Chip color={done ? 'green' : 'gray'}>{fmtWeight(topWeight, units, units === 'imperial' ? 0 : 1)}</Chip>
+                    <button onClick={() => nav.open('exerciseDetail', { defId: e.defId })}><ChevronRight size={18} className="text-white/30" /></button>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </>
+      ) : (
+        <div className="rounded-2xl border border-white/5 bg-ink-800 p-8 text-center">
+          <p className="text-2xl">😌</p>
+          <p className="mt-2 font-bold">Rest Day</p>
+          <p className="mt-1 text-[13px] text-white/50">Recovery is where you grow. Try a mobility flow, a walk — or log whatever you got up to below.</p>
+          <button onClick={() => nav.open('quick')} className="btn-primary mx-auto mt-4">Quick mobility</button>
         </div>
-        <span className="flex items-center gap-1 text-sm font-semibold text-brand-400">Open <ChevronRight size={16} /></span>
-      </button>
+      )}
+
+      <OtherActivities />
       <div className="h-2" />
     </>
+  )
+}
+
+/* Self-logged activities — anything the app didn't prescribe. */
+function OtherActivities() {
+  const { state, dispatch } = useStore()
+  const nav = useNav()
+  const acts = activitiesForDay(state)
+  return (
+    <div className="mt-8">
+      <div className="mb-3 flex items-center justify-between">
+        <div>
+          <h2 className="section-title">Other activities</h2>
+          <p className="text-[12px] text-white/45">Log anything else you did today</p>
+        </div>
+        <button onClick={() => nav.open('logActivity')} className="see-all flex items-center gap-1">Log <Plus size={15} /></button>
+      </div>
+
+      {acts.length === 0 ? (
+        <button onClick={() => nav.open('logActivity')} className="flex w-full items-center gap-3 rounded-2xl border border-dashed border-white/15 p-4 text-left active:scale-[0.99]">
+          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand-400/15"><Activity size={20} className="text-brand-400" /></div>
+          <div className="flex-1">
+            <p className="font-bold leading-tight">Log a workout, sport or activity</p>
+            <p className="text-[12px] text-white/50">Swim, run, football, pickleball — anything counts</p>
+          </div>
+          <ChevronRight size={18} className="text-white/30" />
+        </button>
+      ) : (
+        <div className="space-y-2.5">
+          {acts.map((a) => (
+            <div key={a.id} className="flex items-center gap-3 rounded-2xl border border-white/5 bg-ink-800 p-3">
+              <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-brand-400/15"><ActivityIcon name={a.icon} size={20} className="text-brand-400" /></div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-bold leading-tight">{a.name}</p>
+                <p className="text-[12px] capitalize text-white/50">{a.minutes} min · {a.intensity} · {a.calories} kcal</p>
+                {a.note && <p className="truncate text-[12px] text-white/40">{a.note}</p>}
+              </div>
+              <span className="shrink-0 text-[11px] text-white/35">{a.time}</span>
+              <button onClick={() => dispatch({ type: 'REMOVE_ACTIVITY', id: a.id })} className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/5 text-white/40 active:bg-white/10"><Trash2 size={15} /></button>
+            </div>
+          ))}
+          <button onClick={() => nav.open('logActivity')} className="w-full rounded-2xl border border-dashed border-white/15 py-3 text-sm font-semibold text-white/55 active:bg-white/5">+ Log another activity</button>
+        </div>
+      )}
+    </div>
   )
 }
 

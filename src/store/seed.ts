@@ -336,6 +336,7 @@ export function buildSeed(): AppState {
     habits,
     meals,
     foodReviews: [],
+    activities: [],
     chat: [
       {
         id: 'chat-welcome',

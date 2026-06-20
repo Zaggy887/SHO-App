@@ -14,7 +14,9 @@ import { useToast } from '../components/Toast'
 import { useNav } from '../nav'
 import {
   BUDGET_MEALS, BEGINNER_LESSONS, exerciseDetail, exById, REP_TARGETS, BASE_WEIGHTS,
+  ACTIVITY_PRESETS, activityPreset, INTENSITY_MULT,
 } from '../data/catalog'
+import { ActivityIcon } from '../components/ActivityIcon'
 import { nextSetRecommendation } from '../store/training'
 import { coachThreadView } from '../store/coach'
 import { CHAT_SUGGESTIONS } from '../lib/coachChat'
@@ -504,5 +506,94 @@ export function CoachChatSheet({ open, onClose }: Props) {
         </button>
       </div>
     </div>
+  )
+}
+
+/* ===================== Log a self-chosen activity ================= */
+export function LogActivitySheet({ open, onClose }: Props) {
+  const { dispatch } = useStore()
+  const toast = useToast()
+  const [key, setKey] = useState('run')
+  const [customName, setCustomName] = useState('')
+  const [minutes, setMinutes] = useState('30')
+  const [intensity, setIntensity] = useState<'easy' | 'moderate' | 'hard'>('moderate')
+  const [note, setNote] = useState('')
+
+  const preset = activityPreset(key) ?? ACTIVITY_PRESETS[0]
+  const isCustom = key === 'other'
+  const name = isCustom ? customName.trim() || 'Activity' : preset.name
+  const mins = parseInt(minutes) || 0
+  const kcal = Math.round(mins * preset.kcalPerMin * INTENSITY_MULT[intensity])
+
+  function save() {
+    if (mins <= 0) { toast('Add a duration first'); return }
+    dispatch({ type: 'ADD_ACTIVITY', activity: { type: key, name, icon: isCustom ? 'other' : key, minutes: mins, intensity, calories: kcal, note: note.trim() || undefined } })
+    toast(`${name} logged`)
+    setKey('run'); setCustomName(''); setMinutes('30'); setIntensity('moderate'); setNote('')
+    onClose()
+  }
+
+  return (
+    <Sheet open={open} onClose={onClose} title="Log an activity">
+      <p className="mb-3 text-[13px] text-white/55">Anything counts — a sport, a run, a class. Pick one or add your own.</p>
+
+      <div className="grid grid-cols-4 gap-2">
+        {ACTIVITY_PRESETS.map((a) => {
+          const active = key === a.key
+          return (
+            <button
+              key={a.key}
+              onClick={() => setKey(a.key)}
+              className={`flex flex-col items-center gap-1.5 rounded-2xl border py-3 transition active:scale-95 ${active ? 'border-brand-400 bg-brand-400/10 text-brand-400' : 'border-white/8 bg-ink-800 text-white/70'}`}
+            >
+              <ActivityIcon name={a.key} size={20} className={active ? 'text-brand-400' : 'text-white/70'} />
+              <span className="text-[11px] font-semibold leading-none">{a.name}</span>
+            </button>
+          )
+        })}
+      </div>
+
+      {isCustom && (
+        <input
+          autoFocus
+          value={customName}
+          onChange={(e) => setCustomName(e.target.value)}
+          placeholder="Name your activity (e.g. Padel, Surfing, Netball)"
+          className="mt-3 w-full rounded-xl border border-white/8 bg-ink-800 px-4 py-3 text-white placeholder:text-white/35 focus:border-brand-400/60 focus:outline-none"
+        />
+      )}
+
+      <p className="mb-1.5 mt-5 text-sm font-semibold text-white/70">Duration</p>
+      <div className="flex items-center gap-2">
+        {['15', '30', '45', '60'].map((m) => (
+          <button key={m} onClick={() => setMinutes(m)} className={`rounded-full px-3 py-1.5 text-sm font-semibold ${minutes === m ? 'bg-brand-400 text-black' : 'bg-ink-700 text-white/60'}`}>{m}m</button>
+        ))}
+        <div className="ml-auto flex items-center gap-1.5">
+          <input inputMode="numeric" value={minutes} onChange={(e) => setMinutes(e.target.value.replace(/\D/g, '').slice(0, 3))} className="w-16 rounded-xl border border-white/8 bg-ink-800 px-3 py-2 text-center text-white focus:border-brand-400/60 focus:outline-none" />
+          <span className="text-sm text-white/45">min</span>
+        </div>
+      </div>
+
+      <p className="mb-1.5 mt-5 text-sm font-semibold text-white/70">Intensity</p>
+      <div className="flex gap-1 rounded-xl bg-ink-700 p-1">
+        {(['easy', 'moderate', 'hard'] as const).map((i) => (
+          <button key={i} onClick={() => setIntensity(i)} className={`flex-1 rounded-lg py-2.5 text-sm font-semibold capitalize transition ${intensity === i ? 'bg-brand-400 text-black' : 'text-white/60'}`}>{i}</button>
+        ))}
+      </div>
+
+      <input
+        value={note}
+        onChange={(e) => setNote(e.target.value)}
+        placeholder="Note (optional) — how did it feel?"
+        className="mt-4 w-full rounded-xl border border-white/8 bg-ink-800 px-4 py-3 text-[14px] text-white placeholder:text-white/35 focus:border-brand-400/60 focus:outline-none"
+      />
+
+      <div className="mt-4 flex items-center justify-between rounded-2xl border border-white/5 bg-ink-800 p-4">
+        <span className="text-[13px] text-white/55">Estimated burn</span>
+        <span className="text-lg font-extrabold text-brand-400">≈ {kcal} kcal</span>
+      </div>
+
+      <button onClick={save} className="btn-primary mt-5 w-full"><Plus size={16} /> Log activity</button>
+    </Sheet>
   )
 }

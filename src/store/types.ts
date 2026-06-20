@@ -113,6 +113,23 @@ export interface FoodReview {
   score: number
 }
 
+/** A self-logged fitness activity not prescribed by the app (run, swim, sport…). */
+export interface LoggedActivity {
+  id: string
+  dateKey: string
+  /** preset key (e.g. 'run') or 'custom' */
+  type: string
+  name: string
+  /** icon key resolved by ActivityIcon */
+  icon: string
+  minutes: number
+  intensity: 'easy' | 'moderate' | 'hard'
+  /** rough estimated calories */
+  calories: number
+  note?: string
+  time: string
+}
+
 export interface ExerciseDef {
   id: string
   name: string
@@ -337,6 +354,8 @@ export interface AppState {
   meals: LoggedMeal[]
   foodReviews: FoodReview[]
   chat: ChatMessage[]
+  /** self-logged activities (optional for older saves) */
+  activities?: LoggedActivity[]
   foods: FoodItem[]
   sessions: WorkoutSession[]
   program: ProgramDay[]
