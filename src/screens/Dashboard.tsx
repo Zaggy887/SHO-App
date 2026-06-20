@@ -2,13 +2,14 @@ import type { ReactNode } from 'react'
 import { Menu, MessageCircle, Clock, Play, GraduationCap, ChevronRight, Sparkles, Leaf, Check, Flame } from 'lucide-react'
 import { Icon } from '../components/Icon'
 import { ProgressRing } from '../components/ui'
+import { IndexGauge } from '../components/IndexGauge'
 import { useStore } from '../store/store'
 import { useNav } from '../nav'
 import { currentWeekKeys, todayKey, longDate, TODAY } from '../lib/date'
 import { fmtFluid, fmtWeightNum, weightUnit, pct } from '../lib/format'
 import {
   todayHabit, todaySession, weightStats, workoutsThisWeek, workoutsInRange,
-  strengthProgress, unreadChat, streakStats, foodReviewForDay,
+  strengthProgress, unreadChat, streakStats, foodReviewForDay, weeklyIndex,
 } from '../store/selectors'
 import { coachDaily } from '../store/coach'
 import { dailyTargets, examState } from '../store/training'
@@ -48,6 +49,7 @@ export default function Dashboard() {
   const exam = examState(state)
   const streak = streakStats(state)
   const foodReview = foodReviewForDay(state)
+  const idx = weeklyIndex(state)
   const weightLoggedToday = state.weights.some((x) => x.dateKey === todayKey)
 
   const greeting = greetingFor(TODAY.getHours())
@@ -114,18 +116,38 @@ export default function Dashboard() {
         </button>
       </div>
 
-      {/* Greeting + date + streak */}
+      {/* Weekly performance index — the first thing you see */}
       <Reveal>
-        <div className="flex items-end justify-between gap-3">
-          <div className="min-w-0">
-            <h1 className="text-[26px] font-extrabold leading-tight tracking-tight">{greeting}, {state.profile.name}</h1>
-            <p className="mt-1 text-[14px] text-white/45">{longDate(todayKey)}</p>
+        <div className="overflow-hidden rounded-3xl border border-white/8 bg-ink-800 p-5">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h1 className="text-[20px] font-extrabold leading-tight tracking-tight">{greeting}, {state.profile.name}</h1>
+              <p className="mt-0.5 text-[13px] text-white/45">{longDate(todayKey)}</p>
+            </div>
+            {streak.current > 0 && (
+              <span className="flex shrink-0 items-center gap-1.5 rounded-full bg-accent-orange/12 px-3 py-1.5 text-[13px] font-bold text-accent-orange">
+                <Flame size={15} /> {streak.current} day{streak.current === 1 ? '' : 's'}
+              </span>
+            )}
           </div>
-          {streak.current > 0 && (
-            <span className="flex shrink-0 items-center gap-1.5 rounded-full bg-accent-orange/12 px-3 py-1.5 text-[13px] font-bold text-accent-orange">
-              <Flame size={15} /> {streak.current} day{streak.current === 1 ? '' : 's'}
-            </span>
-          )}
+
+          <div className="mt-3">
+            <IndexGauge index={idx} />
+          </div>
+
+          <p className="mt-3 text-center text-[13px] leading-snug text-white/60">{idx.blurb}</p>
+
+          {/* What's driving the needle */}
+          <div className="mt-4 flex justify-between gap-2 border-t border-white/5 pt-4">
+            {idx.parts.map((p) => (
+              <div key={p.label} className="flex flex-1 flex-col items-center gap-1.5">
+                <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/8">
+                  <div className="h-full rounded-full" style={{ width: `${Math.min(100, p.pct)}%`, backgroundColor: p.pct >= 85 ? '#7ED957' : p.pct >= 55 ? '#F5A524' : '#F87171' }} />
+                </div>
+                <span className="text-[10px] font-semibold text-white/45">{p.label}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </Reveal>
 

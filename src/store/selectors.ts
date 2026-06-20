@@ -187,6 +187,75 @@ export function unreadChat(s: AppState) {
   return s.chat.filter((m) => m.role === 'coach' && !m.read).length
 }
 
+/* -------------------------- Weekly performance index -------------------------- */
+export type WeeklyIndex = {
+  /** 0..100, where ~50 means "on track" to hit your goals. */
+  score: number
+  band: 'off' | 'behind' | 'ontrack' | 'ahead' | 'crushing'
+  label: string
+  blurb: string
+  parts: { label: string; pct: number }[]
+}
+
+/** Reviews the last 7 days of activity vs the user's targets into a single
+ *  needle position. 1.0x of targets = the middle ("on track"). */
+export function weeklyIndex(s: AppState): WeeklyIndex {
+  const p = s.profile
+  const byKey = new Map(s.habits.map((h) => [h.dateKey, h]))
+  const last7 = Array.from({ length: 7 }, (_, d) => dayKey(d))
+  const days = last7.map((k) => byKey.get(k)).filter(Boolean) as HabitDay[]
+  const n = Math.max(1, days.length)
+
+  const avg = (sel: (h: HabitDay) => number) => days.reduce((a, h) => a + sel(h), 0) / n
+  const workouts = workoutsInRange(s, 7)
+
+  // Each ratio: 1.0 means the target was met across the week.
+  const r = {
+    workouts: workouts / Math.max(1, p.daysPerWeek),
+    steps: p.stepTarget ? avg((h) => h.steps) / p.stepTarget : 0,
+    sleep: p.sleepTargetH ? avg((h) => h.sleepH) / p.sleepTargetH : 0,
+    water: p.waterTargetL ? avg((h) => h.waterL) / p.waterTargetL : 0,
+    nutrition: avg((h) => h.nutritionScore) / 8, // 8/10 counts as on-track
+  }
+  const clamp = (x: number) => Math.max(0, Math.min(1.7, x))
+  const weighted =
+    clamp(r.workouts) * 0.30 +
+    clamp(r.steps) * 0.20 +
+    clamp(r.sleep) * 0.20 +
+    clamp(r.water) * 0.15 +
+    clamp(r.nutrition) * 0.15
+
+  // weighted ≈ 1 → middle (50). 1.7x → ~85+, 0 → 0.
+  const score = Math.round(Math.max(0, Math.min(100, weighted * 50)))
+
+  const band: WeeklyIndex['band'] =
+    score >= 80 ? 'crushing' : score >= 62 ? 'ahead' : score >= 44 ? 'ontrack' : score >= 28 ? 'behind' : 'off'
+  const label = {
+    crushing: 'Crushing your goals',
+    ahead: 'Ahead of pace',
+    ontrack: 'On track',
+    behind: 'Slightly behind',
+    off: 'Off track',
+  }[band]
+  const blurb = {
+    crushing: 'Outstanding week. You are well past your targets — keep this rhythm.',
+    ahead: 'Strong week. You are pushing beyond your goals nicely.',
+    ontrack: 'Right where you want to be. Hold this and the results come.',
+    behind: 'A little under pace this week. One or two better days turns it around.',
+    off: 'This week slipped. No guilt — pick one habit and start again today.',
+  }[band]
+
+  const pct = (x: number) => Math.round(Math.max(0, Math.min(1.2, x)) * 100)
+  const parts = [
+    { label: 'Workouts', pct: pct(r.workouts) },
+    { label: 'Steps', pct: pct(r.steps) },
+    { label: 'Sleep', pct: pct(r.sleep) },
+    { label: 'Water', pct: pct(r.water) },
+    { label: 'Nutrition', pct: pct(r.nutrition) },
+  ]
+  return { score, band, label, blurb, parts }
+}
+
 export function leaderboardSorted(s: AppState) {
   return [...s.leaderboard].sort((a, b) => b.points - a.points)
 }
