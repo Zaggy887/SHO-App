@@ -116,38 +116,39 @@ export default function Dashboard() {
         </button>
       </div>
 
-      {/* Weekly performance index — the first thing you see */}
+      {/* Weekly performance index — the first thing you see, flush with the page */}
       <Reveal>
-        <div className="overflow-hidden rounded-3xl border border-white/8 bg-ink-800 p-5">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <h1 className="text-[20px] font-extrabold leading-tight tracking-tight">{greeting}, {state.profile.name}</h1>
-              <p className="mt-0.5 text-[13px] text-white/45">{longDate(todayKey)}</p>
-            </div>
-            {streak.current > 0 && (
-              <span className="flex shrink-0 items-center gap-1.5 rounded-full bg-accent-orange/12 px-3 py-1.5 text-[13px] font-bold text-accent-orange">
-                <Flame size={15} /> {streak.current} day{streak.current === 1 ? '' : 's'}
-              </span>
-            )}
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="text-[20px] font-extrabold leading-tight tracking-tight">{greeting}, {state.profile.name}</h1>
+            <p className="mt-0.5 text-[13px] text-white/45">{longDate(todayKey)}</p>
           </div>
+          {streak.current > 0 && (
+            <span className="flex shrink-0 items-center gap-1.5 rounded-full bg-accent-orange/12 px-3 py-1.5 text-[13px] font-bold text-accent-orange">
+              <Flame size={15} /> {streak.current} day{streak.current === 1 ? '' : 's'}
+            </span>
+          )}
+        </div>
 
-          <div className="mt-3">
-            <IndexGauge index={idx} />
-          </div>
+        <div className="mt-2">
+          <IndexGauge index={idx} />
+        </div>
 
-          <p className="mt-3 text-center text-[13px] leading-snug text-white/60">{idx.blurb}</p>
+        <p className="mt-2 text-center text-[13px] leading-snug text-white/55">{idx.blurb}</p>
 
-          {/* What's driving the needle */}
-          <div className="mt-4 flex justify-between gap-2 border-t border-white/5 pt-4">
-            {idx.parts.map((p) => (
+        {/* What's driving the needle — colour-coded by area */}
+        <div className="mt-4 flex justify-between gap-2">
+          {idx.parts.map((p) => {
+            const c = p.pct >= 85 ? '#7ED957' : p.pct >= 55 ? '#F5A524' : '#F87171'
+            return (
               <div key={p.label} className="flex flex-1 flex-col items-center gap-1.5">
                 <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/8">
-                  <div className="h-full rounded-full" style={{ width: `${Math.min(100, p.pct)}%`, backgroundColor: p.pct >= 85 ? '#7ED957' : p.pct >= 55 ? '#F5A524' : '#F87171' }} />
+                  <div className="h-full rounded-full" style={{ width: `${Math.min(100, p.pct)}%`, backgroundColor: c }} />
                 </div>
-                <span className="text-[10px] font-semibold text-white/45">{p.label}</span>
+                <span className="text-[10px] font-semibold" style={{ color: c }}>{p.label}</span>
               </div>
-            ))}
-          </div>
+            )
+          })}
         </div>
       </Reveal>
 
