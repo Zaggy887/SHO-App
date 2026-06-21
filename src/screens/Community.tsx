@@ -77,7 +77,7 @@ function FeedTab() {
 
       <SectionHeader title="What's happening" />
       <div className="no-scrollbar -mx-5 flex gap-3 overflow-x-auto px-5 pb-1">
-        {state.posts.map((p) => <FeedCard key={p.id} post={p} onLike={() => dispatch({ type: 'TOGGLE_LIKE', postId: p.id })} onKudos={() => dispatch({ type: 'GIVE_KUDOS', postId: p.id })} onBookmark={() => dispatch({ type: 'TOGGLE_BOOKMARK', postId: p.id })} />)}
+        {state.posts.map((p) => <FeedCard key={p.id} post={p} onLike={() => dispatch({ type: 'TOGGLE_LIKE', postId: p.id })} onKudos={() => dispatch({ type: 'GIVE_KUDOS', postId: p.id })} onBookmark={() => dispatch({ type: 'TOGGLE_BOOKMARK', postId: p.id })} onComment={() => nav.open('postDetail', { postId: p.id })} />)}
       </div>
 
       {featured && (
@@ -100,7 +100,7 @@ function FeedTab() {
   )
 }
 
-function FeedCard({ post: p, onLike, onKudos, onBookmark }: { post: Post; onLike: () => void; onKudos: () => void; onBookmark: () => void }) {
+function FeedCard({ post: p, onLike, onKudos, onBookmark, onComment }: { post: Post; onLike: () => void; onKudos: () => void; onBookmark: () => void; onComment: () => void }) {
   return (
     <div className="w-[268px] shrink-0 overflow-hidden rounded-2xl border border-white/5 bg-ink-800">
       <div className="flex items-center gap-2.5 p-3">
@@ -124,7 +124,7 @@ function FeedCard({ post: p, onLike, onKudos, onBookmark }: { post: Post; onLike
       <div className="flex items-center gap-3 p-3">
         <button onClick={onLike} className={`flex items-center gap-1.5 text-sm ${p.liked ? 'text-brand-400' : 'text-white/55'}`}><Heart size={17} fill={p.liked ? 'currentColor' : 'none'} /> {p.likes}</button>
         <button onClick={onKudos} className={`flex items-center gap-1.5 text-sm ${p.gaveKudos ? 'text-brand-400' : 'text-white/55'}`}><HeartHandshake size={17} /> {p.kudos ?? 0}</button>
-        <span className="flex items-center gap-1.5 text-sm text-white/55"><MessageCircle size={17} /> {p.comments}</span>
+        <button onClick={onComment} className="flex items-center gap-1.5 text-sm text-white/55 active:text-brand-400"><MessageCircle size={17} /> {p.comments}</button>
         <button onClick={onBookmark} className="ml-auto"><Bookmark size={17} className={p.bookmarked ? 'text-brand-400' : 'text-white/45'} fill={p.bookmarked ? 'currentColor' : 'none'} /></button>
       </div>
     </div>
@@ -132,6 +132,7 @@ function FeedCard({ post: p, onLike, onKudos, onBookmark }: { post: Post; onLike
 }
 
 function ChallengeCard({ c, onJoin }: { c: Challenge; onJoin: () => void }) {
+  const nav = useNav()
   return (
     <div className="rounded-2xl border border-white/5 bg-ink-800 p-4">
       <div className="flex items-center gap-4">
@@ -167,7 +168,10 @@ function ChallengeCard({ c, onJoin }: { c: Challenge; onJoin: () => void }) {
         </>
       )}
 
-      {!c.joined && <button onClick={onJoin} className="btn-primary mt-4 w-full py-2.5 text-sm">Join challenge</button>}
+      <div className="mt-4 flex gap-2">
+        <button onClick={() => nav.open('challengeDetail', { id: c.id })} className="flex-1 rounded-full border border-white/10 bg-white/[0.04] py-2.5 text-sm font-semibold text-white/80 active:bg-white/[0.1]">View standings</button>
+        {!c.joined && <button onClick={onJoin} className="btn-primary flex-1 py-2.5 text-sm">Join</button>}
+      </div>
     </div>
   )
 }

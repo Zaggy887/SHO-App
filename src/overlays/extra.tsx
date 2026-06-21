@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import {
   Sparkles, Check, ChevronRight, ChevronDown, Wallet, Trophy, Flame,
   GraduationCap, Dumbbell, Lightbulb, ShieldQuestion, Share2, Plus, MapPin,
-  Send, Video, Lock, Crown, X, Clock, Repeat,
+  Send, Video, Lock, Crown, X, Clock, Repeat, Heart, MessageCircle, Award, Swords, Users,
 } from 'lucide-react'
 import { Sheet } from '../components/Sheet'
 import { Avatar } from '../components/Avatar'
@@ -20,7 +20,7 @@ import { ActivityIcon } from '../components/ActivityIcon'
 import { nextSetRecommendation } from '../store/training'
 import { coachThreadView } from '../store/coach'
 import { CHAT_SUGGESTIONS } from '../lib/coachChat'
-import { todaySession } from '../store/selectors'
+import { todaySession, leaderboardSorted, youRank } from '../store/selectors'
 import { relativeLabel } from '../lib/date'
 import type { CoachKind, MealName } from '../store/types'
 
@@ -607,6 +607,115 @@ export function LogActivitySheet({ open, onClose }: Props) {
       </div>
 
       <button onClick={save} className="btn-primary mt-5 w-full"><Plus size={16} /> Log activity</button>
+    </Sheet>
+  )
+}
+
+/* ===================== Post detail + comment thread =============== */
+export function PostDetailSheet({ open, onClose, params }: Props) {
+  const { state, dispatch } = useStore()
+  const postId = params?.postId as string | undefined
+  const post = state.posts.find((p) => p.id === postId)
+  const comments = (state.postComments ?? []).filter((c) => c.postId === postId)
+  const [text, setText] = useState('')
+
+  function send() {
+    if (!text.trim() || !postId) return
+    dispatch({ type: 'ADD_COMMENT', postId, text: text.trim() })
+    setText('')
+  }
+
+  return (
+    <Sheet open={open} onClose={onClose} title="Post">
+      {post && (
+        <>
+          <div className="flex items-center gap-2.5">
+            <Avatar name={post.author} size={40} />
+            <div className="flex-1"><p className="font-bold leading-tight">{post.author}</p><p className="text-[12px] text-white/45">{post.time}</p></div>
+          </div>
+          {post.pr && (
+            <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-brand-400/15 px-2.5 py-1 text-[11px] font-bold text-brand-300">
+              <Award size={13} /> Personal best · {post.pr.lift} {post.pr.weight}
+            </div>
+          )}
+          <p className="mt-2 text-[15px] leading-snug">{post.text}</p>
+          {post.image && <img src={post.image} alt="" className="mt-3 max-h-56 w-full rounded-2xl object-cover" />}
+          <div className="mt-3 flex items-center gap-4 border-b border-white/8 pb-4 text-[13px] text-white/55">
+            <span className="flex items-center gap-1.5"><Heart size={16} /> {post.likes}</span>
+            <span className="flex items-center gap-1.5"><MessageCircle size={16} /> {post.comments}</span>
+          </div>
+
+          <p className="mb-3 mt-4 text-[12px] font-bold uppercase tracking-wide text-white/40">{comments.length} comment{comments.length === 1 ? '' : 's'}</p>
+          <div className="space-y-3">
+            {comments.map((c) => (
+              <div key={c.id} className="flex items-start gap-2.5">
+                <Avatar name={c.author} size={32} />
+                <div className="flex-1 rounded-2xl rounded-tl-md bg-ink-800 px-3 py-2">
+                  <div className="flex items-center gap-2"><p className="text-[13px] font-bold leading-tight">{c.author}</p><span className="text-[11px] text-white/35">{c.time}</span></div>
+                  <p className="mt-0.5 text-[14px] leading-snug text-white/80">{c.text}</p>
+                </div>
+              </div>
+            ))}
+            {comments.length === 0 && <p className="py-2 text-center text-[13px] text-white/40">Be the first to comment.</p>}
+          </div>
+
+          <div className="mt-4 flex items-center gap-2 rounded-2xl border border-white/8 bg-ink-800 p-1.5">
+            <input value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && send()} placeholder="Add a comment…" className="min-w-0 flex-1 bg-transparent px-3 py-2 text-[15px] placeholder:text-white/30 focus:outline-none" />
+            <button onClick={send} disabled={!text.trim()} className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand-400 text-black transition active:scale-90 disabled:opacity-40"><Send size={17} /></button>
+          </div>
+        </>
+      )}
+    </Sheet>
+  )
+}
+
+/* ===================== Challenge detail + standings =============== */
+export function ChallengeDetailSheet({ open, onClose, params }: Props) {
+  const { state } = useStore()
+  const id = params?.id as string | undefined
+  const c = state.challenges.find((x) => x.id === id)
+  const rows = leaderboardSorted(state)
+  const yr = youRank(state)
+
+  return (
+    <Sheet open={open} onClose={onClose} title="Challenge">
+      {c && (
+        <>
+          <div className="rounded-3xl border border-brand-400/20 bg-brand-400/[0.06] p-5">
+            <Trophy size={26} className="text-brand-400" />
+            <h3 className="mt-2 text-xl font-extrabold tracking-tight">{c.title}</h3>
+            <div className="mt-2 flex items-center gap-4 text-[13px] text-white/60">
+              <span className="flex items-center gap-1.5"><Users size={14} /> {c.participants} in</span>
+              <span>Week {c.currentWeek} of {c.totalWeeks}</span>
+              {c.rank != null && <span className="ml-auto font-bold text-brand-400">You're #{c.rank}</span>}
+            </div>
+          </div>
+
+          {c.vsLabel && c.yourSide && (
+            <div className="mt-4 rounded-2xl border border-white/5 bg-ink-800 p-4">
+              <div className="mb-1.5 flex items-center justify-between text-[13px] font-semibold">
+                <span className="flex items-center gap-1 text-brand-400"><Swords size={14} /> {c.yourSide}</span>
+                <span className="text-white/45">{c.rivalSide}</span>
+              </div>
+              <div className="flex h-3 overflow-hidden rounded-full bg-ink-700"><div className="h-full rounded-l-full bg-brand-400" style={{ width: `${c.yourSidePct ?? 50}%` }} /></div>
+              <div className="mt-1 flex items-center justify-between text-[12px] text-white/50"><span>{c.yourSidePct}%</span><span>{c.rivalSidePct}%</span></div>
+            </div>
+          )}
+
+          <p className="mb-2 mt-5 text-[12px] font-bold uppercase tracking-wide text-white/40">Standings</p>
+          <div className="space-y-2">
+            {rows.map((u, i) => (
+              <div key={u.id} className={`flex items-center gap-3 rounded-2xl border p-3 ${u.isYou ? 'border-brand-400/40 bg-brand-400/10' : 'border-white/5 bg-ink-800'}`}>
+                <span className={`w-6 text-center text-sm font-extrabold ${i < 3 ? 'text-brand-400' : 'text-white/40'}`}>{i + 1}</span>
+                <Avatar name={u.name} size={36} />
+                <div className="flex-1"><p className="font-bold leading-tight">{u.name}</p><p className="text-[12px] text-white/45">{u.workouts} workouts · {u.streak}d streak</p></div>
+                <span className="font-extrabold text-brand-400">{u.points.toLocaleString()}</span>
+              </div>
+            ))}
+          </div>
+          <p className="mt-3 text-center text-[12px] text-white/40">You're ranked #{yr} of {rows.length}.</p>
+        </>
+      )}
     </Sheet>
   )
 }
