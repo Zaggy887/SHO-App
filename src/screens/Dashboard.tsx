@@ -252,15 +252,6 @@ export default function Dashboard() {
         {!isToday && !selSession && selActivities.length === 0 && (
           <p className="mt-3 rounded-2xl border border-dashed border-white/12 py-4 text-center text-[13px] text-white/40">No workout or activity logged on {shortDate(selDate)}.</p>
         )}
-
-        {/* Quick workouts — only relevant for today */}
-        {isToday && (
-          <button onClick={() => nav.open('quick')} className="mt-3 flex w-full items-center gap-3 rounded-2xl border border-white/5 bg-ink-800 p-3.5 text-left transition active:scale-[0.99]">
-            <div className="grid h-10 w-10 place-items-center rounded-xl bg-brand-400/15"><Clock size={20} className="text-brand-400" /></div>
-            <div className="flex-1"><p className="font-bold leading-tight">Got 15 minutes?</p><p className="text-[12px] text-white/50">Express workouts between lectures</p></div>
-            <ChevronRight size={18} className="text-white/30" />
-          </button>
-        )}
       </Reveal>
 
       {/* Per-day progress — driven by the day selected in the week strip */}
