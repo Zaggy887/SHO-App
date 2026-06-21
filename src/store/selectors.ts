@@ -21,7 +21,11 @@ export function habitForDay(s: AppState, key: string = todayKey): HabitDay {
 }
 
 export function todaySession(s: AppState): WorkoutSession | undefined {
-  return s.sessions.find((x) => x.dateKey === todayKey)
+  return sessionForDay(s, todayKey)
+}
+
+export function sessionForDay(s: AppState, key: string = todayKey): WorkoutSession | undefined {
+  return s.sessions.find((x) => x.dateKey === key)
 }
 
 export function sessionProgress(session?: WorkoutSession) {

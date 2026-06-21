@@ -1,14 +1,15 @@
 import { useState, type ReactNode } from 'react'
 import { Menu, MessageCircle, Clock, Play, GraduationCap, ChevronRight, Sparkles, Leaf, Check, Flame } from 'lucide-react'
 import { Icon } from '../components/Icon'
+import { ActivityIcon } from '../components/ActivityIcon'
 import { ProgressRing } from '../components/ui'
 import { IndexGauge } from '../components/IndexGauge'
 import { useStore } from '../store/store'
 import { useNav } from '../nav'
 import { currentWeekKeys, todayKey, longDate, shortDate, fromKey, TODAY } from '../lib/date'
-import { fmtFluid, fmtWeightNum, weightUnit, pct } from '../lib/format'
+import { fmtFluid, fmtWeightNum, weightUnit, fmtVolume, pct } from '../lib/format'
 import {
-  todayHabit, habitForDay, todaySession, weightStats, regularWorkoutsInWeek,
+  todayHabit, habitForDay, todaySession, sessionForDay, activitiesForDay, weightStats, regularWorkoutsInWeek,
   strengthProgress, unreadChat, streakStats, foodReviewForDay, weeklyIndex,
 } from '../store/selectors'
 import { coachDaily } from '../store/coach'
@@ -60,7 +61,10 @@ export default function Dashboard() {
   const [selDate, setSelDate] = useState(todayKey)
   const isToday = selDate === todayKey
   const selHabit = habitForDay(state, selDate)
-  const selTitle = isToday ? "Today's progress" : `${FULL_WD[fromKey(selDate).getDay()]}'s progress`
+  const selSession = sessionForDay(state, selDate)
+  const selActivities = activitiesForDay(state, selDate)
+  const selWeekday = FULL_WD[fromKey(selDate).getDay()]
+  const selTitle = isToday ? "Today's progress" : `${selWeekday}'s progress`
 
   const habitRings = [
     { icon: 'footprints', label: 'Steps', value: selHabit.steps.toLocaleString(), pct: pct(selHabit.steps, t.steps), color: '#7ED957' },
@@ -188,34 +192,75 @@ export default function Dashboard() {
         </div>
       </Reveal>
 
-      {/* Today's plan */}
+      {/* Plan / workout — follows the selected day */}
       <Reveal delay={120}>
-        <Section title="Your plan" action="Workouts" onAction={() => nav.goTab('workout')} />
+        <Section title={isToday ? 'Your plan' : `${selWeekday}'s workout`} action="Workouts" onAction={() => nav.goTab('workout')} />
         <div className="relative overflow-hidden rounded-2xl border border-white/5">
-          <img src={session?.image ?? ''} alt="" className="absolute inset-0 h-full w-full object-cover" loading="lazy" />
+          <img src={selSession?.image ?? session?.image ?? ''} alt="" className="absolute inset-0 h-full w-full object-cover" loading="lazy" />
           <div className="relative bg-gradient-to-r from-ink-900 via-ink-900/90 to-ink-900/30 p-5">
             <div className="flex items-center gap-2">
-              <p className="text-sm font-semibold text-brand-400">Today's plan</p>
-              {exam.active && <span className="rounded-full bg-accent-purple/20 px-2 py-0.5 text-[10px] font-bold text-accent-purple">Exam mode</span>}
+              <p className="text-sm font-semibold text-brand-400">{isToday ? "Today's plan" : selSession ? (selSession.completed ? 'Completed' : 'Logged') : 'Rest day'}</p>
+              {exam.active && isToday && <span className="rounded-full bg-accent-purple/20 px-2 py-0.5 text-[10px] font-bold text-accent-purple">Exam mode</span>}
             </div>
-            <h3 className="mt-1 text-2xl font-extrabold tracking-tight">{session?.name ?? 'Rest day'}</h3>
+            <h3 className="mt-1 text-2xl font-extrabold tracking-tight">{selSession?.name ?? 'Rest day'}</h3>
             <div className="mt-2 flex items-center gap-1.5 text-sm text-white/60">
-              <Clock size={15} /> {session ? `${session.exercises.length} exercises, about ${exam.active ? 30 : 50} min` : 'Recovery and mobility'}
+              <Clock size={15} />
+              {selSession
+                ? isToday
+                  ? `${selSession.exercises.length} exercises, about ${exam.active ? 30 : 50} min`
+                  : `${selSession.exercises.length} exercises · ${selSession.durationMin} min · ${fmtVolume(selSession.volumeKg, units)}`
+                : 'Recovery and mobility'}
             </div>
-            {session && (
+            {isToday && selSession && (
               <button onClick={() => nav.open('activeWorkout')} className="btn-primary mt-4">
-                <Play size={16} fill="currentColor" /> {session.completed ? 'View workout' : 'Start workout'}
+                <Play size={16} fill="currentColor" /> {selSession.completed ? 'View workout' : 'Start workout'}
               </button>
             )}
           </div>
         </div>
 
-        {/* Quick workouts */}
-        <button onClick={() => nav.open('quick')} className="mt-3 flex w-full items-center gap-3 rounded-2xl border border-white/5 bg-ink-800 p-3.5 text-left transition active:scale-[0.99]">
-          <div className="grid h-10 w-10 place-items-center rounded-xl bg-brand-400/15"><Clock size={20} className="text-brand-400" /></div>
-          <div className="flex-1"><p className="font-bold leading-tight">Got 15 minutes?</p><p className="text-[12px] text-white/50">Express workouts between lectures</p></div>
-          <ChevronRight size={18} className="text-white/30" />
-        </button>
+        {/* Past day: read-only list of what was done */}
+        {!isToday && selSession && (
+          <div className="mt-3 space-y-2">
+            {selSession.exercises.map((ex) => {
+              const doneSets = ex.sets.filter((s) => s.done)
+              const top = doneSets.length ? Math.max(...doneSets.map((s) => s.weightKg)) : 0
+              return (
+                <div key={ex.defId} className="flex items-center gap-3 rounded-2xl border border-white/5 bg-ink-800 p-3">
+                  <img src={ex.image} alt="" className="h-10 w-10 rounded-xl object-cover" loading="lazy" />
+                  <p className="flex-1 truncate font-semibold">{ex.name}</p>
+                  <span className="text-[12px] text-white/55">{doneSets.length || ex.sets.length} × {fmtWeightNum(top, units, units === 'imperial' ? 0 : 1)} {weightUnit(units)}</span>
+                </div>
+              )
+            })}
+          </div>
+        )}
+
+        {/* Activities logged that day */}
+        {selActivities.length > 0 && (
+          <div className="mt-3 space-y-2">
+            {selActivities.map((a) => (
+              <div key={a.id} className="flex items-center gap-3 rounded-2xl border border-white/5 bg-ink-800 p-3">
+                <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand-400/15"><ActivityIcon name={a.icon} size={18} className="text-brand-400" /></div>
+                <div className="min-w-0 flex-1"><p className="truncate font-semibold">{a.name}</p><p className="text-[12px] capitalize text-white/50">{a.minutes} min · {a.intensity}</p></div>
+                <span className="text-[12px] text-white/55">{a.calories} kcal</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {!isToday && !selSession && selActivities.length === 0 && (
+          <p className="mt-3 rounded-2xl border border-dashed border-white/12 py-4 text-center text-[13px] text-white/40">No workout or activity logged on {shortDate(selDate)}.</p>
+        )}
+
+        {/* Quick workouts — only relevant for today */}
+        {isToday && (
+          <button onClick={() => nav.open('quick')} className="mt-3 flex w-full items-center gap-3 rounded-2xl border border-white/5 bg-ink-800 p-3.5 text-left transition active:scale-[0.99]">
+            <div className="grid h-10 w-10 place-items-center rounded-xl bg-brand-400/15"><Clock size={20} className="text-brand-400" /></div>
+            <div className="flex-1"><p className="font-bold leading-tight">Got 15 minutes?</p><p className="text-[12px] text-white/50">Express workouts between lectures</p></div>
+            <ChevronRight size={18} className="text-white/30" />
+          </button>
+        )}
       </Reveal>
 
       {/* Per-day progress — driven by the day selected in the week strip */}
