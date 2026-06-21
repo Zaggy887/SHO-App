@@ -2,11 +2,11 @@ import { useEffect, useState } from 'react'
 import type { WeeklyIndex } from '../store/selectors'
 
 const BAND_COLOR: Record<WeeklyIndex['band'], string> = {
-  off: '#F87171',
-  behind: '#F5A524',
-  ontrack: '#7ED957',
-  ahead: '#7ED957',
-  crushing: '#7ED957',
+  off: 'rgb(var(--danger))',
+  behind: 'rgb(var(--accent-orange))',
+  ontrack: 'rgb(var(--brand-600))',
+  ahead: 'rgb(var(--brand-600))',
+  crushing: 'rgb(var(--brand-600))',
 }
 
 const prefersReducedMotion = () =>
@@ -48,10 +48,10 @@ export function IndexGauge({ index }: { index: WeeklyIndex }) {
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[228px]">
         <defs>
           <linearGradient id="gaugeArc" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stopColor="#F87171" />
-            <stop offset="38%" stopColor="#F5A524" />
-            <stop offset="62%" stopColor="#C2EE98" />
-            <stop offset="100%" stopColor="#7ED957" />
+            <stop offset="0%" stopColor="rgb(var(--danger))" />
+            <stop offset="38%" stopColor="rgb(var(--accent-orange))" />
+            <stop offset="62%" stopColor="rgb(var(--brand-200))" />
+            <stop offset="100%" stopColor="rgb(var(--brand-400))" />
           </linearGradient>
         </defs>
         <path d={d} fill="none" stroke="rgba(130,130,130,0.18)" strokeWidth={stroke + 5} strokeLinecap="round" />

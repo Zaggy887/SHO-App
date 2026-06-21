@@ -91,10 +91,10 @@ export interface PlateSection {
 }
 
 export const PLATE_GUIDE: PlateSection[] = [
-  { portion: 'Half', title: 'Vegetables & fruit', examples: 'Broccoli, peppers, salad, berries — colour and fibre that fill you up', color: '#7ED957' },
-  { portion: 'A quarter', title: 'Lean protein', examples: 'Chicken, fish, eggs, tofu, beans, Greek yogurt — every meal', color: '#3B82F6' },
-  { portion: 'A quarter', title: 'Smart carbs', examples: 'Oats, rice, potato, wholegrain bread — fuel for training & study', color: '#F5A524' },
-  { portion: 'A thumb', title: 'Healthy fats', examples: 'Olive oil, nuts, avocado, oily fish — a little goes a long way', color: '#8B5CF6' },
+  { portion: 'Half', title: 'Vegetables & fruit', examples: 'Broccoli, peppers, salad, berries — colour and fibre that fill you up', color: 'rgb(var(--brand-400))' },
+  { portion: 'A quarter', title: 'Lean protein', examples: 'Chicken, fish, eggs, tofu, beans, Greek yogurt — every meal', color: 'rgb(var(--accent-blue))' },
+  { portion: 'A quarter', title: 'Smart carbs', examples: 'Oats, rice, potato, wholegrain bread — fuel for training & study', color: 'rgb(var(--accent-orange))' },
+  { portion: 'A thumb', title: 'Healthy fats', examples: 'Olive oil, nuts, avocado, oily fish — a little goes a long way', color: 'rgb(var(--accent-purple))' },
 ]
 
 /* ------------------------------------------------------------------ */
@@ -110,17 +110,17 @@ export interface FoodTierGuide {
 
 export const FOOD_TIERS: FoodTierGuide[] = [
   {
-    tier: 'great', title: 'Eat freely', color: '#7ED957',
+    tier: 'great', title: 'Eat freely', color: 'rgb(var(--brand-400))',
     desc: 'Build most meals from these. Filling, nutritious and hard to overeat.',
     items: ['Vegetables & salad', 'Fruit', 'Chicken, fish, eggs', 'Beans, lentils, tofu', 'Greek yogurt', 'Oats, potatoes, wholegrains'],
   },
   {
-    tier: 'moderate', title: 'In moderation', color: '#F5A524',
+    tier: 'moderate', title: 'In moderation', color: 'rgb(var(--accent-orange))',
     desc: 'Useful fuel and totally fine — just keep portions sensible.',
     items: ['White rice, pasta, bread', 'Cheese & full-fat dairy', 'Nuts & nut butters', 'Lean red meat', 'Dried fruit & honey'],
   },
   {
-    tier: 'limit', title: 'Keep occasional', color: '#F87171',
+    tier: 'limit', title: 'Keep occasional', color: 'rgb(var(--danger))',
     desc: 'No food is banned. Enjoy these sometimes, not as the base of your day.',
     items: ['Fried & fast food', 'Sweets, cake, chocolate', 'Sugary & energy drinks', 'Processed meats', 'Alcohol'],
   },

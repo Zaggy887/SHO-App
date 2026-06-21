@@ -101,11 +101,11 @@ function CoachTab() {
 }
 
 function ReviewCard({ review }: { review: DayReview }) {
-  const tierColor: Record<string, string> = { great: '#7ED957', good: '#9FE264', moderate: '#F5A524', limit: '#F87171' }
+  const tierVar: Record<string, string> = { great: '--brand-500', good: '--brand-400', moderate: '--accent-orange', limit: '--danger' }
   return (
     <div className="mt-4 animate-screen-in rounded-2xl border border-white/8 bg-ink-800 p-5">
       <div className="flex items-center gap-4">
-        <ProgressRing value={review.score * 10} size={84} stroke={8} color={review.score >= 5 ? '#7ED957' : '#F5A524'}>
+        <ProgressRing value={review.score * 10} size={84} stroke={8} color={review.score >= 5 ? 'rgb(var(--brand-400))' : 'rgb(var(--accent-orange))'}>
           <span className="text-2xl font-extrabold leading-none">{review.score}</span>
           <span className="text-[10px] text-white/45">/ 10</span>
         </ProgressRing>
@@ -118,7 +118,7 @@ function ReviewCard({ review }: { review: DayReview }) {
       {review.found.length > 0 && (
         <div className="mt-4 flex flex-wrap gap-1.5">
           {review.found.map((f, i) => (
-            <span key={i} className="rounded-full px-2.5 py-1 text-[11px] font-semibold" style={{ backgroundColor: `${tierColor[f.tier]}1f`, color: tierColor[f.tier] }}>
+            <span key={i} className="rounded-full px-2.5 py-1 text-[11px] font-semibold" style={{ backgroundColor: `rgb(var(${tierVar[f.tier]}) / 0.14)`, color: `rgb(var(${tierVar[f.tier]}))` }}>
               {f.label}
             </span>
           ))}
@@ -237,7 +237,7 @@ function LearnTab() {
         <div className="space-y-2.5">
           {PLATE_GUIDE.map((s) => (
             <div key={s.title} className="flex items-center gap-3 rounded-2xl border border-white/5 bg-ink-800 p-3.5">
-              <div className="grid h-12 w-12 shrink-0 place-items-center rounded-xl text-[11px] font-black uppercase" style={{ backgroundColor: `${s.color}1f`, color: s.color }}>
+              <div className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-white/5 text-[11px] font-black uppercase" style={{ color: s.color }}>
                 {s.portion.split(' ')[0]}
               </div>
               <div className="min-w-0 flex-1">

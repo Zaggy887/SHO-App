@@ -67,11 +67,11 @@ export default function Dashboard() {
   const selTitle = isToday ? "Today's progress" : `${selWeekday}'s progress`
 
   const habitRings = [
-    { icon: 'footprints', label: 'Steps', value: selHabit.steps.toLocaleString(), pct: pct(selHabit.steps, t.steps), color: '#7ED957' },
-    { icon: 'bed', label: 'Sleep', value: `${selHabit.sleepH} hrs`, pct: pct(selHabit.sleepH, t.sleepH), color: '#7ED957' },
-    { icon: 'droplet', label: 'Water', value: fmtFluid(selHabit.waterL, units), pct: pct(selHabit.waterL, t.waterL), color: '#7ED957' },
-    { icon: 'utensils', label: 'Nutrition', value: `${selHabit.nutritionScore}/10`, pct: selHabit.nutritionScore * 10, color: '#7ED957' },
-    { icon: 'leaf', label: 'Mindset', value: `${selHabit.mindsetMin} min`, pct: pct(selHabit.mindsetMin, 10), color: '#7ED957' },
+    { icon: 'footprints', label: 'Steps', value: selHabit.steps.toLocaleString(), pct: pct(selHabit.steps, t.steps), color: 'rgb(var(--brand-400))' },
+    { icon: 'bed', label: 'Sleep', value: `${selHabit.sleepH} hrs`, pct: pct(selHabit.sleepH, t.sleepH), color: 'rgb(var(--brand-400))' },
+    { icon: 'droplet', label: 'Water', value: fmtFluid(selHabit.waterL, units), pct: pct(selHabit.waterL, t.waterL), color: 'rgb(var(--brand-400))' },
+    { icon: 'utensils', label: 'Nutrition', value: `${selHabit.nutritionScore}/10`, pct: selHabit.nutritionScore * 10, color: 'rgb(var(--brand-400))' },
+    { icon: 'leaf', label: 'Mindset', value: `${selHabit.mindsetMin} min`, pct: pct(selHabit.mindsetMin, 10), color: 'rgb(var(--brand-400))' },
   ]
   const ringsOnTrack = habitRings.filter((h) => h.pct >= 100).length
 
@@ -150,13 +150,15 @@ export default function Dashboard() {
         {/* What's driving the needle — colour-coded by area */}
         <div className="mt-4 flex justify-between gap-2">
           {idx.parts.map((p) => {
-            const c = p.pct >= 85 ? '#7ED957' : p.pct >= 55 ? '#F5A524' : '#F87171'
+            const good = p.pct >= 85, mid = p.pct >= 55
+            const bar = good ? 'rgb(var(--brand-400))' : mid ? 'rgb(var(--accent-orange))' : 'rgb(var(--danger))'
+            const text = good ? 'rgb(var(--brand-600))' : mid ? 'rgb(var(--accent-orange))' : 'rgb(var(--danger))'
             return (
               <div key={p.label} className="flex flex-1 flex-col items-center gap-1.5">
                 <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/8">
-                  <div className="h-full rounded-full" style={{ width: `${Math.min(100, p.pct)}%`, backgroundColor: c }} />
+                  <div className="h-full rounded-full" style={{ width: `${Math.min(100, p.pct)}%`, backgroundColor: bar }} />
                 </div>
-                <span className="text-[10px] font-semibold" style={{ color: c }}>{p.label}</span>
+                <span className="text-[10px] font-semibold" style={{ color: text }}>{p.label}</span>
               </div>
             )
           })}

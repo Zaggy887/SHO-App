@@ -18,6 +18,23 @@
     --frame: #0a0a0b;
     /* contrasting colour for the gauge needle (flips per theme) */
     --needle: #ffffff;
+    /* brand (green) — vivid on dark */
+    --brand-50: 241 251 233;
+    --brand-100: 223 246 200;
+    --brand-200: 194 238 152;
+    --brand-300: 159 226 100;
+    --brand-400: 126 217 87;
+    --brand-500: 92 186 54;
+    --brand-600: 70 150 40;
+    --brand-700: 55 115 34;
+    --brand-800: 46 91 32;
+    --brand-900: 40 77 31;
+    /* accents — vivid on dark */
+    --accent-blue: 59 130 246;
+    --accent-purple: 139 92 246;
+    --accent-orange: 245 165 36;
+    --accent-yellow: 245 197 24;
+    --danger: 248 113 113;
   }
 
   /* Soft cream + sage light theme — gentle on the eyes, on-brand. */
@@ -34,13 +51,31 @@
     --tick: rgba(60, 80, 50, 0.85);
     --frame: #e4e8d8; /* soft sage around the device */
     --needle: #2a3326;
+    /* brand — softer, more natural green so fills aren't neon on cream */
+    --brand-50: 239 245 231;
+    --brand-100: 224 237 207;
+    --brand-200: 196 223 167;
+    --brand-300: 124 186 92;
+    --brand-400: 99 165 71; /* primary fill — natural green */
+    --brand-500: 82 146 56;
+    --brand-600: 67 124 44;
+    --brand-700: 55 102 36;
+    --brand-800: 45 84 32;
+    --brand-900: 38 70 28;
+    /* accents — earthier, calmer on cream */
+    --accent-blue: 52 116 214;
+    --accent-purple: 116 102 196;
+    --accent-orange: 181 112 30; /* warm terracotta amber */
+    --accent-yellow: 184 150 24;
+    --danger: 199 86 74; /* muted brick red */
   }
 
-  /* Accent green is vivid on dark but low-contrast on cream — deepen the
-   * green used for *text/icons* in light mode so it stays readable. */
-  .theme-light .text-brand-400 { color: #4e9e34; }
-  .theme-light .text-brand-300 { color: #58a83d; }
-  .theme-light .text-brand-500 { color: #468f2c; }
+  /* Vivid green works as a fill, but as *text* on cream it's low-contrast —
+   * deepen brand text/icons in light mode for readability. */
+  .theme-light .text-brand-400 { color: rgb(var(--brand-700)); }
+  .theme-light .text-brand-300 { color: rgb(var(--brand-600)); }
+  .theme-light .text-brand-500 { color: rgb(var(--brand-700)); }
+  .theme-light .text-accent-orange { color: rgb(var(--accent-orange)); }
 
   html,
   body,

@@ -7,7 +7,7 @@ export function ProgressRing({
   value,
   size = 64,
   stroke = 6,
-  color = '#7ED957',
+  color = 'rgb(var(--brand-400))',
   track = 'rgba(130,130,130,0.22)',
   children,
 }: {
@@ -53,7 +53,7 @@ export function ProgressRing({
 /* ------------------------------------------------------------------ */
 export function ProgressBar({
   value,
-  color = '#7ED957',
+  color = 'rgb(var(--brand-400))',
   className = '',
   height = 8,
 }: {

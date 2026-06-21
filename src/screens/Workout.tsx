@@ -64,7 +64,7 @@ function TodayTab() {
             </div>
             <ProgressBar value={prog.pct} />
             <div className="mt-4 grid grid-cols-3 gap-3 rounded-2xl border border-white/5 bg-ink-800 p-4">
-              <Stat icon="dumbbell" color="#7ED957" label="Volume" value={fmtVolume(session.volumeKg, units)} />
+              <Stat icon="dumbbell" color="rgb(var(--brand-400))" label="Volume" value={fmtVolume(session.volumeKg, units)} />
               <Stat icon="clock" color="#9AA0A6" label="Duration" value={`${session.durationMin} min`} />
               <Stat icon="flame" color="#9AA0A6" label="Calories" value={`${session.calories} kcal`} />
             </div>
@@ -232,7 +232,7 @@ function HistoryTab() {
       {history.map((h) => (
         <div key={h.id} className="flex items-center gap-3 rounded-2xl border border-white/5 bg-ink-800 p-4">
           <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-brand-400/15">
-            {h.kind === 'session' ? <Icon name="dumbbell" size={20} color="#7ED957" /> : <ActivityIcon name={h.icon} size={20} className="text-brand-400" />}
+            {h.kind === 'session' ? <Icon name="dumbbell" size={20} color="rgb(var(--brand-400))" /> : <ActivityIcon name={h.icon} size={20} className="text-brand-400" />}
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5">

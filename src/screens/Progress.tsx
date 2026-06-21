@@ -46,17 +46,17 @@ export default function Progress() {
   const measRows = latestMeasurements(state)
 
   const cards = [
-    { icon: 'scale', label: 'Weight', value: fmtWeightNum(w.current, units), unit: weightUnit(units), delta: `${w.delta <= 0 ? '↓' : '↑'} ${fmtWeight(Math.abs(w.delta), units, 1)}`, color: '#7ED957', onClick: () => nav.open('logWeight') },
+    { icon: 'scale', label: 'Weight', value: fmtWeightNum(w.current, units), unit: weightUnit(units), delta: `${w.delta <= 0 ? '↓' : '↑'} ${fmtWeight(Math.abs(w.delta), units, 1)}`, color: 'rgb(var(--brand-400))', onClick: () => nav.open('logWeight') },
     { icon: 'trending', label: 'Strength', value: `+${strengthAvg}%`, unit: '', delta: '↑ 4 wks', color: '#9AA0A6' },
     { icon: 'footprints', label: 'Workouts', value: String(workouts4w), unit: '', delta: 'last 4 wks', color: '#9AA0A6' },
     { icon: 'flame', label: 'Calories', value: avgCals.toLocaleString(), unit: '', delta: 'avg / day', color: '#9AA0A6' },
   ]
 
   const habitRings = [
-    { label: 'Workouts', value: `${hc.workouts}/${hc.total}`, sub: 'This week', pct: hc.total ? (hc.workouts / hc.total) * 100 : 0, color: '#7ED957' },
-    { label: 'Steps', value: `${hc.steps}/${hc.total}`, sub: `Avg ${hc.avgSteps.toLocaleString()}`, pct: hc.total ? (hc.steps / hc.total) * 100 : 0, color: '#7ED957' },
-    { label: 'Sleep', value: `${hc.sleep}/${hc.total}`, sub: `Avg ${hc.avgSleep.toFixed(1)}h`, pct: hc.total ? (hc.sleep / hc.total) * 100 : 0, color: '#7ED957' },
-    { label: 'Nutrition', value: `${hc.nutrition}/${hc.total}`, sub: 'On Track', pct: hc.total ? (hc.nutrition / hc.total) * 100 : 0, color: '#7ED957' },
+    { label: 'Workouts', value: `${hc.workouts}/${hc.total}`, sub: 'This week', pct: hc.total ? (hc.workouts / hc.total) * 100 : 0, color: 'rgb(var(--brand-400))' },
+    { label: 'Steps', value: `${hc.steps}/${hc.total}`, sub: `Avg ${hc.avgSteps.toLocaleString()}`, pct: hc.total ? (hc.steps / hc.total) * 100 : 0, color: 'rgb(var(--brand-400))' },
+    { label: 'Sleep', value: `${hc.sleep}/${hc.total}`, sub: `Avg ${hc.avgSleep.toFixed(1)}h`, pct: hc.total ? (hc.sleep / hc.total) * 100 : 0, color: 'rgb(var(--brand-400))' },
+    { label: 'Nutrition', value: `${hc.nutrition}/${hc.total}`, sub: 'On Track', pct: hc.total ? (hc.nutrition / hc.total) * 100 : 0, color: 'rgb(var(--brand-400))' },
   ]
 
   return (
@@ -103,15 +103,15 @@ export default function Progress() {
             <AreaChart data={chart} margin={{ top: 10, right: 6, left: -22, bottom: 0 }}>
               <defs>
                 <linearGradient id="wt" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#7ED957" stopOpacity={0.4} />
-                  <stop offset="100%" stopColor="#7ED957" stopOpacity={0} />
+                  <stop offset="0%" stopColor="rgb(var(--brand-400))" stopOpacity={0.4} />
+                  <stop offset="100%" stopColor="rgb(var(--brand-400))" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(130,130,130,0.18)" vertical={false} />
               <XAxis dataKey="date" tick={{ fill: 'rgba(140,140,140,0.85)', fontSize: 11 }} axisLine={false} tickLine={false} interval="preserveStartEnd" minTickGap={28} />
               <YAxis domain={[yMin, yMax]} tick={{ fill: 'rgba(140,140,140,0.85)', fontSize: 11 }} axisLine={false} tickLine={false} width={40} />
               <Tooltip contentStyle={{ background: '#1A1B1E', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, fontSize: 12, color: '#fff' }} labelStyle={{ color: '#fff' }} formatter={(v: number) => [`${v} ${weightUnit(units)}`, 'Weight']} />
-              <Area type="monotone" dataKey="weight" stroke="#7ED957" strokeWidth={3} fill="url(#wt)" dot={{ r: 2, fill: '#7ED957', strokeWidth: 0 }} activeDot={{ r: 5 }} />
+              <Area type="monotone" dataKey="weight" stroke="rgb(var(--brand-400))" strokeWidth={3} fill="url(#wt)" dot={{ r: 2, fill: 'rgb(var(--brand-400))', strokeWidth: 0 }} activeDot={{ r: 5 }} />
             </AreaChart>
           </ResponsiveContainer>
         </div>
@@ -128,7 +128,7 @@ export default function Progress() {
               <XAxis dataKey="label" tick={{ fill: 'rgba(140,140,140,0.85)', fontSize: 11 }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fill: 'rgba(140,140,140,0.85)', fontSize: 11 }} axisLine={false} tickLine={false} width={44} tickFormatter={(v: number) => (v >= 1000 ? `${Math.round(v / 1000)}k` : `${v}`)} />
               <Tooltip cursor={{ fill: 'rgba(255,255,255,0.04)' }} contentStyle={{ background: '#1A1B1E', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, fontSize: 12, color: '#fff' }} formatter={(v: number) => [`${v.toLocaleString()} ${weightUnit(units)}`, 'Volume']} />
-              <Bar dataKey="volume" fill="#7ED957" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="volume" fill="rgb(var(--brand-400))" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -146,7 +146,7 @@ export default function Progress() {
                 <XAxis dataKey="date" tick={{ fill: 'rgba(140,140,140,0.85)', fontSize: 11 }} axisLine={false} tickLine={false} interval="preserveStartEnd" minTickGap={28} />
                 <YAxis domain={['dataMin - 5', 'dataMax + 5']} tick={{ fill: 'rgba(140,140,140,0.85)', fontSize: 11 }} axisLine={false} tickLine={false} width={40} />
                 <Tooltip contentStyle={{ background: '#1A1B1E', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, fontSize: 12, color: '#fff' }} formatter={(v: number) => [`${v} ${weightUnit(units)}`, '1RM']} />
-                <Line type="monotone" dataKey="kg" stroke="#7ED957" strokeWidth={3} dot={{ r: 2, fill: '#7ED957', strokeWidth: 0 }} activeDot={{ r: 5 }} />
+                <Line type="monotone" dataKey="kg" stroke="rgb(var(--brand-400))" strokeWidth={3} dot={{ r: 2, fill: 'rgb(var(--brand-400))', strokeWidth: 0 }} activeDot={{ r: 5 }} />
               </LineChart>
             </ResponsiveContainer>
           </div>

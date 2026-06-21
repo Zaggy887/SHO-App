@@ -480,7 +480,7 @@ function HabitSlider({ icon, label, value, min, max, step, onChange, display, un
         type="range" min={min} max={max} step={step} value={value}
         onChange={(e) => onChange(parseFloat(e.target.value))}
         className="habit-range"
-        style={{ background: `linear-gradient(to right, #7ED957 ${pct}%, rgba(255,255,255,0.1) ${pct}%)` }}
+        style={{ background: `linear-gradient(to right, rgb(var(--brand-400)) ${pct}%, rgba(255,255,255,0.1) ${pct}%)` }}
       />
       <div className="mt-1.5 flex items-center justify-between text-[11px] text-white/35">
         <span>{minLabel}</span>
@@ -790,7 +790,7 @@ export function BadgesSheet({ open, onClose }: Props) {
         {state.badges.map((b) => (
           <div key={b.id} className={`flex flex-col items-center rounded-2xl border p-3 text-center ${b.earned ? 'border-brand-400/30 bg-brand-400/8' : 'border-white/5 bg-ink-800 opacity-50'}`}>
             <div className={`grid h-12 w-12 place-items-center rounded-full ${b.earned ? 'bg-brand-400/20' : 'bg-white/5'}`}>
-              <Icon name={b.icon} size={22} color={b.earned ? '#7ED957' : '#888'} />
+              <Icon name={b.icon} size={22} color={b.earned ? 'rgb(var(--brand-400))' : '#888'} />
             </div>
             <p className="mt-2 text-[12px] font-bold leading-tight">{b.name}</p>
             <p className="mt-0.5 text-[10px] text-white/45">{b.desc}</p>
