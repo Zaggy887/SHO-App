@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   Bell, Moon, Sun, GraduationCap, Wallet, RotateCcw, Trash2, Camera, Trophy,
   Flame, Search, ScanLine, Plus, Check, Share2, ChevronRight, User, Sparkles, Dumbbell,
@@ -17,7 +17,7 @@ import { FOODS, QUICK_WORKOUTS } from '../data/catalog'
 import { pick, makeRng } from '../lib/rng'
 import { todayKey, relativeLabel, shortDate } from '../lib/date'
 import {
-  fmtWeight, fmtWeightNum, toKg, weightUnit, fmtFluid, fluidUnit,
+  fmtWeight, fmtWeightNum, toKg, weightUnit, fmtFluid,
   weightVal,
 } from '../lib/format'
 import {
@@ -381,49 +381,112 @@ export function LogHabitSheet({ open, onClose }: Props) {
   const toast = useToast()
   const units = state.settings.units
   const h = todayHabit(state)
-  const [steps, setSteps] = useState(String(h.steps))
-  const [sleep, setSleep] = useState(String(h.sleepH))
-  const [mindset, setMindset] = useState(String(h.mindsetMin))
+  const [steps, setSteps] = useState(h.steps)
+  const [sleepH, setSleepH] = useState(h.sleepH)
+  const [mindset, setMindset] = useState(h.mindsetMin)
+
+  // Resync to today's values whenever the sheet opens.
+  useEffect(() => {
+    if (open) { setSteps(h.steps); setSleepH(h.sleepH); setMindset(h.mindsetMin) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open])
 
   function save() {
-    dispatch({ type: 'PATCH_TODAY_HABIT', patch: { steps: parseInt(steps) || 0, sleepH: parseFloat(sleep) || 0, mindsetMin: parseInt(mindset) || 0 } })
-    toast('Habits updated')
+    dispatch({ type: 'PATCH_TODAY_HABIT', patch: { steps, sleepH, mindsetMin: mindset } })
+    toast('Nice — habits logged 🙌')
     onClose()
   }
 
   const waterStep = units === 'imperial' ? 8 / 33.814 : 0.25
   return (
     <Sheet open={open} onClose={onClose} title="Log habits">
-      {/* Water quick logger */}
-      <div className="mb-4 rounded-2xl border border-white/5 bg-ink-800 p-4">
-        <div className="flex items-center gap-2">
-          <Droplet size={18} className="text-brand-400" />
-          <p className="flex-1 font-bold">Water</p>
-          <p className="font-extrabold">{fmtFluid(h.waterL, units)}</p>
-        </div>
-        <div className="mt-3 flex gap-2">
-          <button onClick={() => dispatch({ type: 'ADJUST_WATER', deltaL: -waterStep })} className="flex-1 rounded-xl bg-ink-700 py-2.5 font-bold active:bg-ink-600">−</button>
-          <button onClick={() => { dispatch({ type: 'ADJUST_WATER', deltaL: waterStep }); }} className="flex-[2] rounded-xl bg-brand-400/20 py-2.5 font-bold text-brand-400 active:bg-brand-400/30">
-            + {units === 'imperial' ? '8 oz' : '250 ml'}
-          </button>
-        </div>
-        <p className="mt-2 text-center text-[12px] text-white/40">Goal: {fmtFluid(state.profile.waterTargetL, units)} / {fluidUnit(units)}</p>
-      </div>
+      <p className="mb-3 text-[13px] text-white/50">Slide to log — done in seconds.</p>
 
-      <Field icon={<Footprints size={18} className="text-brand-400" />} label="Steps" value={steps} onChange={setSteps} placeholder="8000" />
-      <Field icon={<BedDouble size={18} className="text-brand-400" />} label="Sleep (hours)" value={sleep} onChange={setSleep} placeholder="8" />
-      <Field icon={<Leaf size={18} className="text-brand-400" />} label="Mindset / meditation (min)" value={mindset} onChange={setMindset} placeholder="5" />
+      <div className="space-y-3.5">
+        {/* Water — fast tap logger */}
+        <div className="rounded-2xl border border-white/5 bg-ink-800 p-4">
+          <div className="flex items-center gap-2">
+            <Droplet size={18} className="text-brand-400" />
+            <p className="flex-1 font-bold">Water</p>
+            <p className="text-2xl font-extrabold tabular-nums text-brand-400">{fmtFluid(h.waterL, units)}</p>
+          </div>
+          <div className="mt-3 flex gap-2">
+            <button onClick={() => dispatch({ type: 'ADJUST_WATER', deltaL: -waterStep })} className="flex-1 rounded-xl bg-ink-700 py-2.5 text-lg font-bold active:bg-ink-600">−</button>
+            <button onClick={() => dispatch({ type: 'ADJUST_WATER', deltaL: waterStep })} className="flex-[2] rounded-xl bg-brand-400/20 py-2.5 font-bold text-brand-400 active:bg-brand-400/30">
+              + {units === 'imperial' ? '8 oz' : '250 ml'}
+            </button>
+          </div>
+          <p className="mt-2 text-center text-[12px] text-white/40">Goal {fmtFluid(state.profile.waterTargetL, units)}</p>
+        </div>
+
+        {/* Steps — ruler slider */}
+        <HabitSlider
+          icon={<Footprints size={18} className="text-brand-400" />} label="Steps"
+          value={steps} min={0} max={20000} step={250} onChange={setSteps}
+          display={steps.toLocaleString()} minLabel="0" maxLabel="20k"
+          goalLabel={`${(state.profile.stepTarget / 1000).toFixed(0)}k`} goalPct={(state.profile.stepTarget / 20000) * 100}
+        />
+
+        {/* Sleep — ruler slider */}
+        <HabitSlider
+          icon={<BedDouble size={18} className="text-brand-400" />} label="Sleep"
+          value={sleepH} min={0} max={12} step={0.5} onChange={setSleepH}
+          display={`${sleepH}`} unit="h" minLabel="0h" maxLabel="12h"
+          goalLabel={`${state.profile.sleepTargetH}h`} goalPct={(state.profile.sleepTargetH / 12) * 100}
+        />
+
+        {/* Mindset — quick chips */}
+        <div className="rounded-2xl border border-white/5 bg-ink-800 p-4">
+          <div className="flex items-center gap-2">
+            <Leaf size={18} className="text-brand-400" />
+            <p className="flex-1 font-bold">Mindset</p>
+            <p className="text-2xl font-extrabold tabular-nums text-brand-400">{mindset}<span className="ml-1 text-[13px] font-semibold text-white/40">min</span></p>
+          </div>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {[0, 5, 10, 15, 20, 30, 45].map((m) => (
+              <button key={m} onClick={() => setMindset(m)} className={`min-w-[44px] rounded-xl px-3 py-2 text-sm font-bold transition active:scale-95 ${mindset === m ? 'bg-brand-400 text-black' : 'bg-ink-700 text-white/60'}`}>
+                {m === 0 ? 'None' : m}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
 
       <button onClick={save} className="btn-primary mt-6 w-full">Save habits</button>
     </Sheet>
   )
 }
 
-function Field({ icon, label, value, onChange, placeholder }: { icon: JSX.Element; label: string; value: string; onChange: (v: string) => void; placeholder: string }) {
+function HabitSlider({ icon, label, value, min, max, step, onChange, display, unit, minLabel, maxLabel, goalLabel, goalPct }: {
+  icon: JSX.Element; label: string; value: number; min: number; max: number; step: number; onChange: (v: number) => void
+  display: string; unit?: string; minLabel: string; maxLabel: string; goalLabel?: string; goalPct?: number
+}) {
+  const pct = ((value - min) / (max - min)) * 100
   return (
-    <div className="mb-3">
-      <label className="mb-1.5 flex items-center gap-2 text-sm font-semibold text-white/70">{icon} {label}</label>
-      <input inputMode="decimal" value={value} onChange={(e) => onChange(e.target.value.replace(/[^\d.]/g, ''))} placeholder={placeholder} className="w-full rounded-xl border border-white/8 bg-ink-800 px-4 py-3 text-white placeholder:text-white/30 focus:border-brand-400/60 focus:outline-none" />
+    <div className="rounded-2xl border border-white/5 bg-ink-800 p-4">
+      <div className="flex items-center gap-2">
+        {icon}
+        <p className="flex-1 font-bold">{label}</p>
+        <p className="text-2xl font-extrabold tabular-nums text-brand-400">{display}{unit && <span className="ml-1 text-[13px] font-semibold text-white/40">{unit}</span>}</p>
+      </div>
+      {/* ruler ticks */}
+      <div className="relative mt-3 mb-1 flex items-end justify-between px-1.5">
+        {Array.from({ length: 21 }).map((_, i) => (
+          <span key={i} className={`w-px ${i % 5 === 0 ? 'h-3 bg-white/25' : 'h-1.5 bg-white/12'}`} />
+        ))}
+        {goalPct != null && <span className="absolute bottom-0 h-4 w-0.5 rounded bg-brand-400/70" style={{ left: `${goalPct}%` }} />}
+      </div>
+      <input
+        type="range" min={min} max={max} step={step} value={value}
+        onChange={(e) => onChange(parseFloat(e.target.value))}
+        className="habit-range"
+        style={{ background: `linear-gradient(to right, #7ED957 ${pct}%, rgba(255,255,255,0.1) ${pct}%)` }}
+      />
+      <div className="mt-1.5 flex items-center justify-between text-[11px] text-white/35">
+        <span>{minLabel}</span>
+        {goalLabel && <span className="font-semibold text-brand-400/80">Goal {goalLabel}</span>}
+        <span>{maxLabel}</span>
+      </div>
     </div>
   )
 }
