@@ -1,14 +1,14 @@
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Menu, MessageCircle, Clock, Play, GraduationCap, ChevronRight, Sparkles, Leaf, Check, Flame } from 'lucide-react'
 import { Icon } from '../components/Icon'
 import { ProgressRing } from '../components/ui'
 import { IndexGauge } from '../components/IndexGauge'
 import { useStore } from '../store/store'
 import { useNav } from '../nav'
-import { currentWeekKeys, todayKey, longDate, TODAY } from '../lib/date'
+import { currentWeekKeys, todayKey, longDate, shortDate, fromKey, TODAY } from '../lib/date'
 import { fmtFluid, fmtWeightNum, weightUnit, pct } from '../lib/format'
 import {
-  todayHabit, todaySession, weightStats, regularWorkoutsInWeek,
+  todayHabit, habitForDay, todaySession, weightStats, regularWorkoutsInWeek,
   strengthProgress, unreadChat, streakStats, foodReviewForDay, weeklyIndex,
 } from '../store/selectors'
 import { coachDaily } from '../store/coach'
@@ -16,6 +16,7 @@ import { dailyTargets, examState } from '../store/training'
 import { Wordmark } from '../components/Logo'
 
 const WD = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+const FULL_WD = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
 function greetingFor(hour: number): string {
   if (hour < 12) return 'Good morning'
@@ -55,12 +56,18 @@ export default function Dashboard() {
   const greeting = greetingFor(TODAY.getHours())
   const weekKeys = currentWeekKeys()
 
+  // The week strip selects which day's data fills the progress section below.
+  const [selDate, setSelDate] = useState(todayKey)
+  const isToday = selDate === todayKey
+  const selHabit = habitForDay(state, selDate)
+  const selTitle = isToday ? "Today's progress" : `${FULL_WD[fromKey(selDate).getDay()]}'s progress`
+
   const habitRings = [
-    { icon: 'footprints', label: 'Steps', value: habit.steps.toLocaleString(), pct: pct(habit.steps, t.steps), color: '#7ED957' },
-    { icon: 'bed', label: 'Sleep', value: `${habit.sleepH} hrs`, pct: pct(habit.sleepH, t.sleepH), color: '#7ED957' },
-    { icon: 'droplet', label: 'Water', value: fmtFluid(habit.waterL, units), pct: pct(habit.waterL, t.waterL), color: '#7ED957' },
-    { icon: 'utensils', label: 'Nutrition', value: `${habit.nutritionScore}/10`, pct: habit.nutritionScore * 10, color: '#7ED957' },
-    { icon: 'leaf', label: 'Mindset', value: `${habit.mindsetMin} min`, pct: pct(habit.mindsetMin, 10), color: '#7ED957' },
+    { icon: 'footprints', label: 'Steps', value: selHabit.steps.toLocaleString(), pct: pct(selHabit.steps, t.steps), color: '#7ED957' },
+    { icon: 'bed', label: 'Sleep', value: `${selHabit.sleepH} hrs`, pct: pct(selHabit.sleepH, t.sleepH), color: '#7ED957' },
+    { icon: 'droplet', label: 'Water', value: fmtFluid(selHabit.waterL, units), pct: pct(selHabit.waterL, t.waterL), color: '#7ED957' },
+    { icon: 'utensils', label: 'Nutrition', value: `${selHabit.nutritionScore}/10`, pct: selHabit.nutritionScore * 10, color: '#7ED957' },
+    { icon: 'leaf', label: 'Mindset', value: `${selHabit.mindsetMin} min`, pct: pct(selHabit.mindsetMin, 10), color: '#7ED957' },
   ]
   const ringsOnTrack = habitRings.filter((h) => h.pct >= 100).length
 
@@ -152,11 +159,12 @@ export default function Dashboard() {
         </div>
       </Reveal>
 
-      {/* Week strip — slim, tappable, with clear activity dots */}
+      {/* Week strip — tap a day to load its progress below */}
       <Reveal delay={60}>
         <div className="mt-5 flex justify-between">
           {weekKeys.map((k, i) => {
-            const active = k === todayKey
+            const today = k === todayKey
+            const selected = k === selDate
             const future = k > todayKey
             const trained = state.sessions.some((s) => s.dateKey === k && s.completed)
             const logged = state.habits.some((h) => h.dateKey === k)
@@ -165,12 +173,12 @@ export default function Dashboard() {
               <button
                 key={k}
                 disabled={future}
-                onClick={() => nav.goTab('progress')}
-                aria-label={`${WD[i]} ${date}${active ? ', today' : ''}${trained ? ', trained' : logged ? ', logged' : ''}`}
+                onClick={() => setSelDate(k)}
+                aria-label={`${WD[i]} ${date}${today ? ', today' : ''}${trained ? ', trained' : logged ? ', logged' : ''}`}
                 className={`flex w-10 flex-col items-center gap-1.5 rounded-xl py-1.5 transition active:scale-95 ${future ? 'opacity-30' : 'active:bg-white/5'}`}
               >
-                <span className={`text-[10px] font-semibold uppercase tracking-wide ${active ? 'text-brand-400' : 'text-white/35'}`}>{WD[i]}</span>
-                <span className={`grid h-7 w-7 place-items-center rounded-full text-[15px] font-bold leading-none ${active ? 'bg-brand-400/15 text-brand-400 ring-1 ring-brand-400' : 'text-white/75'}`}>{date}</span>
+                <span className={`text-[10px] font-semibold uppercase tracking-wide ${today ? 'text-brand-400' : 'text-white/35'}`}>{WD[i]}</span>
+                <span className={`grid h-7 w-7 place-items-center rounded-full text-[15px] font-bold leading-none transition ${selected ? 'bg-brand-400 text-black' : today ? 'text-brand-400 ring-1 ring-brand-400/50' : 'text-white/75'}`}>{date}</span>
                 <span
                   className={`h-1.5 w-1.5 rounded-full ${trained ? 'bg-brand-400' : logged ? 'bg-white/30' : future ? 'bg-transparent' : 'bg-white/10'}`}
                 />
@@ -210,16 +218,21 @@ export default function Dashboard() {
         </button>
       </Reveal>
 
-      {/* Today's habits — your data at a glance */}
+      {/* Per-day progress — driven by the day selected in the week strip */}
       <Reveal delay={180}>
-        <Section title="Today's progress" action="Log" onAction={() => nav.open('logHabit')} tight />
-        {t.adjusted && <p className="-mt-1 mb-3 text-[12px] text-accent-purple">Targets eased for exam season</p>}
+        <Section
+          title={selTitle}
+          action={isToday ? 'Log' : 'Today'}
+          onAction={() => (isToday ? nav.open('logHabit') : setSelDate(todayKey))}
+          tight
+        />
+        {isToday && t.adjusted && <p className="-mt-1 mb-3 text-[12px] text-accent-purple">Targets eased for exam season</p>}
         <div className="card p-4">
           <div className="mb-4 flex items-center gap-2 text-[13px]">
             <span className="font-semibold text-white/55">{ringsOnTrack} of {habitRings.length} goals on track</span>
-            <span className="ml-auto text-white/30">Tap to update</span>
+            <span className="ml-auto text-white/30">{isToday ? 'Tap to update' : shortDate(selDate)}</span>
           </div>
-          <button onClick={() => nav.open('logHabit')} className="flex w-full justify-between active:opacity-80">
+          <button onClick={isToday ? () => nav.open('logHabit') : undefined} className={`flex w-full justify-between ${isToday ? 'active:opacity-80' : 'cursor-default'}`}>
             {habitRings.map((h) => (
               <div key={h.label} className="flex flex-col items-center gap-1.5">
                 <ProgressRing value={h.pct} size={54} stroke={4} color={h.color}><Icon name={h.icon} size={19} color={h.color} /></ProgressRing>

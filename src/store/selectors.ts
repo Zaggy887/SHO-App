@@ -2,9 +2,14 @@ import { currentWeekKeys, dayKey, todayKey, fromKey, toKey, addDays } from '../l
 import type { AppState, HabitDay, WorkoutSession } from './types'
 
 export function todayHabit(s: AppState): HabitDay {
+  return habitForDay(s, todayKey)
+}
+
+/** The logged habit for any day, or a zeroed day if nothing was logged. */
+export function habitForDay(s: AppState, key: string = todayKey): HabitDay {
   return (
-    s.habits.find((h) => h.dateKey === todayKey) ?? {
-      dateKey: todayKey,
+    s.habits.find((h) => h.dateKey === key) ?? {
+      dateKey: key,
       steps: 0,
       sleepH: 0,
       waterL: 0,
