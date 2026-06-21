@@ -16,21 +16,31 @@
     --grid: rgba(148, 163, 184, 0.16);
     --tick: rgba(148, 163, 184, 0.85);
     --frame: #0a0a0b;
+    /* contrasting colour for the gauge needle (flips per theme) */
+    --needle: #ffffff;
   }
 
+  /* Soft cream + sage light theme — gentle on the eyes, on-brand. */
   .theme-light {
     color-scheme: light;
-    --fg: 17 18 22;
-    --ink-900: 244 245 248;
-    --ink-800: 255 255 255;
-    --ink-700: 238 240 244;
-    --ink-600: 226 229 234;
-    --ink-500: 214 218 224;
-    --track: rgba(15, 23, 42, 0.08);
-    --grid: rgba(100, 116, 139, 0.18);
-    --tick: rgba(71, 85, 105, 0.9);
-    --frame: #e9ebef;
+    --fg: 31 38 28; /* warm dark green-charcoal text */
+    --ink-900: 244 240 229; /* page background — warm cream */
+    --ink-800: 252 250 242; /* cards — soft off-white cream */
+    --ink-700: 235 230 215; /* inputs / secondary buttons */
+    --ink-600: 224 217 198;
+    --ink-500: 211 203 181;
+    --track: rgba(31, 38, 28, 0.1);
+    --grid: rgba(60, 90, 50, 0.16);
+    --tick: rgba(60, 80, 50, 0.85);
+    --frame: #e4e8d8; /* soft sage around the device */
+    --needle: #2a3326;
   }
+
+  /* Accent green is vivid on dark but low-contrast on cream — deepen the
+   * green used for *text/icons* in light mode so it stays readable. */
+  .theme-light .text-brand-400 { color: #4e9e34; }
+  .theme-light .text-brand-300 { color: #58a83d; }
+  .theme-light .text-brand-500 { color: #468f2c; }
 
   html,
   body,

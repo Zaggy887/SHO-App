@@ -54,7 +54,7 @@ export function IndexGauge({ index }: { index: WeeklyIndex }) {
             <stop offset="100%" stopColor="#7ED957" />
           </linearGradient>
         </defs>
-        <path d={d} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={stroke + 5} strokeLinecap="round" />
+        <path d={d} fill="none" stroke="rgba(130,130,130,0.18)" strokeWidth={stroke + 5} strokeLinecap="round" />
         <path d={d} fill="none" stroke="url(#gaugeArc)" strokeWidth={stroke} strokeLinecap="round" />
         <g
           style={{
@@ -66,12 +66,12 @@ export function IndexGauge({ index }: { index: WeeklyIndex }) {
         >
           <polygon
             points={`${cx - baseW},${cy} ${cx},${cy - rN} ${cx + baseW},${cy}`}
-            fill="#ffffff"
-            style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))' }}
+            fill="var(--needle)"
+            style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.4))' }}
           />
         </g>
-        <circle cx={cx} cy={cy} r={9} fill="#ffffff" />
-        <circle cx={cx} cy={cy} r={4} fill="#0a0a0b" />
+        <circle cx={cx} cy={cy} r={9} fill="var(--needle)" />
+        <circle cx={cx} cy={cy} r={4} fill="rgb(var(--ink-900))" />
       </svg>
 
       {/* readable anchors under the arc */}
