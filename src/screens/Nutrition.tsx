@@ -1,23 +1,28 @@
 import { useMemo, useState } from 'react'
 import {
-  Sparkles, Send, Check, ArrowRight, ChevronDown,
+  Sparkles, Send, Check, ArrowRight, ChevronDown, Droplet, Plus, Trash2, Share2,
   Wallet, Search, Lightbulb, HelpCircle, Salad,
 } from 'lucide-react'
 import { Icon } from '../components/Icon'
 import { ProgressRing, SegmentedTabs, ScreenHeader } from '../components/ui'
 import { useStore } from '../store/store'
+import { useToast } from '../components/Toast'
 import {
   PLATE_GUIDE, FOOD_TIERS, GOAL_GUIDES, NUTRITION_LESSONS,
 } from '../data/nutrition'
-import { BUDGET_MEALS } from '../data/catalog'
-import { foodReviewForDay } from '../store/selectors'
+import { BUDGET_MEALS, FOODS } from '../data/catalog'
+import { foodReviewForDay, todayHabit } from '../store/selectors'
+import { dailyTargets } from '../store/training'
+import { fmtFluid, pct } from '../lib/format'
 import {
   reviewDay, answerQuestion, answerForQuestion, STARTER_QUESTIONS,
   type DayReview, type QAResult,
 } from '../lib/nutritionCoach'
-import type { Goal } from '../store/types'
+import type { Goal, MealName } from '../store/types'
 
-const TABS = ['Coach', 'Learn', 'Budget Eats']
+const TABS = ['Coach', 'Learn', 'Budget Eats', 'Plan']
+const PLAN_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+const SLOTS: MealName[] = ['Breakfast', 'Lunch', 'Snack', 'Dinner']
 
 export default function Nutrition() {
   const [tab, setTab] = useState('Coach')
@@ -29,6 +34,7 @@ export default function Nutrition() {
         {tab === 'Coach' && <CoachTab />}
         {tab === 'Learn' && <LearnTab />}
         {tab === 'Budget Eats' && <BudgetTab />}
+        {tab === 'Plan' && <PlanTab />}
       </div>
     </div>
   )
@@ -62,6 +68,9 @@ function CoachTab() {
           Tell me what you ate today and I'll give you honest, friendly feedback for your goal — no calorie counting needed.
         </p>
       </div>
+
+      {/* Water quick-log */}
+      <WaterCard />
 
       {/* Free-text food log */}
       <div className="mt-4">
@@ -306,6 +315,7 @@ const GOAL_FILTERS: { label: string; goal: Goal | 'all' }[] = [
 
 function BudgetTab() {
   const { state } = useStore()
+  const toast = useToast()
   const [filter, setFilter] = useState<Goal | 'all'>(state.profile.goal)
   const [q, setQ] = useState('')
   const [openId, setOpenId] = useState<string | null>(null)
@@ -325,6 +335,15 @@ function BudgetTab() {
   }, [meals])
   const [showList, setShowList] = useState(false)
   const weekTotal = grocery.reduce((a, [, c]) => a + c, 0)
+
+  async function exportList() {
+    const lines = grocery.map(([item, cost]) => `• ${item} — $${cost.toFixed(2)}`).join('\n')
+    const txt = `🛒 Shopping list (${meals.length} meals) · ~$${weekTotal.toFixed(2)}\n\n${lines}`
+    try {
+      if (navigator.share) await navigator.share({ text: txt })
+      else { await navigator.clipboard.writeText(txt); toast('Shopping list copied') }
+    } catch { /* cancelled */ }
+  }
 
   return (
     <>
@@ -370,6 +389,9 @@ function BudgetTab() {
                 </div>
               ))}
               <div className="mt-2 flex items-center justify-between text-[14px] font-bold"><span>Estimated total</span><span className="text-brand-400">${weekTotal.toFixed(2)}</span></div>
+              <button onClick={exportList} className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-brand-400/15 py-2.5 text-sm font-semibold text-brand-400 active:bg-brand-400/25">
+                <Share2 size={15} /> Copy / share list
+              </button>
             </div>
           )}
         </>
@@ -426,6 +448,99 @@ function BudgetTab() {
             <p className="mt-1 text-[12px] text-white/40">Try another goal filter or clear your search.</p>
           </div>
         )}
+      </div>
+      <div className="h-2" />
+    </>
+  )
+}
+
+/* ============================ Water quick-log ============================ */
+function WaterCard() {
+  const { state, dispatch } = useStore()
+  const units = state.settings.units
+  const h = todayHabit(state)
+  const t = dailyTargets(state)
+  const step = units === 'imperial' ? 8 / 33.814 : 0.25
+  return (
+    <div className="mt-4 rounded-2xl border border-white/5 bg-ink-800 p-4">
+      <div className="flex items-center gap-2">
+        <Droplet size={18} className="text-brand-400" />
+        <p className="flex-1 font-bold">Water</p>
+        <p className="font-extrabold">{fmtFluid(h.waterL, units)} <span className="text-[12px] font-medium text-white/40">/ {fmtFluid(t.waterL, units)}</span></p>
+      </div>
+      <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-white/8">
+        <div className="h-full rounded-full bg-brand-400 transition-[width] duration-500" style={{ width: `${pct(h.waterL, t.waterL)}%` }} />
+      </div>
+      <div className="mt-3 flex gap-2">
+        <button onClick={() => dispatch({ type: 'ADJUST_WATER', deltaL: -step })} className="flex-1 rounded-xl bg-ink-700 py-2.5 font-bold active:bg-ink-600">−</button>
+        <button onClick={() => dispatch({ type: 'ADJUST_WATER', deltaL: step })} className="flex-[2] rounded-xl bg-brand-400/20 py-2.5 font-bold text-brand-400 active:bg-brand-400/30">
+          + {units === 'imperial' ? '8 oz' : '250 ml'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+/* ============================ Meal planner ============================ */
+function PlanTab() {
+  const { state, dispatch } = useStore()
+  const toast = useToast()
+  const plan = state.mealPlan ?? []
+  const mealNames = useMemo(() => [...BUDGET_MEALS.map((m) => m.name), ...FOODS.map((f) => f.name)], [])
+  const [day, setDay] = useState('Mon')
+  const [slot, setSlot] = useState<MealName>('Breakfast')
+  const [meal, setMeal] = useState(mealNames[0])
+
+  function add() {
+    dispatch({ type: 'ADD_PLANNED_MEAL', plan: { day, slot, name: meal } })
+    toast(`Added to ${day}`)
+  }
+
+  const selectCls = 'rounded-xl border border-white/8 bg-ink-800 px-3 py-2.5 text-sm text-white focus:border-brand-400/60 focus:outline-none'
+  return (
+    <>
+      <div className="rounded-2xl border border-white/8 bg-ink-800 p-4">
+        <h3 className="text-lg font-extrabold tracking-tight">Plan your week</h3>
+        <p className="mt-1 text-[13px] leading-snug text-white/60">Map meals to days so shopping and cooking are sorted ahead of time.</p>
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <select value={day} onChange={(e) => setDay(e.target.value)} className={selectCls}>
+            {PLAN_DAYS.map((d) => <option key={d} value={d}>{d}</option>)}
+          </select>
+          <select value={slot} onChange={(e) => setSlot(e.target.value as MealName)} className={selectCls}>
+            {SLOTS.map((s) => <option key={s} value={s}>{s}</option>)}
+          </select>
+        </div>
+        <select value={meal} onChange={(e) => setMeal(e.target.value)} className={`${selectCls} mt-2 w-full`}>
+          {mealNames.map((n) => <option key={n} value={n}>{n}</option>)}
+        </select>
+        <button onClick={add} className="btn-primary mt-3 w-full"><Plus size={16} /> Add to plan</button>
+      </div>
+
+      <div className="mt-4 space-y-2.5">
+        {PLAN_DAYS.map((d) => {
+          const items = plan.filter((p) => p.day === d)
+          return (
+            <div key={d} className="rounded-2xl border border-white/5 bg-ink-800 p-3.5">
+              <div className="mb-1.5 flex items-center justify-between">
+                <p className="font-bold">{d}</p>
+                <span className="text-[11px] text-white/35">{items.length ? `${items.length} planned` : '—'}</span>
+              </div>
+              {items.length === 0 ? (
+                <p className="text-[12px] text-white/35">Nothing planned</p>
+              ) : (
+                <div className="space-y-1.5">
+                  {items.map((it) => (
+                    <div key={it.id} className="flex items-center gap-2.5">
+                      <span className="w-16 shrink-0 text-[11px] font-semibold uppercase tracking-wide text-brand-400">{it.slot}</span>
+                      <span className="min-w-0 flex-1 truncate text-[13px] text-white/80">{it.name}</span>
+                      <button onClick={() => dispatch({ type: 'REMOVE_PLANNED_MEAL', id: it.id })} className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white/5 text-white/40 active:bg-white/10"><Trash2 size={13} /></button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )
+        })}
       </div>
       <div className="h-2" />
     </>
