@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import type { WeeklyIndex } from '../store/selectors'
 
 const BAND_COLOR: Record<WeeklyIndex['band'], string> = {
@@ -8,10 +9,13 @@ const BAND_COLOR: Record<WeeklyIndex['band'], string> = {
   crushing: '#7ED957',
 }
 
+const prefersReducedMotion = () =>
+  typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+
 /**
  * Compact semicircular performance gauge. Needle sits in the middle when the
- * user is on track, swings right when ahead and left when behind. Renders flat
- * on the page (no card chrome) so it blends with the rest of the dashboard.
+ * user is on track, swings right when ahead and left when behind. The needle
+ * animates from the left up to the score on mount. Renders flat on the page.
  */
 export function IndexGauge({ index }: { index: WeeklyIndex }) {
   const W = 220, H = 116
@@ -26,12 +30,18 @@ export function IndexGauge({ index }: { index: WeeklyIndex }) {
     d += `${i === 0 ? 'M' : 'L'}${x.toFixed(2)} ${y.toFixed(2)}`
   }
 
-  const t = Math.PI * (1 - Math.max(0, Math.min(100, index.score)) / 100)
+  // Needle is drawn pointing straight up, then rotated by score. Animate from
+  // the far left (-90deg) to the target so it "settles" on load.
+  const targetDeg = (Math.max(0, Math.min(100, index.score)) - 50) / 50 * 90
+  const [deg, setDeg] = useState(prefersReducedMotion() ? targetDeg : -90)
+  useEffect(() => {
+    if (prefersReducedMotion()) { setDeg(targetDeg); return }
+    const id = requestAnimationFrame(() => setDeg(targetDeg))
+    return () => cancelAnimationFrame(id)
+  }, [targetDeg])
+
   const rN = r - 16
   const baseW = 7
-  const b1 = [cx + baseW * Math.cos(t + Math.PI / 2), cy - baseW * Math.sin(t + Math.PI / 2)]
-  const b2 = [cx + baseW * Math.cos(t - Math.PI / 2), cy - baseW * Math.sin(t - Math.PI / 2)]
-  const tip = [cx + rN * Math.cos(t), cy - rN * Math.sin(t)]
 
   return (
     <div className="flex flex-col items-center">
@@ -46,11 +56,20 @@ export function IndexGauge({ index }: { index: WeeklyIndex }) {
         </defs>
         <path d={d} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={stroke + 5} strokeLinecap="round" />
         <path d={d} fill="none" stroke="url(#gaugeArc)" strokeWidth={stroke} strokeLinecap="round" />
-        <polygon
-          points={`${b1[0].toFixed(2)},${b1[1].toFixed(2)} ${tip[0].toFixed(2)},${tip[1].toFixed(2)} ${b2[0].toFixed(2)},${b2[1].toFixed(2)}`}
-          fill="#ffffff"
-          style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))' }}
-        />
+        <g
+          style={{
+            transform: `rotate(${deg}deg)`,
+            transformOrigin: `${cx}px ${cy}px`,
+            transformBox: 'view-box',
+            transition: 'transform 0.95s cubic-bezier(0.22,1,0.36,1)',
+          }}
+        >
+          <polygon
+            points={`${cx - baseW},${cy} ${cx},${cy - rN} ${cx + baseW},${cy}`}
+            fill="#ffffff"
+            style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))' }}
+          />
+        </g>
         <circle cx={cx} cy={cy} r={9} fill="#ffffff" />
         <circle cx={cx} cy={cy} r={4} fill="#0a0a0b" />
       </svg>

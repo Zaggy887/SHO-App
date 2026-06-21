@@ -297,7 +297,7 @@ export default function Dashboard() {
 
       {/* Coach presence — the human touch */}
       <Reveal delay={300}>
-        <button onClick={() => nav.open('coach')} className="mt-7 w-full overflow-hidden rounded-2xl border border-brand-400/20 bg-brand-400/[0.06] p-4 text-left transition active:scale-[0.99]">
+        <button onClick={() => nav.open('coach')} className="mt-5 w-full overflow-hidden rounded-2xl border border-brand-400/20 bg-brand-400/[0.06] p-4 text-left transition active:scale-[0.99]">
           <div className="flex items-center gap-2.5">
             <span className="grid h-7 w-7 place-items-center rounded-full bg-brand-400 text-black"><Sparkles size={15} /></span>
             <span className="text-[13px] font-bold text-brand-400">Coach</span>
@@ -374,7 +374,7 @@ function TaskRow({ task }: { task: Task }) {
 
 function Section({ title, action, onAction, right, tight }: { title: string; action?: string; onAction?: () => void; right?: ReactNode; tight?: boolean }) {
   return (
-    <div className={`mb-3 flex items-center justify-between ${tight ? 'mt-7' : 'mt-9'}`}>
+    <div className={`mb-2.5 flex items-center justify-between ${tight ? 'mt-5' : 'mt-7'}`}>
       <h2 className="section-title">{title}</h2>
       {right ? right : action && <button className="see-all" onClick={onAction}>{action}</button>}
     </div>
