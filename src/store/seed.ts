@@ -23,6 +23,7 @@ import type {
   Group,
   HabitDay,
   LeaderUser,
+  LoggedActivity,
   LoggedExercise,
   LoggedMeal,
   Post,
@@ -31,7 +32,7 @@ import type {
   WorkoutSession,
 } from './types'
 
-export const SCHEMA_VERSION = 4
+export const SCHEMA_VERSION = 5
 const DAYS = 40 // 0..38 completed history, 39 = today (in progress)
 
 /* round to nearest 2.5 (plate increments) */
@@ -225,6 +226,29 @@ export function buildSeed(): AppState {
     workout: false,
   })
 
+  /* Curate the current week (Mon..Sat) into a believable "week in the life" so
+   * the dashboard gauge and its colour-coded breakdown read realistically:
+   * strong workouts/steps/sleep/nutrition, with water running a little low. */
+  const weekHabit: Record<string, Partial<HabitDay>> = {
+    [dayKey(6)]: { steps: 11200, sleepH: 8.1, waterL: 2.5, mindsetMin: 10, nutritionScore: 9, workout: true },
+    [dayKey(5)]: { steps: 9800, sleepH: 7.6, waterL: 2.3, mindsetMin: 8, nutritionScore: 8, workout: true },
+    [dayKey(4)]: { steps: 8600, sleepH: 7.2, waterL: 2.1, mindsetMin: 5, nutritionScore: 8, workout: true },
+    [dayKey(3)]: { steps: 7200, sleepH: 8.3, waterL: 2.6, mindsetMin: 12, nutritionScore: 8, workout: false },
+    [dayKey(2)]: { steps: 10400, sleepH: 7.0, waterL: 2.2, mindsetMin: 6, nutritionScore: 9, workout: true },
+    [dayKey(1)]: { steps: 12500, sleepH: 8.0, waterL: 2.4, mindsetMin: 9, nutritionScore: 9, workout: true },
+  }
+  for (let j = 0; j < habits.length; j++) {
+    const ov = weekHabit[habits[j].dateKey]
+    if (ov) habits[j] = { ...habits[j], ...ov }
+  }
+
+  /* A couple of self-logged activities this week (cross-training the app didn't
+   * prescribe). The Saturday football is flagged as a regular weekly activity. */
+  const activities: LoggedActivity[] = [
+    { id: 'act-seed-foot', dateKey: dayKey(1), type: 'football', name: 'Football', icon: 'football', minutes: 60, intensity: 'hard', calories: 540, weekly: true, time: '4:30 PM' },
+    { id: 'act-seed-swim', dateKey: dayKey(3), type: 'swim', name: 'Swim', icon: 'swim', minutes: 30, intensity: 'moderate', calories: 270, weekly: false, time: '8:10 AM' },
+  ]
+
   /* -------- sessions -------- */
   const sessions: WorkoutSession[] = []
   for (let i = 0; i < DAYS - 1; i++) {
@@ -336,7 +360,7 @@ export function buildSeed(): AppState {
     habits,
     meals,
     foodReviews: [],
-    activities: [],
+    activities,
     chat: [
       {
         id: 'chat-welcome',
@@ -375,6 +399,7 @@ export function emptyState(): AppState {
     habits: [],
     meals: [],
     foodReviews: [],
+    activities: [],
     sessions: [],
     photos: [],
     posts: s.posts.filter((p) => p.authorId !== 'you'),
