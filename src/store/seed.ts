@@ -17,6 +17,7 @@ import type {
   AppNotification,
   AppState,
   Badge,
+  BodyMeasurement,
   Challenge,
   CoachMessage,
   CommunityEvent,
@@ -26,13 +27,15 @@ import type {
   LoggedActivity,
   LoggedExercise,
   LoggedMeal,
+  PlannedMeal,
   Post,
+  PostComment,
   ProgressPhoto,
   WeightEntry,
   WorkoutSession,
 } from './types'
 
-export const SCHEMA_VERSION = 6
+export const SCHEMA_VERSION = 7
 const DAYS = 40 // 0..38 completed history, 39 = today (in progress)
 
 /* round to nearest 2.5 (plate increments) */
@@ -250,6 +253,29 @@ export function buildSeed(): AppState {
     { id: 'act-seed-swim', dateKey: dayKey(3), type: 'swim', name: 'Swim', icon: 'swim', minutes: 30, intensity: 'moderate', calories: 270, weekly: false, time: '8:10 AM' },
   ]
 
+  /* -------- body measurements (cm), trending with the recomp -------- */
+  const measurements: BodyMeasurement[] = [
+    { dateKey: dayKey(35), waist: 82.5, chest: 99.5, arms: 35.5, thighs: 57.5 },
+    { dateKey: dayKey(21), waist: 81.5, chest: 100.5, arms: 36, thighs: 58 },
+    { dateKey: dayKey(7), waist: 80, chest: 101.5, arms: 36.5, thighs: 58.5 },
+    { dateKey: dayKey(1), waist: 79, chest: 102, arms: 37, thighs: 59 },
+  ]
+
+  /* -------- a starter weekly meal plan -------- */
+  const mealPlan: PlannedMeal[] = [
+    { id: 'pm-1', day: 'Mon', slot: 'Breakfast', name: 'Protein Overnight Oats' },
+    { id: 'pm-2', day: 'Mon', slot: 'Lunch', name: 'Chicken, Rice & Frozen Veg' },
+    { id: 'pm-3', day: 'Tue', slot: 'Dinner', name: 'Tuna Pasta' },
+    { id: 'pm-4', day: 'Thu', slot: 'Lunch', name: 'Chicken & Hummus Wrap' },
+  ]
+
+  /* -------- seeded comments on the feed -------- */
+  const postComments: PostComment[] = [
+    { id: 'cm-s1', postId: 'post-1', author: 'Jayden K.', text: 'Huge, congrats! That bench is flying up.', time: '1h ago' },
+    { id: 'cm-s2', postId: 'post-1', author: 'Sophie L.', text: 'Beast mode 💪 see you Friday?', time: '45m ago' },
+    { id: 'cm-s3', postId: 'post-3', author: 'Mia R.', text: 'Recipe please 🙏', time: '20h ago' },
+  ]
+
   /* -------- sessions -------- */
   const sessions: WorkoutSession[] = []
   for (let i = 0; i < DAYS - 1; i++) {
@@ -362,6 +388,9 @@ export function buildSeed(): AppState {
     meals,
     foodReviews: [],
     activities,
+    measurements,
+    mealPlan,
+    postComments,
     chat: [
       {
         id: 'chat-welcome',
@@ -401,6 +430,9 @@ export function emptyState(): AppState {
     meals: [],
     foodReviews: [],
     activities: [],
+    measurements: [],
+    mealPlan: [],
+    postComments: [],
     sessions: [],
     photos: [],
     posts: s.posts.filter((p) => p.authorId !== 'you'),

@@ -1,16 +1,19 @@
 import { useState } from 'react'
-import { SlidersHorizontal, ChevronDown, ArrowRight, Trophy, Flame, Plus, Camera } from 'lucide-react'
-import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
+import { SlidersHorizontal, ChevronDown, ArrowRight, Trophy, Flame, Plus, Camera, Ruler } from 'lucide-react'
+import { AreaChart, Area, BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 import { Icon } from '../components/Icon'
 import { ProgressRing, ScreenHeader, SectionHeader } from '../components/ui'
 import { useStore } from '../store/store'
 import { useNav } from '../nav'
+import { exById } from '../data/catalog'
 import { dayKey, shortDate } from '../lib/date'
 import { fmtWeight, fmtWeightNum, weightUnit, weightVal } from '../lib/format'
 import {
   weightStats, strengthProgress, habitConsistencyWeek, streakStats,
-  workoutsInRange, nutritionForDay,
+  workoutsInRange, nutritionForDay, volumeByWeek, bestLiftId, oneRMSeries, latestMeasurements,
 } from '../store/selectors'
+
+const MEAS_LABEL: Record<string, string> = { waist: 'Waist', chest: 'Chest', arms: 'Arms', thighs: 'Thighs' }
 
 export default function Progress() {
   const { state } = useStore()
@@ -35,6 +38,12 @@ export default function Progress() {
   const vals = chart.map((c) => c.weight)
   const yMin = Math.floor(Math.min(...vals) - 1)
   const yMax = Math.ceil(Math.max(...vals) + 1)
+
+  const volWeeks = volumeByWeek(state, 8).map((v) => ({ label: v.label, volume: Math.round(weightVal(v.volume, units)) }))
+  const liftId = bestLiftId(state)
+  const strengthSeries = liftId ? oneRMSeries(state, liftId).map((p) => ({ date: shortDate(p.dateKey), kg: Math.round(weightVal(p.kg, units)) })) : []
+  const liftName = liftId ? exById(liftId)?.name ?? 'Strength' : ''
+  const measRows = latestMeasurements(state)
 
   const cards = [
     { icon: 'scale', label: 'Weight', value: fmtWeightNum(w.current, units), unit: weightUnit(units), delta: `${w.delta <= 0 ? '↓' : '↑'} ${fmtWeight(Math.abs(w.delta), units, 1)}`, color: '#7ED957', onClick: () => nav.open('logWeight') },
@@ -108,6 +117,42 @@ export default function Progress() {
         </div>
       </div>
 
+      {/* Training volume */}
+      <div className="mt-4 rounded-2xl border border-white/5 bg-ink-800 p-4">
+        <h2 className="section-title mb-2">Training volume</h2>
+        <p className="mb-2 text-[12px] text-white/45">Total weight lifted per week ({weightUnit(units)})</p>
+        <div className="h-40 w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={volWeeks} margin={{ top: 6, right: 6, left: -14, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(130,130,130,0.18)" vertical={false} />
+              <XAxis dataKey="label" tick={{ fill: 'rgba(140,140,140,0.85)', fontSize: 11 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: 'rgba(140,140,140,0.85)', fontSize: 11 }} axisLine={false} tickLine={false} width={44} tickFormatter={(v: number) => (v >= 1000 ? `${Math.round(v / 1000)}k` : `${v}`)} />
+              <Tooltip cursor={{ fill: 'rgba(255,255,255,0.04)' }} contentStyle={{ background: '#1A1B1E', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, fontSize: 12, color: '#fff' }} formatter={(v: number) => [`${v.toLocaleString()} ${weightUnit(units)}`, 'Volume']} />
+              <Bar dataKey="volume" fill="#7ED957" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      {/* Strength over time */}
+      {strengthSeries.length >= 2 && (
+        <div className="mt-4 rounded-2xl border border-white/5 bg-ink-800 p-4">
+          <h2 className="section-title mb-2">Strength over time</h2>
+          <p className="mb-2 text-[12px] text-white/45">{liftName} · estimated 1RM ({weightUnit(units)})</p>
+          <div className="h-40 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={strengthSeries} margin={{ top: 6, right: 8, left: -14, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(130,130,130,0.18)" vertical={false} />
+                <XAxis dataKey="date" tick={{ fill: 'rgba(140,140,140,0.85)', fontSize: 11 }} axisLine={false} tickLine={false} interval="preserveStartEnd" minTickGap={28} />
+                <YAxis domain={['dataMin - 5', 'dataMax + 5']} tick={{ fill: 'rgba(140,140,140,0.85)', fontSize: 11 }} axisLine={false} tickLine={false} width={40} />
+                <Tooltip contentStyle={{ background: '#1A1B1E', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, fontSize: 12, color: '#fff' }} formatter={(v: number) => [`${v} ${weightUnit(units)}`, '1RM']} />
+                <Line type="monotone" dataKey="kg" stroke="#7ED957" strokeWidth={3} dot={{ r: 2, fill: '#7ED957', strokeWidth: 0 }} activeDot={{ r: 5 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
+
       {/* Strength Progress */}
       <SectionHeader title="Strength Progress" />
       <div className="space-y-3 rounded-2xl border border-white/5 bg-ink-800 p-3">
@@ -142,6 +187,27 @@ export default function Progress() {
           <p className="flex items-center justify-center gap-1 text-2xl font-extrabold">{streak.current} <Flame size={20} className="text-brand-400" /></p>
           <p className="text-[11px] text-white/40">Best: {streak.best}d</p>
         </div>
+      </div>
+
+      {/* Body measurements */}
+      <SectionHeader title="Body measurements" right={<button onClick={() => nav.open('logMeasurement')} className="flex items-center gap-1 text-sm font-semibold text-brand-400">Log <Plus size={15} /></button>} />
+      <div className="grid grid-cols-2 gap-3">
+        {measRows.map((m) => (
+          <div key={m.key} className="rounded-2xl border border-white/5 bg-ink-800 p-4">
+            <div className="mb-1 flex items-center gap-1.5 text-[13px] font-medium text-white/55"><Ruler size={14} className="text-brand-400" /> {MEAS_LABEL[m.key]}</div>
+            {m.current != null ? (
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-2xl font-extrabold">{m.current}</span>
+                <span className="text-xs text-white/50">cm</span>
+                {m.delta != null && m.delta !== 0 && (
+                  <span className={`ml-auto text-[12px] font-semibold ${m.delta < 0 ? 'text-brand-400' : 'text-white/55'}`}>{m.delta < 0 ? '↓' : '↑'} {Math.abs(m.delta).toFixed(1)}</span>
+                )}
+              </div>
+            ) : (
+              <p className="text-[13px] text-white/35">Not logged</p>
+            )}
+          </div>
+        ))}
       </div>
 
       {/* Progress photos */}

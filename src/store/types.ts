@@ -42,6 +42,32 @@ export interface Profile {
   createdAtKey: string
 }
 
+/** Body measurements logged on a day (cm). Fields are optional per entry. */
+export interface BodyMeasurement {
+  dateKey: string
+  waist?: number
+  chest?: number
+  arms?: number
+  thighs?: number
+}
+
+/** A planned meal slot in the weekly meal planner. */
+export interface PlannedMeal {
+  id: string
+  day: string // 'Mon'..'Sun'
+  slot: MealName
+  name: string
+}
+
+/** A comment on a community post. */
+export interface PostComment {
+  id: string
+  postId: string
+  author: string
+  text: string
+  time: string
+}
+
 /** A single message in the 1:1 coach messenger. */
 export interface ChatMessage {
   id: string
@@ -358,6 +384,12 @@ export interface AppState {
   chat: ChatMessage[]
   /** self-logged activities (optional for older saves) */
   activities?: LoggedActivity[]
+  /** body measurements over time */
+  measurements?: BodyMeasurement[]
+  /** weekly meal plan */
+  mealPlan?: PlannedMeal[]
+  /** comments per community post */
+  postComments?: PostComment[]
   foods: FoodItem[]
   sessions: WorkoutSession[]
   program: ProgramDay[]

@@ -196,6 +196,61 @@ export function strengthProgress(s: AppState) {
     .filter(Boolean) as { id: string; name: string; from: number; to: number; pct: number; image: string }[]
 }
 
+/* -------------------------- Strength & volume series -------------------------- */
+function epley(weightKg: number, reps: number) {
+  return weightKg * (1 + reps / 30)
+}
+
+/** Estimated 1RM per completed session for a lift, chronological. */
+export function oneRMSeries(s: AppState, defId: string) {
+  return completedSessions(s)
+    .filter((x) => x.exercises.some((e) => e.defId === defId))
+    .sort((a, b) => a.dateKey.localeCompare(b.dateKey))
+    .map((x) => {
+      const ex = x.exercises.find((e) => e.defId === defId)!
+      const kg = Math.max(0, ...ex.sets.map((set) => epley(set.weightKg, set.reps)))
+      return { dateKey: x.dateKey, kg: Math.round(kg / 2.5) * 2.5 }
+    })
+    .filter((p) => p.kg > 0)
+}
+
+/** The lift with the most logged history (for the default strength chart). */
+export function bestLiftId(s: AppState): string | null {
+  const lifts = ['bench', 'squat', 'deadlift', 'ohp', 'row', 'pulldown']
+  let best: string | null = null
+  let n = 0
+  for (const id of lifts) {
+    const c = completedSessions(s).filter((x) => x.exercises.some((e) => e.defId === id)).length
+    if (c > n) { n = c; best = id }
+  }
+  return best
+}
+
+/** Total training volume bucketed into the last `weeks` weeks (oldest → newest). */
+export function volumeByWeek(s: AppState, weeks = 8) {
+  const done = completedSessions(s)
+  const out: { label: string; volume: number }[] = []
+  for (let wk = weeks - 1; wk >= 0; wk--) {
+    const start = dayKey(wk * 7 + 6)
+    const end = dayKey(wk * 7)
+    const volume = done.filter((x) => x.dateKey >= start && x.dateKey <= end).reduce((a, x) => a + x.volumeKg, 0)
+    out.push({ label: wk === 0 ? 'Now' : `${wk}w`, volume: Math.round(volume) })
+  }
+  return out
+}
+
+/* -------------------------- Body measurements -------------------------- */
+export function latestMeasurements(s: AppState) {
+  const all = [...(s.measurements ?? [])].sort((a, b) => a.dateKey.localeCompare(b.dateKey))
+  const keys = ['waist', 'chest', 'arms', 'thighs'] as const
+  return keys.map((k) => {
+    const withVal = all.filter((m) => m[k] != null)
+    const current = withVal.at(-1)?.[k]
+    const prev = withVal.length > 1 ? withVal.at(-2)?.[k] : undefined
+    return { key: k, current, delta: current != null && prev != null ? current - prev : undefined }
+  })
+}
+
 /* -------------------------- Habit consistency (this week) -------------------------- */
 export function habitConsistencyWeek(s: AppState) {
   const wk = currentWeekKeys().filter((k) => k <= todayKey)

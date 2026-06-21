@@ -5,11 +5,14 @@ import { coachReply } from '../lib/coachChat'
 import type {
   AppNotification,
   AppState,
+  BodyMeasurement,
   ChatMessage,
   LoggedActivity,
   LoggedExercise,
   LoggedMeal,
+  PlannedMeal,
   Post,
+  PostComment,
   Profile,
   Settings,
   WorkoutSession,
@@ -30,6 +33,10 @@ export type Action =
   | { type: 'ADD_ACTIVITY'; activity: Omit<LoggedActivity, 'id' | 'dateKey' | 'time'> }
   | { type: 'REMOVE_ACTIVITY'; id: string }
   | { type: 'TOGGLE_ACTIVITY_WEEKLY'; id: string }
+  | { type: 'LOG_MEASUREMENT'; patch: Partial<Omit<BodyMeasurement, 'dateKey'>> }
+  | { type: 'ADD_PLANNED_MEAL'; plan: Omit<PlannedMeal, 'id'> }
+  | { type: 'REMOVE_PLANNED_MEAL'; id: string }
+  | { type: 'ADD_COMMENT'; postId: string; text: string }
   | { type: 'SAVE_FOOD_REVIEW'; text: string; score: number }
   | { type: 'SEND_CHAT'; text: string }
   | { type: 'MARK_CHAT_READ' }
@@ -118,6 +125,27 @@ function reducer(state: AppState, action: Action): AppState {
 
     case 'TOGGLE_ACTIVITY_WEEKLY':
       return { ...state, activities: (state.activities ?? []).map((a) => (a.id === action.id ? { ...a, weekly: !a.weekly } : a)) }
+
+    case 'LOG_MEASUREMENT': {
+      const others = (state.measurements ?? []).filter((m) => m.dateKey !== todayKey)
+      const existing = (state.measurements ?? []).find((m) => m.dateKey === todayKey)
+      const merged: BodyMeasurement = { dateKey: todayKey, ...existing, ...action.patch }
+      return { ...state, measurements: [...others, merged] }
+    }
+
+    case 'ADD_PLANNED_MEAL':
+      return { ...state, mealPlan: [...(state.mealPlan ?? []), { ...action.plan, id: `pm-${Date.now()}` }] }
+
+    case 'REMOVE_PLANNED_MEAL':
+      return { ...state, mealPlan: (state.mealPlan ?? []).filter((p) => p.id !== action.id) }
+
+    case 'ADD_COMMENT': {
+      const text = action.text.trim()
+      if (!text) return state
+      const comment: PostComment = { id: `cm-${Date.now()}`, postId: action.postId, author: `${state.profile.name} (You)`, text, time: 'now' }
+      const posts = state.posts.map((p) => (p.id === action.postId ? { ...p, comments: p.comments + 1 } : p))
+      return { ...state, postComments: [...(state.postComments ?? []), comment], posts }
+    }
 
     case 'SAVE_FOOD_REVIEW': {
       const others = state.foodReviews.filter((r) => r.dateKey !== todayKey)
