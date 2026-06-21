@@ -8,7 +8,7 @@ import { useNav } from '../nav'
 import { currentWeekKeys, todayKey, longDate, TODAY } from '../lib/date'
 import { fmtFluid, fmtWeightNum, weightUnit, pct } from '../lib/format'
 import {
-  todayHabit, todaySession, weightStats, workoutsThisWeek, workoutsInRange,
+  todayHabit, todaySession, weightStats, regularWorkoutsInWeek,
   strengthProgress, unreadChat, streakStats, foodReviewForDay, weeklyIndex,
 } from '../store/selectors'
 import { coachDaily } from '../store/coach'
@@ -39,8 +39,8 @@ export default function Dashboard() {
   const habit = todayHabit(state)
   const session = todaySession(state)
   const w = weightStats(state)
-  const thisWeek = workoutsThisWeek(state)
-  const lastWeek = workoutsInRange(state, 14) - thisWeek
+  const thisWeek = regularWorkoutsInWeek(state, 0)
+  const lastWeek = regularWorkoutsInWeek(state, 1)
   const sp = strengthProgress(state)
   const strengthAvg = sp.length ? Math.round(sp.reduce((a, s) => a + s.pct, 0) / sp.length) : 0
   const unread = unreadChat(state)

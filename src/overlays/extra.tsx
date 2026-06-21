@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import {
   Sparkles, Check, ChevronRight, ChevronDown, Wallet, Trophy, Flame,
   GraduationCap, Dumbbell, Lightbulb, ShieldQuestion, Share2, Plus, MapPin,
-  Send, Video, Lock, Crown, X, Clock,
+  Send, Video, Lock, Crown, X, Clock, Repeat,
 } from 'lucide-react'
 import { Sheet } from '../components/Sheet'
 import { Avatar } from '../components/Avatar'
@@ -518,6 +518,7 @@ export function LogActivitySheet({ open, onClose }: Props) {
   const [minutes, setMinutes] = useState('30')
   const [intensity, setIntensity] = useState<'easy' | 'moderate' | 'hard'>('moderate')
   const [note, setNote] = useState('')
+  const [weekly, setWeekly] = useState(false)
 
   const preset = activityPreset(key) ?? ACTIVITY_PRESETS[0]
   const isCustom = key === 'other'
@@ -527,9 +528,9 @@ export function LogActivitySheet({ open, onClose }: Props) {
 
   function save() {
     if (mins <= 0) { toast('Add a duration first'); return }
-    dispatch({ type: 'ADD_ACTIVITY', activity: { type: key, name, icon: isCustom ? 'other' : key, minutes: mins, intensity, calories: kcal, note: note.trim() || undefined } })
+    dispatch({ type: 'ADD_ACTIVITY', activity: { type: key, name, icon: isCustom ? 'other' : key, minutes: mins, intensity, calories: kcal, note: note.trim() || undefined, weekly } })
     toast(`${name} logged`)
-    setKey('run'); setCustomName(''); setMinutes('30'); setIntensity('moderate'); setNote('')
+    setKey('run'); setCustomName(''); setMinutes('30'); setIntensity('moderate'); setNote(''); setWeekly(false)
     onClose()
   }
 
@@ -587,6 +588,18 @@ export function LogActivitySheet({ open, onClose }: Props) {
         placeholder="Note (optional) — how did it feel?"
         className="mt-4 w-full rounded-xl border border-white/8 bg-ink-800 px-4 py-3 text-[14px] text-white placeholder:text-white/35 focus:border-brand-400/60 focus:outline-none"
       />
+
+      {/* Weekly activity — only these count toward "workouts this week" */}
+      <button onClick={() => setWeekly((v) => !v)} className="mt-3 flex w-full items-center gap-3 rounded-2xl border border-white/8 bg-ink-800 p-3.5 text-left active:scale-[0.99]">
+        <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-brand-400/15"><Repeat size={18} className="text-brand-400" /></div>
+        <div className="flex-1">
+          <p className="font-bold leading-tight">Regular weekly activity</p>
+          <p className="text-[12px] text-white/50">Counts toward your weekly workouts</p>
+        </div>
+        <span className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${weekly ? 'bg-brand-400' : 'bg-white/15'}`}>
+          <span className={`absolute top-0.5 h-6 w-6 rounded-full bg-white transition-transform ${weekly ? 'translate-x-[22px]' : 'translate-x-0.5'}`} />
+        </span>
+      </button>
 
       <div className="mt-4 flex items-center justify-between rounded-2xl border border-white/5 bg-ink-800 p-4">
         <span className="text-[13px] text-white/55">Estimated burn</span>

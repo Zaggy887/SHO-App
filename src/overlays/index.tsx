@@ -22,8 +22,9 @@ import {
 } from '../lib/format'
 import {
   weightStats, workoutsThisWeek, totalVolumeRange, streakStats, todayHabit,
-  habitConsistencyWeek, leaderboardSorted, strengthProgress,
+  habitConsistencyWeek, leaderboardSorted, strengthProgress, activitiesInRange,
 } from '../store/selectors'
+import { ActivityIcon } from '../components/ActivityIcon'
 import { examState, dailyTargets, defaultExamWindow } from '../store/training'
 import { translator, LANGUAGES, type Language } from '../lib/i18n'
 import type { MealName, Units, Theme } from '../store/types'
@@ -484,9 +485,11 @@ export function WeeklyRecapSheet({ open, onClose }: Props) {
   const hc = habitConsistencyWeek(state)
   const w = weightStats(state)
   const top = strengthProgress(state)[0]
+  const acts = activitiesInRange(state, 7)
 
   async function share() {
-    const txt = `My StrengthHub week. ${workouts} workouts, ${Math.round(vol).toLocaleString()} kg lifted, a ${streak.current} day streak.`
+    const actText = acts.length ? `, ${acts.length} other ${acts.length === 1 ? 'activity' : 'activities'}` : ''
+    const txt = `My StrengthHub week. ${workouts} workouts, ${Math.round(vol).toLocaleString()} kg lifted${actText}, a ${streak.current} day streak.`
     try {
       if (navigator.share) await navigator.share({ text: txt })
       else toast('Recap copied to share!')
@@ -514,6 +517,22 @@ export function WeeklyRecapSheet({ open, onClose }: Props) {
             Biggest gain: <span className="font-bold">{top.name}</span> up{' '}
             <span className="font-bold text-brand-400">{top.pct}%</span> in 4 weeks.
           </p>
+        </div>
+      )}
+
+      {acts.length > 0 && (
+        <div className="mt-3 rounded-2xl border border-white/5 bg-ink-800 p-4">
+          <p className="mb-2.5 text-[12px] font-bold uppercase tracking-wide text-white/40">Other activities · {acts.length}</p>
+          <div className="space-y-2">
+            {acts.slice(0, 6).map((a) => (
+              <div key={a.id} className="flex items-center gap-2.5">
+                <ActivityIcon name={a.icon} size={16} className="text-brand-400" />
+                <span className="flex-1 text-[13px] text-white/75">{a.name}</span>
+                {a.weekly && <span className="rounded-full bg-brand-400/15 px-1.5 py-0.5 text-[10px] font-bold text-brand-300">Weekly</span>}
+                <span className="text-[12px] text-white/45">{a.minutes} min</span>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

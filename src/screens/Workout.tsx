@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { CalendarDays, Clock, Play, ChevronRight, Check, Leaf, Plus, Trash2, Activity } from 'lucide-react'
+import { CalendarDays, Clock, Play, ChevronRight, Check, Leaf, Plus, Trash2, Activity, Repeat } from 'lucide-react'
 import { Icon } from '../components/Icon'
 import { ActivityIcon } from '../components/ActivityIcon'
 import { ProgressBar, SegmentedTabs, ScreenHeader, Chip } from '../components/ui'
@@ -139,11 +139,14 @@ function OtherActivities() {
             <div key={a.id} className="flex items-center gap-3 rounded-2xl border border-white/5 bg-ink-800 p-3">
               <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-brand-400/15"><ActivityIcon name={a.icon} size={20} className="text-brand-400" /></div>
               <div className="min-w-0 flex-1">
-                <p className="truncate font-bold leading-tight">{a.name}</p>
+                <div className="flex items-center gap-1.5">
+                  <p className="truncate font-bold leading-tight">{a.name}</p>
+                  {a.weekly && <span className="flex shrink-0 items-center gap-1 rounded-full bg-brand-400/15 px-1.5 py-0.5 text-[10px] font-bold text-brand-300"><Repeat size={10} /> Weekly</span>}
+                </div>
                 <p className="text-[12px] capitalize text-white/50">{a.minutes} min · {a.intensity} · {a.calories} kcal</p>
                 {a.note && <p className="truncate text-[12px] text-white/40">{a.note}</p>}
               </div>
-              <span className="shrink-0 text-[11px] text-white/35">{a.time}</span>
+              <button onClick={() => dispatch({ type: 'TOGGLE_ACTIVITY_WEEKLY', id: a.id })} aria-label="Toggle weekly activity" className={`grid h-8 w-8 shrink-0 place-items-center rounded-full active:scale-90 ${a.weekly ? 'bg-brand-400/20 text-brand-400' : 'bg-white/5 text-white/40'}`}><Repeat size={15} /></button>
               <button onClick={() => dispatch({ type: 'REMOVE_ACTIVITY', id: a.id })} className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/5 text-white/40 active:bg-white/10"><Trash2 size={15} /></button>
             </div>
           ))}
@@ -204,22 +207,45 @@ function ExercisesTab() {
   )
 }
 
+type HistoryItem =
+  | { kind: 'session'; id: string; dateKey: string; name: string; volumeKg: number; durationMin: number }
+  | { kind: 'activity'; id: string; dateKey: string; name: string; icon: string; minutes: number; calories: number; weekly?: boolean }
+
 function HistoryTab() {
   const { state } = useStore()
   const units = state.settings.units
-  const history = completedSessions(state).sort((a, b) => b.dateKey.localeCompare(a.dateKey)).slice(0, 20)
+  const sessions: HistoryItem[] = completedSessions(state).map((s) => ({ kind: 'session', id: s.id, dateKey: s.dateKey, name: s.name, volumeKg: s.volumeKg, durationMin: s.durationMin }))
+  const acts: HistoryItem[] = (state.activities ?? []).map((a) => ({ kind: 'activity', id: a.id, dateKey: a.dateKey, name: a.name, icon: a.icon, minutes: a.minutes, calories: a.calories, weekly: a.weekly }))
+  const history = [...sessions, ...acts].sort((a, b) => b.dateKey.localeCompare(a.dateKey)).slice(0, 30)
+
+  if (history.length === 0) return <p className="py-8 text-center text-sm text-white/40">No history yet. Complete a workout or log an activity.</p>
+
   return (
     <div className="space-y-3">
       {history.map((h) => (
         <div key={h.id} className="flex items-center gap-3 rounded-2xl border border-white/5 bg-ink-800 p-4">
-          <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-brand-400/15"><Icon name="dumbbell" size={20} color="#7ED957" /></div>
-          <div className="flex-1">
-            <p className="font-bold">{h.name}</p>
-            <p className="text-[12px] text-white/45">{relativeLabel(h.dateKey)}</p>
+          <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-brand-400/15">
+            {h.kind === 'session' ? <Icon name="dumbbell" size={20} color="#7ED957" /> : <ActivityIcon name={h.icon} size={20} className="text-brand-400" />}
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5">
+              <p className="truncate font-bold">{h.name}</p>
+              {h.kind === 'activity' && h.weekly && <span className="flex shrink-0 items-center gap-1 rounded-full bg-brand-400/15 px-1.5 py-0.5 text-[10px] font-bold text-brand-300"><Repeat size={10} /> Weekly</span>}
+            </div>
+            <p className="text-[12px] text-white/45">{relativeLabel(h.dateKey)}{h.kind === 'activity' ? ' · activity' : ''}</p>
           </div>
           <div className="text-right">
-            <p className="text-sm font-semibold">{fmtVolume(h.volumeKg, units)}</p>
-            <p className="text-[12px] text-white/45">{h.durationMin} min</p>
+            {h.kind === 'session' ? (
+              <>
+                <p className="text-sm font-semibold">{fmtVolume(h.volumeKg, units)}</p>
+                <p className="text-[12px] text-white/45">{h.durationMin} min</p>
+              </>
+            ) : (
+              <>
+                <p className="text-sm font-semibold">{h.calories} kcal</p>
+                <p className="text-[12px] text-white/45">{h.minutes} min</p>
+              </>
+            )}
           </div>
         </div>
       ))}

@@ -29,6 +29,7 @@ export type Action =
   | { type: 'REMOVE_MEAL'; id: string }
   | { type: 'ADD_ACTIVITY'; activity: Omit<LoggedActivity, 'id' | 'dateKey' | 'time'> }
   | { type: 'REMOVE_ACTIVITY'; id: string }
+  | { type: 'TOGGLE_ACTIVITY_WEEKLY'; id: string }
   | { type: 'SAVE_FOOD_REVIEW'; text: string; score: number }
   | { type: 'SEND_CHAT'; text: string }
   | { type: 'MARK_CHAT_READ' }
@@ -114,6 +115,9 @@ function reducer(state: AppState, action: Action): AppState {
 
     case 'REMOVE_ACTIVITY':
       return { ...state, activities: (state.activities ?? []).filter((a) => a.id !== action.id) }
+
+    case 'TOGGLE_ACTIVITY_WEEKLY':
+      return { ...state, activities: (state.activities ?? []).map((a) => (a.id === action.id ? { ...a, weekly: !a.weekly } : a)) }
 
     case 'SAVE_FOOD_REVIEW': {
       const others = state.foodReviews.filter((r) => r.dateKey !== todayKey)

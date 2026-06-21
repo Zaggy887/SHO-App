@@ -1,4 +1,4 @@
-import { currentWeekKeys, dayKey, todayKey } from '../lib/date'
+import { currentWeekKeys, dayKey, todayKey, fromKey, toKey, addDays } from '../lib/date'
 import type { AppState, HabitDay, WorkoutSession } from './types'
 
 export function todayHabit(s: AppState): HabitDay {
@@ -129,6 +129,20 @@ export function activitiesForDay(s: AppState, key: string = todayKey) {
 export function activitiesInRange(s: AppState, days: number) {
   const cutoff = dayKey(days)
   return (s.activities ?? []).filter((a) => a.dateKey >= cutoff)
+}
+
+/** Activities the user flagged as a regular weekly activity, in a given calendar
+ *  week (offset 0 = this week, 1 = last week). These count as "workouts". */
+export function weeklyActivitiesInWeek(s: AppState, offset = 0) {
+  const wk = new Set(currentWeekKeys().map((k) => toKey(addDays(fromKey(k), -7 * offset))))
+  return (s.activities ?? []).filter((a) => a.weekly && wk.has(a.dateKey))
+}
+
+/** Prescribed sessions + regular weekly activities for a calendar week. */
+export function regularWorkoutsInWeek(s: AppState, offset = 0) {
+  const wk = new Set(currentWeekKeys().map((k) => toKey(addDays(fromKey(k), -7 * offset))))
+  const sessions = completedSessions(s).filter((x) => wk.has(x.dateKey)).length
+  return sessions + weeklyActivitiesInWeek(s, offset).length
 }
 
 /* -------------------------- Strength progress -------------------------- */
