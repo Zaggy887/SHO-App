@@ -166,7 +166,7 @@ export default function Dashboard() {
             const today = k === todayKey
             const selected = k === selDate
             const future = k > todayKey
-            const trained = state.sessions.some((s) => s.dateKey === k && s.completed)
+            const trained = state.sessions.some((s) => s.dateKey === k && s.completed) || (state.activities ?? []).some((a) => a.dateKey === k)
             const logged = state.habits.some((h) => h.dateKey === k)
             const date = parseInt(k.slice(-2))
             return (

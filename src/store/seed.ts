@@ -32,7 +32,7 @@ import type {
   WorkoutSession,
 } from './types'
 
-export const SCHEMA_VERSION = 5
+export const SCHEMA_VERSION = 6
 const DAYS = 40 // 0..38 completed history, 39 = today (in progress)
 
 /* round to nearest 2.5 (plate increments) */
@@ -226,16 +226,17 @@ export function buildSeed(): AppState {
     workout: false,
   })
 
-  /* Curate the current week (Mon..Sat) into a believable "week in the life" so
-   * the dashboard gauge and its colour-coded breakdown read realistically:
-   * strong workouts/steps/sleep/nutrition, with water running a little low. */
+  /* Curate the current week (Mon..Sat) into a believable, varied "week in the
+   * life" so each day tells its own story and the dashboard gauge + colour-coded
+   * breakdown show a real mix: steps strong (green), sleep & nutrition mixed
+   * (amber), water the weak spot (red). */
   const weekHabit: Record<string, Partial<HabitDay>> = {
-    [dayKey(6)]: { steps: 11200, sleepH: 8.1, waterL: 2.5, mindsetMin: 10, nutritionScore: 9, workout: true },
-    [dayKey(5)]: { steps: 9800, sleepH: 7.6, waterL: 2.3, mindsetMin: 8, nutritionScore: 8, workout: true },
-    [dayKey(4)]: { steps: 8600, sleepH: 7.2, waterL: 2.1, mindsetMin: 5, nutritionScore: 8, workout: true },
-    [dayKey(3)]: { steps: 7200, sleepH: 8.3, waterL: 2.6, mindsetMin: 12, nutritionScore: 8, workout: false },
-    [dayKey(2)]: { steps: 10400, sleepH: 7.0, waterL: 2.2, mindsetMin: 6, nutritionScore: 9, workout: true },
-    [dayKey(1)]: { steps: 12500, sleepH: 8.0, waterL: 2.4, mindsetMin: 9, nutritionScore: 9, workout: true },
+    [dayKey(6)]: { steps: 13200, sleepH: 7.4, waterL: 2.2, mindsetMin: 12, nutritionScore: 8, workout: true }, // Mon — strong start
+    [dayKey(5)]: { steps: 10800, sleepH: 7.6, waterL: 1.8, mindsetMin: 8, nutritionScore: 7, workout: true }, // Tue — solid
+    [dayKey(4)]: { steps: 4800, sleepH: 5.5, waterL: 0.8, mindsetMin: 0, nutritionScore: 4, workout: false }, // Wed — rough day off
+    [dayKey(3)]: { steps: 7200, sleepH: 5.2, waterL: 1.0, mindsetMin: 5, nutritionScore: 5, workout: true }, // Thu — trained on poor sleep
+    [dayKey(2)]: { steps: 11500, sleepH: 6.2, waterL: 1.3, mindsetMin: 6, nutritionScore: 6, workout: true }, // Fri — busy but active
+    [dayKey(1)]: { steps: 9000, sleepH: 7.2, waterL: 1.6, mindsetMin: 10, nutritionScore: 8, workout: true }, // Sat — football day
   }
   for (let j = 0; j < habits.length; j++) {
     const ov = weekHabit[habits[j].dateKey]
