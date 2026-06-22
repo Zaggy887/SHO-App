@@ -58,6 +58,14 @@ export default {
         '2xl': '1.25rem',
         '3xl': '1.5rem',
       },
+      // Premium-feel motion defaults: a touch slower, with a refined ease-out
+      // so transitions and presses feel deliberate rather than instant.
+      transitionTimingFunction: {
+        DEFAULT: 'cubic-bezier(0.22, 1, 0.36, 1)',
+      },
+      transitionDuration: {
+        DEFAULT: '220ms',
+      },
     },
   },
   plugins: [],

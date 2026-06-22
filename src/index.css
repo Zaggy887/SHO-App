@@ -116,7 +116,7 @@
 
   .btn-primary {
     @apply inline-flex items-center justify-center gap-2 rounded-full bg-brand-400 px-5 py-3
-           font-semibold text-black transition-transform duration-150 active:scale-[0.97] hover:bg-brand-300;
+           font-semibold text-black transition-transform duration-200 ease-out active:scale-[0.96] hover:bg-brand-300;
   }
 
   .section-title {
@@ -128,11 +128,11 @@
   }
 }
 
-/* Smooth fade/slide for screen transitions */
+/* Smooth fade/slide for screen transitions — unhurried, premium easing. */
 @keyframes screen-in {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
@@ -141,7 +141,23 @@
 }
 
 .animate-screen-in {
-  animation: screen-in 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+  animation: screen-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Bottom-sheet slide-up + backdrop fade. */
+@keyframes sheet-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+.animate-sheet-up {
+  animation: sheet-up 0.46s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.animate-fade-in {
+  animation: fade-in 0.32s ease-out both;
 }
 
 /* Chunky, touch-friendly range slider used for habit logging. */

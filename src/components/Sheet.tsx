@@ -29,14 +29,12 @@ export function Sheet({
       <button
         aria-label="Close"
         onClick={onClose}
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-screen-in"
-        style={{ animationDuration: '0.15s' }}
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in"
       />
       <div
-        className={`relative flex flex-col rounded-t-3xl border-t border-white/10 bg-ink-900 ${
+        className={`animate-sheet-up relative flex flex-col rounded-t-3xl border-t border-white/10 bg-ink-900 ${
           full ? 'h-[92%]' : 'max-h-[88%]'
         }`}
-        style={{ animation: 'screen-in 0.28s cubic-bezier(0.22,1,0.36,1)' }}
       >
         <div className="flex items-center justify-between px-5 pb-2 pt-4">
           <div className="absolute left-1/2 top-2 h-1 w-10 -translate-x-1/2 rounded-full bg-white/20" />
