@@ -75,7 +75,7 @@ export function IndexGauge({ index }: { index: WeeklyIndex }) {
       </svg>
 
       {/* readable anchors under the arc */}
-      <div className="-mt-2 flex w-full max-w-[236px] items-center justify-between">
+      <div className="mt-1.5 flex w-full max-w-[236px] items-center justify-between">
         <span className="text-[10px] font-bold uppercase tracking-wide text-white/45">Behind</span>
         <span className="text-[10px] font-bold uppercase tracking-wide text-white/45">Ahead</span>
       </div>
