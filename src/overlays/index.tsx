@@ -3,7 +3,7 @@ import {
   Bell, Moon, Sun, GraduationCap, Wallet, RotateCcw, Trash2, Camera, Trophy,
   Flame, Search, ScanLine, Plus, Check, Share2, ChevronRight, User, Sparkles, Dumbbell,
   Droplet, Footprints, BedDouble, Leaf, Clock, Play, Award, BellRing, Crown,
-  HeartPulse, Activity, Zap, Ruler,
+  HeartPulse, Activity, Zap,
 } from 'lucide-react'
 import { Sheet, EmptyState } from '../components/Sheet'
 import { Avatar } from '../components/Avatar'
@@ -22,7 +22,7 @@ import {
 } from '../lib/format'
 import {
   weightStats, workoutsThisWeek, totalVolumeRange, streakStats, todayHabit,
-  habitConsistencyWeek, leaderboardSorted, strengthProgress, activitiesInRange, latestMeasurements,
+  habitConsistencyWeek, leaderboardSorted, strengthProgress, activitiesInRange,
 } from '../store/selectors'
 import { ActivityIcon } from '../components/ActivityIcon'
 import { examState, dailyTargets, defaultExamWindow } from '../store/training'
@@ -486,53 +486,6 @@ function HabitSlider({ icon, label, value, min, max, step, onChange, display, un
         <span>{minLabel}</span>
         {goalLabel && <span className="font-semibold text-brand-400/80">Goal {goalLabel}</span>}
         <span>{maxLabel}</span>
-      </div>
-    </div>
-  )
-}
-
-/* ============================ Log Measurements ============================ */
-export function LogMeasurementSheet({ open, onClose }: Props) {
-  const { state, dispatch } = useStore()
-  const toast = useToast()
-  const latest = latestMeasurements(state)
-  const init = (k: string) => {
-    const v = latest.find((m) => m.key === k)?.current
-    return v != null ? String(v) : ''
-  }
-  const [waist, setWaist] = useState(() => init('waist'))
-  const [chest, setChest] = useState(() => init('chest'))
-  const [arms, setArms] = useState(() => init('arms'))
-  const [thighs, setThighs] = useState(() => init('thighs'))
-
-  function save() {
-    const num = (v: string) => (v.trim() ? parseFloat(v) : undefined)
-    const patch = { waist: num(waist), chest: num(chest), arms: num(arms), thighs: num(thighs) }
-    if (Object.values(patch).every((v) => v == null)) { toast('Add at least one measurement'); return }
-    dispatch({ type: 'LOG_MEASUREMENT', patch })
-    toast('Measurements saved')
-    onClose()
-  }
-
-  return (
-    <Sheet open={open} onClose={onClose} title="Log measurements">
-      <p className="mb-3 text-[13px] text-white/50">In centimetres. Leave any blank — only what you fill in is saved.</p>
-      <MeasField icon={<Ruler size={18} className="text-brand-400" />} label="Waist" value={waist} onChange={setWaist} />
-      <MeasField icon={<Ruler size={18} className="text-brand-400" />} label="Chest" value={chest} onChange={setChest} />
-      <MeasField icon={<Ruler size={18} className="text-brand-400" />} label="Arms" value={arms} onChange={setArms} />
-      <MeasField icon={<Ruler size={18} className="text-brand-400" />} label="Thighs" value={thighs} onChange={setThighs} />
-      <button onClick={save} className="btn-primary mt-6 w-full">Save measurements</button>
-    </Sheet>
-  )
-}
-
-function MeasField({ icon, label, value, onChange }: { icon: JSX.Element; label: string; value: string; onChange: (v: string) => void }) {
-  return (
-    <div className="mb-3">
-      <label className="mb-1.5 flex items-center gap-2 text-sm font-semibold text-white/70">{icon} {label}</label>
-      <div className="flex items-center gap-2">
-        <input inputMode="decimal" value={value} onChange={(e) => onChange(e.target.value.replace(/[^\d.]/g, ''))} placeholder="—" className="w-full rounded-xl border border-white/8 bg-ink-800 px-4 py-3 text-white placeholder:text-white/30 focus:border-brand-400/60 focus:outline-none" />
-        <span className="text-sm text-white/45">cm</span>
       </div>
     </div>
   )

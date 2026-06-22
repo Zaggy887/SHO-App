@@ -17,7 +17,6 @@ import type {
   AppNotification,
   AppState,
   Badge,
-  BodyMeasurement,
   Challenge,
   CoachMessage,
   CommunityEvent,
@@ -253,14 +252,6 @@ export function buildSeed(): AppState {
     { id: 'act-seed-swim', dateKey: dayKey(3), type: 'swim', name: 'Swim', icon: 'swim', minutes: 30, intensity: 'moderate', calories: 270, weekly: false, time: '8:10 AM' },
   ]
 
-  /* -------- body measurements (cm), trending with the recomp -------- */
-  const measurements: BodyMeasurement[] = [
-    { dateKey: dayKey(35), waist: 82.5, chest: 99.5, arms: 35.5, thighs: 57.5 },
-    { dateKey: dayKey(21), waist: 81.5, chest: 100.5, arms: 36, thighs: 58 },
-    { dateKey: dayKey(7), waist: 80, chest: 101.5, arms: 36.5, thighs: 58.5 },
-    { dateKey: dayKey(1), waist: 79, chest: 102, arms: 37, thighs: 59 },
-  ]
-
   /* -------- a starter weekly meal plan -------- */
   const mealPlan: PlannedMeal[] = [
     { id: 'pm-1', day: 'Mon', slot: 'Breakfast', name: 'Protein Overnight Oats' },
@@ -388,7 +379,6 @@ export function buildSeed(): AppState {
     meals,
     foodReviews: [],
     activities,
-    measurements,
     mealPlan,
     postComments,
     chat: [
@@ -430,7 +420,6 @@ export function emptyState(): AppState {
     meals: [],
     foodReviews: [],
     activities: [],
-    measurements: [],
     mealPlan: [],
     postComments: [],
     sessions: [],

@@ -19,7 +19,6 @@ import {
   LogWeightSheet,
   LogHabitSheet,
   LogActivitySheet,
-  LogMeasurementSheet,
   CreatePostSheet,
   WeeklyRecapSheet,
   LeaderboardSheet,
@@ -93,7 +92,6 @@ function Shell() {
       <LogWeightSheet open={overlay === 'logWeight'} onClose={nav.close} />
       <LogHabitSheet open={overlay === 'logHabit'} onClose={nav.close} params={params} />
       <LogActivitySheet open={overlay === 'logActivity'} onClose={nav.close} />
-      <LogMeasurementSheet open={overlay === 'logMeasurement'} onClose={nav.close} />
       <CreatePostSheet open={overlay === 'createPost'} onClose={nav.close} />
       <WeeklyRecapSheet open={overlay === 'recap'} onClose={nav.close} />
       <LeaderboardSheet open={overlay === 'leaderboard'} onClose={nav.close} />

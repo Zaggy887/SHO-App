@@ -9,7 +9,6 @@ export type Overlay =
   | 'logWeight'
   | 'logHabit'
   | 'logActivity'
-  | 'logMeasurement'
   | 'createPost'
   | 'recap'
   | 'leaderboard'

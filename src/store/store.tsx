@@ -5,7 +5,6 @@ import { coachReply } from '../lib/coachChat'
 import type {
   AppNotification,
   AppState,
-  BodyMeasurement,
   ChatMessage,
   LoggedActivity,
   LoggedExercise,
@@ -33,7 +32,6 @@ export type Action =
   | { type: 'ADD_ACTIVITY'; activity: Omit<LoggedActivity, 'id' | 'dateKey' | 'time'> }
   | { type: 'REMOVE_ACTIVITY'; id: string }
   | { type: 'TOGGLE_ACTIVITY_WEEKLY'; id: string }
-  | { type: 'LOG_MEASUREMENT'; patch: Partial<Omit<BodyMeasurement, 'dateKey'>> }
   | { type: 'ADD_PLANNED_MEAL'; plan: Omit<PlannedMeal, 'id'> }
   | { type: 'REMOVE_PLANNED_MEAL'; id: string }
   | { type: 'ADD_COMMENT'; postId: string; text: string }
@@ -125,13 +123,6 @@ function reducer(state: AppState, action: Action): AppState {
 
     case 'TOGGLE_ACTIVITY_WEEKLY':
       return { ...state, activities: (state.activities ?? []).map((a) => (a.id === action.id ? { ...a, weekly: !a.weekly } : a)) }
-
-    case 'LOG_MEASUREMENT': {
-      const others = (state.measurements ?? []).filter((m) => m.dateKey !== todayKey)
-      const existing = (state.measurements ?? []).find((m) => m.dateKey === todayKey)
-      const merged: BodyMeasurement = { dateKey: todayKey, ...existing, ...action.patch }
-      return { ...state, measurements: [...others, merged] }
-    }
 
     case 'ADD_PLANNED_MEAL':
       return { ...state, mealPlan: [...(state.mealPlan ?? []), { ...action.plan, id: `pm-${Date.now()}` }] }

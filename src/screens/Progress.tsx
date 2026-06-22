@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { SlidersHorizontal, ChevronDown, ArrowRight, Trophy, Flame, Plus, Camera, Ruler } from 'lucide-react'
+import { SlidersHorizontal, ChevronDown, ArrowRight, Trophy, Flame, Plus, Camera } from 'lucide-react'
 import { AreaChart, Area, BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 import { Icon } from '../components/Icon'
 import { ProgressRing, ScreenHeader, SectionHeader } from '../components/ui'
@@ -10,10 +10,8 @@ import { dayKey, shortDate } from '../lib/date'
 import { fmtWeight, fmtWeightNum, weightUnit, weightVal } from '../lib/format'
 import {
   weightStats, strengthProgress, habitConsistencyWeek, streakStats,
-  workoutsInRange, nutritionForDay, volumeByWeek, bestLiftId, oneRMSeries, latestMeasurements,
+  workoutsInRange, nutritionForDay, volumeByWeek, bestLiftId, oneRMSeries,
 } from '../store/selectors'
-
-const MEAS_LABEL: Record<string, string> = { waist: 'Waist', chest: 'Chest', arms: 'Arms', thighs: 'Thighs' }
 
 export default function Progress() {
   const { state } = useStore()
@@ -43,7 +41,6 @@ export default function Progress() {
   const liftId = bestLiftId(state)
   const strengthSeries = liftId ? oneRMSeries(state, liftId).map((p) => ({ date: shortDate(p.dateKey), kg: Math.round(weightVal(p.kg, units)) })) : []
   const liftName = liftId ? exById(liftId)?.name ?? 'Strength' : ''
-  const measRows = latestMeasurements(state)
 
   const cards = [
     { icon: 'scale', label: 'Weight', value: fmtWeightNum(w.current, units), unit: weightUnit(units), delta: `${w.delta <= 0 ? '↓' : '↑'} ${fmtWeight(Math.abs(w.delta), units, 1)}`, color: 'rgb(var(--brand-400))', onClick: () => nav.open('logWeight') },
@@ -187,27 +184,6 @@ export default function Progress() {
           <p className="flex items-center justify-center gap-1 text-2xl font-extrabold">{streak.current} <Flame size={20} className="text-brand-400" /></p>
           <p className="text-[11px] text-white/40">Best: {streak.best}d</p>
         </div>
-      </div>
-
-      {/* Body measurements */}
-      <SectionHeader title="Body measurements" right={<button onClick={() => nav.open('logMeasurement')} className="flex items-center gap-1 text-sm font-semibold text-brand-400">Log <Plus size={15} /></button>} />
-      <div className="grid grid-cols-2 gap-3">
-        {measRows.map((m) => (
-          <div key={m.key} className="rounded-2xl border border-white/5 bg-ink-800 p-4">
-            <div className="mb-1 flex items-center gap-1.5 text-[13px] font-medium text-white/55"><Ruler size={14} className="text-brand-400" /> {MEAS_LABEL[m.key]}</div>
-            {m.current != null ? (
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-2xl font-extrabold">{m.current}</span>
-                <span className="text-xs text-white/50">cm</span>
-                {m.delta != null && m.delta !== 0 && (
-                  <span className={`ml-auto text-[12px] font-semibold ${m.delta < 0 ? 'text-brand-400' : 'text-white/55'}`}>{m.delta < 0 ? '↓' : '↑'} {Math.abs(m.delta).toFixed(1)}</span>
-                )}
-              </div>
-            ) : (
-              <p className="text-[13px] text-white/35">Not logged</p>
-            )}
-          </div>
-        ))}
       </div>
 
       {/* Progress photos */}

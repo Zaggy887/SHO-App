@@ -239,18 +239,6 @@ export function volumeByWeek(s: AppState, weeks = 8) {
   return out
 }
 
-/* -------------------------- Body measurements -------------------------- */
-export function latestMeasurements(s: AppState) {
-  const all = [...(s.measurements ?? [])].sort((a, b) => a.dateKey.localeCompare(b.dateKey))
-  const keys = ['waist', 'chest', 'arms', 'thighs'] as const
-  return keys.map((k) => {
-    const withVal = all.filter((m) => m[k] != null)
-    const current = withVal.at(-1)?.[k]
-    const prev = withVal.length > 1 ? withVal.at(-2)?.[k] : undefined
-    return { key: k, current, delta: current != null && prev != null ? current - prev : undefined }
-  })
-}
-
 /* -------------------------- Habit consistency (this week) -------------------------- */
 export function habitConsistencyWeek(s: AppState) {
   const wk = currentWeekKeys().filter((k) => k <= todayKey)
