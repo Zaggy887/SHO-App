@@ -308,7 +308,6 @@ export default function ActiveWorkout({ open, onClose }: { open: boolean; onClos
         exTotal={session.exercises.length}
         nextExName={session.exercises[cursor.exIdx + 1]?.name}
         detail={exerciseDetail(cursorEx.defId)}
-        why={exerciseWhy(cursorEx.defId, state.profile.goal)}
         onBack={backToList}
         onAdjust={adjust}
         onApplyCoach={() => { if (rec) { setSet(cursor.exIdx, cursor.setIdx, 'weightKg', rec.suggestedWeightKg); setSet(cursor.exIdx, cursor.setIdx, 'reps', rec.suggestedReps) } }}
@@ -542,7 +541,7 @@ export default function ActiveWorkout({ open, onClose }: { open: boolean; onClos
 
 /* ============================ Work screen ============================ */
 function WorkScreen({
-  ex, cursor, set, elapsed, sessionTotal, units, coachHint, exIndex, exTotal, nextExName, detail, why,
+  ex, cursor, set, elapsed, sessionTotal, units, coachHint, exIndex, exTotal, nextExName, detail,
   onBack, onAdjust, onApplyCoach, onStartRest,
 }: {
   ex: WorkoutSession['exercises'][number]
@@ -556,7 +555,6 @@ function WorkScreen({
   exTotal: number
   nextExName?: string
   detail: { desc: string; cues: string[]; commonMistake: string; video?: string }
-  why: string
   onBack: () => void
   onAdjust: (field: 'weightKg' | 'reps', dir: 1 | -1) => void
   onApplyCoach: () => void
@@ -589,10 +587,7 @@ function WorkScreen({
           </p>
           <h2 className="mt-1.5 text-[26px] font-black leading-tight tracking-tight">{ex.name}</h2>
 
-          <p className="mx-auto mt-2 flex max-w-[20rem] items-start justify-center gap-1.5 text-[12.5px] leading-snug text-brand-400">
-            <Target size={13} className="mt-0.5 shrink-0" />
-            <span className="text-left">{why}</span>
-          </p>
+
           <SetDots sets={ex.sets} current={cursor.setIdx} />
           <button
             onClick={() => setShowHow(true)}
