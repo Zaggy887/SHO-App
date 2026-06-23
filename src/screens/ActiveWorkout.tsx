@@ -1,5 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Check, Plus, Minus, Flag, Info, ChevronDown, Bell, BookOpen, Play, ChevronLeft, Timer, Dumbbell, ListChecks, CircleHelp as HelpCircle, X } from 'lucide-react'
+import { createPortal } from 'react-dom'
+import {
+  Check, Plus, Minus, Flag, Info, Bell, BookOpen, Play, Target,
+  ChevronLeft, Timer, Dumbbell, ListChecks, CircleHelp as HelpCircle, X,
+} from 'lucide-react'
 import { Sheet } from '../components/Sheet'
 import { TechniqueClip } from '../components/TechniqueClip'
 import { useStore } from '../store/store'
@@ -8,7 +12,7 @@ import { useNav } from '../nav'
 import { todaySession, sessionProgress } from '../store/selectors'
 import { nextSetRecommendation, examState, examTrim } from '../store/training'
 import { prForSession, type PR } from '../store/coach'
-import { exerciseDetail, incrementFor } from '../data/catalog'
+import { exerciseDetail, exerciseWhy, workoutGoalLine, incrementFor } from '../data/catalog'
 import { fmtWeightNum, weightUnit, fmtVolume, fmtWeight, toKg } from '../lib/format'
 import type { Units, WorkoutSession } from '../store/types'
 
@@ -115,7 +119,7 @@ export default function ActiveWorkout({ open, onClose }: { open: boolean; onClos
   const [rest, setRest] = useState<number | null>(null)
   const [restTotal, setRestTotal] = useState(120)
   const [total, setTotal] = useState(0)
-  const [howTo, setHowTo] = useState<Set<string>>(new Set())
+  const [detailIdx, setDetailIdx] = useState<number | null>(null)
   const [finishing, setFinishing] = useState(false)
   const [finishPR, setFinishPR] = useState<PR | null>(null)
   const finishStatsRef = useRef<{ time: number; volume: number; sets: number } | null>(null)
@@ -126,7 +130,7 @@ export default function ActiveWorkout({ open, onClose }: { open: boolean; onClos
   useEffect(() => {
     if (!open) return
     setMode('overview'); setCursor(null); setRest(null); setWorkElapsed(0); setTotal(0)
-    setFinishing(false); setFinishPR(null)
+    setFinishing(false); setFinishPR(null); setDetailIdx(null)
   }, [open])
 
   // After the completion tick, hand off to a PR moment or close.
@@ -214,15 +218,6 @@ export default function ActiveWorkout({ open, onClose }: { open: boolean; onClos
       return { ...ex, sets: [...ex.sets, { weightKg: last?.weightKg ?? 0, reps: last?.reps ?? 8, done: false }] }
     })
     patch({ ...session, exercises })
-  }
-
-  function toggleHowTo(defId: string) {
-    setHowTo((prev) => {
-      const next = new Set(prev)
-      if (next.has(defId)) next.delete(defId)
-      else next.add(defId)
-      return next
-    })
   }
 
   /* ---- guided flow controls ---- */
@@ -313,6 +308,7 @@ export default function ActiveWorkout({ open, onClose }: { open: boolean; onClos
         exTotal={session.exercises.length}
         nextExName={session.exercises[cursor.exIdx + 1]?.name}
         detail={exerciseDetail(cursorEx.defId)}
+        why={exerciseWhy(cursorEx.defId, state.profile.goal)}
         onBack={backToList}
         onAdjust={adjust}
         onApplyCoach={() => { if (rec) { setSet(cursor.exIdx, cursor.setIdx, 'weightKg', rec.suggestedWeightKg); setSet(cursor.exIdx, cursor.setIdx, 'reps', rec.suggestedReps) } }}
@@ -374,14 +370,23 @@ export default function ActiveWorkout({ open, onClose }: { open: boolean; onClos
         </div>
       )}
 
+      {/* What today's session is for — tied to the user's overall goal */}
+      <div className="mb-4 rounded-2xl border border-brand-400/20 bg-brand-400/[0.06] p-4">
+        <div className="mb-1.5 flex items-center gap-1.5">
+          <Target size={14} className="text-brand-400" />
+          <p className="text-[11px] font-black uppercase tracking-[0.18em] text-brand-400">Today's goal</p>
+        </div>
+        <p className="text-[13.5px] leading-snug text-white/75">
+          {workoutGoalLine(session.name, session.focus, state.profile.goal)}
+        </p>
+      </div>
+
       <p className="mb-3 text-[12px] font-bold uppercase tracking-[0.18em] text-white/35">{session.exercises.length} exercises</p>
 
       <div className="space-y-3">
         {session.exercises.map((ex, exIdx) => {
           const isOptional = trim?.optionalIds.has(ex.defId)
           const exDone = ex.sets.length > 0 && ex.sets.every((s) => s.done)
-          const detail = exerciseDetail(ex.defId)
-          const howToOpen = howTo.has(ex.defId)
           return (
             <div key={ex.defId} className={`overflow-hidden rounded-2xl border bg-ink-800 transition ${exDone ? 'border-brand-400/30' : 'border-white/5'} ${isOptional ? 'opacity-70' : ''}`}>
               {/* Header */}
@@ -403,7 +408,10 @@ export default function ActiveWorkout({ open, onClose }: { open: boolean; onClos
                     {isOptional && <span className="shrink-0 rounded-full bg-white/8 px-2 py-0.5 text-[10px] font-semibold text-white/55">Optional</span>}
                   </div>
                   <p className="mt-0.5 text-[12px] font-semibold text-brand-400">{ex.targetSets} sets · {ex.targetReps} reps</p>
-                  <p className="mt-1 line-clamp-2 text-[12px] leading-snug text-white/45">{detail.desc}</p>
+                  <p className="mt-1.5 flex items-start gap-1.5 text-[12px] leading-snug text-white/60">
+                    <Target size={12} className="mt-0.5 shrink-0 text-brand-400" />
+                    <span>{exerciseWhy(ex.defId, state.profile.goal)}</span>
+                  </p>
                 </div>
               </div>
 
@@ -423,63 +431,13 @@ export default function ActiveWorkout({ open, onClose }: { open: boolean; onClos
 
               {/* Actions */}
               <div className="flex items-stretch gap-2 border-t border-white/5 p-2.5">
-                <button onClick={() => toggleHowTo(ex.defId)} className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-white/[0.04] py-2.5 text-[12px] font-semibold text-white/65 active:bg-white/[0.08]">
-                  <ChevronDown size={14} className={`transition-transform ${howToOpen ? 'rotate-180' : ''}`} /> Form & video
+                <button onClick={() => setDetailIdx(exIdx)} className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-white/[0.04] py-2.5 text-[12px] font-semibold text-white/65 active:bg-white/[0.08]">
+                  <BookOpen size={14} /> Form & video
                 </button>
                 <button onClick={() => startAt(exIdx)} className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-brand-400/15 py-2.5 text-[12px] font-bold text-brand-400 active:bg-brand-400/25">
                   <Play size={13} fill="currentColor" /> {exDone ? 'Redo' : 'Start'}
                 </button>
               </div>
-
-              {howToOpen && (
-                <div className="border-t border-white/5 px-3.5 pb-4 pt-3.5">
-                  <TechniqueClip poster={ex.image} videoUrl={detail.video} label="Form clip coming soon" />
-                  <p className="mt-3 text-[13px] leading-snug text-white/70">{detail.desc}</p>
-                  <ol className="mt-3 space-y-2">
-                    {detail.cues.map((c, i) => (
-                      <li key={i} className="flex items-start gap-2.5 text-[13px]">
-                        <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-brand-400/15 text-[11px] font-bold text-brand-400">{i + 1}</span>
-                        <span className="text-white/75">{c}</span>
-                      </li>
-                    ))}
-                  </ol>
-                  <p className="mt-3 rounded-xl border border-white/8 bg-white/[0.03] p-2.5 text-[12px] leading-snug text-white/55">
-                    <span className="font-semibold text-white/70">Common mistake · </span>{detail.commonMistake}
-                  </p>
-                  <button onClick={() => nav.open('exerciseDetail', { defId: ex.defId })} className="mt-3 flex items-center gap-1.5 text-[12px] font-semibold text-brand-400 active:opacity-70">
-                    <BookOpen size={13} /> Open full guide
-                  </button>
-                  {/* Manual set editor stays available for tweaks */}
-                  <div className="mt-4 space-y-1.5">
-                    <p className="mb-1 text-[11px] font-bold uppercase tracking-wide text-white/35">Log manually</p>
-                    {ex.sets.map((set, setIdx) => (
-                      <div key={setIdx} className="grid grid-cols-[24px_1fr_1fr_40px] items-center gap-2">
-                        <span className="text-[12px] font-bold text-white/45">{setIdx + 1}</span>
-                        <input
-                          key={`w-${exIdx}-${setIdx}-${set.weightKg}`}
-                          inputMode="decimal"
-                          defaultValue={fmtWeightNum(set.weightKg, units, units === 'imperial' ? 0 : 1)}
-                          onBlur={(e) => setSet(exIdx, setIdx, 'weightKg', toKg(parseFloat(e.target.value) || 0, units))}
-                          className="rounded-lg border border-white/8 bg-ink-700 px-2 py-1.5 text-center text-[13px] font-semibold focus:outline-none"
-                        />
-                        <input
-                          key={`r-${exIdx}-${setIdx}-${set.reps}`}
-                          inputMode="numeric"
-                          defaultValue={set.reps}
-                          onBlur={(e) => setSet(exIdx, setIdx, 'reps', parseInt(e.target.value) || 0)}
-                          className="rounded-lg border border-white/8 bg-ink-700 px-2 py-1.5 text-center text-[13px] font-semibold focus:outline-none"
-                        />
-                        <button onClick={() => toggleSet(exIdx, setIdx)} className={`ml-auto grid h-7 w-7 place-items-center rounded-lg border-2 transition active:scale-90 ${set.done ? 'border-brand-400 bg-brand-400' : 'border-white/20'}`}>
-                          {set.done && <Check size={14} strokeWidth={3} className="text-black" />}
-                        </button>
-                      </div>
-                    ))}
-                    <button onClick={() => addSet(exIdx)} className="mt-1 flex w-full items-center justify-center gap-1 rounded-lg border border-dashed border-white/12 py-1.5 text-[12px] font-semibold text-white/55 active:bg-white/5">
-                      <Plus size={13} /> Add set
-                    </button>
-                  </div>
-                </div>
-              )}
             </div>
           )
         })}
@@ -489,13 +447,102 @@ export default function ActiveWorkout({ open, onClose }: { open: boolean; onClos
         <Flag size={16} /> Finish workout
       </button>
       <div className="h-2" />
+
+      {/* Form & video — pops out over the page instead of expanding inline */}
+      {detailIdx !== null && session.exercises[detailIdx] && createPortal(
+        (() => {
+          const ex = session.exercises[detailIdx]
+          const detail = exerciseDetail(ex.defId)
+          const close = () => setDetailIdx(null)
+          return (
+            <div className="fixed inset-0 z-[70] flex flex-col justify-end" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+              <button aria-label="Close" onClick={close} className="absolute inset-0 bg-black/65 backdrop-blur-sm animate-fade-in" />
+              <div className="animate-sheet-up relative flex max-h-[90%] flex-col rounded-t-3xl border-t border-white/10 bg-ink-900">
+                <div className="flex items-center justify-between gap-3 px-5 pb-3 pt-4">
+                  <span className="absolute left-1/2 top-2 h-1 w-10 -translate-x-1/2 rounded-full bg-white/20" />
+                  <div className="min-w-0">
+                    <p className="truncate text-[17px] font-bold leading-tight">{ex.name}</p>
+                    <p className="text-[12px] font-semibold text-brand-400">{ex.targetSets} sets · {ex.targetReps} reps</p>
+                  </div>
+                  <button onClick={close} className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/8 text-white/70 active:bg-white/15"><X size={18} /></button>
+                </div>
+
+                <div className="no-scrollbar flex-1 overflow-y-auto px-5 pb-8">
+                  <TechniqueClip poster={ex.image} videoUrl={detail.video} label="Form clip coming soon" />
+
+                  {/* Why this exercise serves your goal */}
+                  <div className="mt-4 flex items-start gap-2.5 rounded-2xl border border-brand-400/20 bg-brand-400/[0.06] p-3.5">
+                    <Target size={16} className="mt-0.5 shrink-0 text-brand-400" />
+                    <div>
+                      <p className="text-[11px] font-black uppercase tracking-[0.16em] text-brand-400">Why you're doing this</p>
+                      <p className="mt-1 text-[13.5px] leading-snug text-white/80">{exerciseWhy(ex.defId, state.profile.goal)}</p>
+                    </div>
+                  </div>
+
+                  <p className="mt-4 text-[14px] leading-snug text-white/75">{detail.desc}</p>
+
+                  <p className="mb-2 mt-5 text-[12px] font-bold uppercase tracking-wide text-white/40">Step by step</p>
+                  <ol className="space-y-2.5">
+                    {detail.cues.map((c, i) => (
+                      <li key={i} className="flex items-start gap-3 text-[14px]">
+                        <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-brand-400/15 text-[12px] font-bold text-brand-400">{i + 1}</span>
+                        <span className="text-white/80">{c}</span>
+                      </li>
+                    ))}
+                  </ol>
+
+                  <div className="mt-4 flex gap-2.5 rounded-2xl border border-white/10 bg-white/[0.04] p-3.5">
+                    <Info size={17} className="mt-0.5 shrink-0 text-accent-orange" />
+                    <p className="text-[13px] leading-snug text-white/70"><span className="font-semibold text-white/85">Avoid: </span>{detail.commonMistake}</p>
+                  </div>
+
+                  <button onClick={() => { close(); nav.open('exerciseDetail', { defId: ex.defId }) }} className="mt-3 flex items-center gap-1.5 text-[13px] font-semibold text-brand-400 active:opacity-70">
+                    <BookOpen size={14} /> Open full guide
+                  </button>
+
+                  {/* Manual set editor stays available for tweaks */}
+                  <div className="mt-5 space-y-1.5 border-t border-white/8 pt-4">
+                    <p className="mb-1 text-[11px] font-bold uppercase tracking-wide text-white/35">Log manually</p>
+                    {ex.sets.map((set, setIdx) => (
+                      <div key={setIdx} className="grid grid-cols-[24px_1fr_1fr_40px] items-center gap-2">
+                        <span className="text-[12px] font-bold text-white/45">{setIdx + 1}</span>
+                        <input
+                          key={`w-${detailIdx}-${setIdx}-${set.weightKg}`}
+                          inputMode="decimal"
+                          defaultValue={fmtWeightNum(set.weightKg, units, units === 'imperial' ? 0 : 1)}
+                          onBlur={(e) => setSet(detailIdx, setIdx, 'weightKg', toKg(parseFloat(e.target.value) || 0, units))}
+                          className="rounded-lg border border-white/8 bg-ink-700 px-2 py-1.5 text-center text-[13px] font-semibold focus:outline-none"
+                        />
+                        <input
+                          key={`r-${detailIdx}-${setIdx}-${set.reps}`}
+                          inputMode="numeric"
+                          defaultValue={set.reps}
+                          onBlur={(e) => setSet(detailIdx, setIdx, 'reps', parseInt(e.target.value) || 0)}
+                          className="rounded-lg border border-white/8 bg-ink-700 px-2 py-1.5 text-center text-[13px] font-semibold focus:outline-none"
+                        />
+                        <button onClick={() => toggleSet(detailIdx, setIdx)} className={`ml-auto grid h-7 w-7 place-items-center rounded-lg border-2 transition active:scale-90 ${set.done ? 'border-brand-400 bg-brand-400' : 'border-white/20'}`}>
+                          {set.done && <Check size={14} strokeWidth={3} className="text-black" />}
+                        </button>
+                      </div>
+                    ))}
+                    <button onClick={() => addSet(detailIdx)} className="mt-1 flex w-full items-center justify-center gap-1 rounded-lg border border-dashed border-white/12 py-1.5 text-[12px] font-semibold text-white/55 active:bg-white/5">
+                      <Plus size={13} /> Add set
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )
+        })(),
+        document.body,
+      )}
     </Sheet>
   )
 }
 
 /* ============================ Work screen ============================ */
 function WorkScreen({
-  ex, cursor, set, elapsed, sessionTotal, units, coachHint, exIndex, exTotal, nextExName, detail,
+  ex, cursor, set, elapsed, sessionTotal, units, coachHint, exIndex, exTotal, nextExName, detail, why,
   onBack, onAdjust, onApplyCoach, onStartRest,
 }: {
   ex: WorkoutSession['exercises'][number]
@@ -509,6 +556,7 @@ function WorkScreen({
   exTotal: number
   nextExName?: string
   detail: { desc: string; cues: string[]; commonMistake: string; video?: string }
+  why: string
   onBack: () => void
   onAdjust: (field: 'weightKg' | 'reps', dir: 1 | -1) => void
   onApplyCoach: () => void
@@ -541,6 +589,10 @@ function WorkScreen({
           </p>
           <h2 className="mt-1.5 text-[26px] font-black leading-tight tracking-tight">{ex.name}</h2>
           <p className="mx-auto mt-1.5 max-w-[19rem] text-[13px] leading-snug text-white/55">{detail.desc}</p>
+          <p className="mx-auto mt-2 flex max-w-[20rem] items-start justify-center gap-1.5 text-[12.5px] leading-snug text-brand-400">
+            <Target size={13} className="mt-0.5 shrink-0" />
+            <span className="text-left">{why}</span>
+          </p>
           <SetDots sets={ex.sets} current={cursor.setIdx} />
           <button
             onClick={() => setShowHow(true)}

@@ -3,6 +3,7 @@ import type {
   BudgetMeal,
   ExerciseDef,
   FoodItem,
+  Goal,
   PartnerCandidate,
   ProgramDay,
   QuickWorkout,
@@ -178,6 +179,61 @@ export const exerciseDetail = (id: string): ExerciseDetail =>
     ifTaken: 'Pick a similar machine or a dumbbell variation that is free.',
     beginnerFriendly: true,
   }
+
+/* -------- "Why this helps your goal" — keeps every exercise purposeful -------- */
+/* A noun-phrase describing what each lift develops, slotted into a goal-aware
+ * sentence so the user always sees how a movement serves their bigger goal. */
+const EXERCISE_ROLE: Record<string, string> = {
+  bench: 'your chest, front shoulders and pressing strength',
+  incline: 'your upper chest',
+  shoulder: 'your shoulders and overhead pressing strength',
+  cablefly: 'chest size with a deep stretch and squeeze',
+  tricep: 'your triceps, so your presses lock out stronger',
+  squat: 'your quads, glutes and total-body strength',
+  deadlift: 'your back, glutes and hamstrings',
+  pulldown: 'a wider back and stronger pulling strength',
+  row: 'back thickness and upright posture',
+  curl: 'your biceps',
+  ohp: 'your shoulders and bracing core',
+  legpress: 'your legs with heavy, low-skill loading',
+  rdl: 'your hamstrings and glutes',
+  lateral: 'your side delts and shoulder width',
+}
+
+const COMPOUND_IDS = ['bench', 'incline', 'shoulder', 'squat', 'deadlift', 'pulldown', 'row', 'ohp', 'legpress', 'rdl']
+
+/** One sentence: how this exercise moves the user toward their overall goal. */
+export function exerciseWhy(defId: string, goal: Goal): string {
+  const role = EXERCISE_ROLE[defId] ?? 'strength across this movement'
+  const compound = COMPOUND_IDS.includes(defId)
+  switch (goal) {
+    case 'build-muscle':
+      return `Builds ${role} — direct, visible muscle for your goal.`
+    case 'lose-fat':
+      return compound
+        ? `Works ${role} and burns serious energy, protecting muscle while you lose fat.`
+        : `Keeps ${role} firm and defined as you lean down.`
+    case 'gain-strength':
+      return compound
+        ? `A core strength lift — driving up ${role} pushes your whole strength goal forward.`
+        : `Strengthens ${role} to support your heavier compound lifts.`
+    case 'stay-healthy':
+    default:
+      return `Strengthens ${role}, keeping you capable and resilient day to day.`
+  }
+}
+
+/** A few words on what today's whole session is for, tied to the user's goal. */
+export function workoutGoalLine(name: string, focus: string, goal: Goal): string {
+  const muscles = focus.replace(/\s*·\s*/g, ', ').toLowerCase()
+  const aim: Record<Goal, string> = {
+    'build-muscle': 'building visible muscle',
+    'lose-fat': 'losing fat while holding on to muscle',
+    'gain-strength': 'getting noticeably stronger',
+    'stay-healthy': 'staying strong and healthy',
+  }
+  return `${name} trains ${muscles}. Done well, every set here moves you closer to ${aim[goal]}.`
+}
 
 /* --------------- Self-logged activity presets ------------------- */
 /* Common activities with a rough kcal/min (at moderate effort). The user can
