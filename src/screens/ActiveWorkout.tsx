@@ -1,8 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import {
-  Check, Plus, Minus, Flag, Info, ChevronDown, Bell, BookOpen, Play,
-  ChevronLeft, Timer, Dumbbell, ListChecks, HelpCircle, X,
-} from 'lucide-react'
+import { Check, Plus, Minus, Flag, Info, ChevronDown, Bell, BookOpen, Play, ChevronLeft, Timer, Dumbbell, ListChecks, CircleHelp as HelpCircle, X } from 'lucide-react'
 import { Sheet } from '../components/Sheet'
 import { TechniqueClip } from '../components/TechniqueClip'
 import { useStore } from '../store/store'
@@ -346,13 +343,6 @@ export default function ActiveWorkout({ open, onClose }: { open: boolean; onClos
   /* ================================ Overview ================================ */
   return (
     <Sheet open={open} onClose={onClose} title={session.name} full>
-      {/* Live session stat strip */}
-      <div className="mb-4 grid grid-cols-3 gap-3 rounded-2xl border border-white/5 bg-ink-800 p-4 text-center">
-        <div><p className="text-[11px] uppercase tracking-wide text-white/40">Time</p><p className="text-xl font-extrabold tabular-nums">{mmss(total)}</p></div>
-        <div><p className="text-[11px] uppercase tracking-wide text-white/40">Volume</p><p className="text-xl font-extrabold">{fmtVolume(session.volumeKg, units)}</p></div>
-        <div><p className="text-[11px] uppercase tracking-wide text-white/40">Sets</p><p className="text-xl font-extrabold text-brand-400">{prog.done}/{prog.total}</p></div>
-      </div>
-
       {/* The bold primary CTA — launches the follow-along flow */}
       {!allDone && (
         <button
