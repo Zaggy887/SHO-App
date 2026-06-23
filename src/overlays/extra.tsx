@@ -19,7 +19,8 @@ import {
 import { ActivityIcon } from '../components/ActivityIcon'
 import { nextSetRecommendation } from '../store/training'
 import { coachThreadView } from '../store/coach'
-import { CHAT_SUGGESTIONS } from '../lib/coachChat'
+import { CHAT_SUGGESTIONS, coachReply } from '../lib/coachChat'
+import { askCoach } from '../lib/coachApi'
 import { todaySession, leaderboardSorted, youRank } from '../store/selectors'
 import { relativeLabel } from '../lib/date'
 import type { CoachKind, MealName } from '../store/types'
@@ -378,6 +379,7 @@ export function CoachChatSheet({ open, onClose }: Props) {
   const [text, setText] = useState('')
   const [showBook, setShowBook] = useState(false)
   const [booked, setBooked] = useState<string | null>(null)
+  const [typing, setTyping] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   const premium = state.profile.premium
   const messages = state.chat
@@ -391,15 +393,28 @@ export function CoachChatSheet({ open, onClose }: Props) {
   // Keep the latest message in view.
   useEffect(() => {
     if (open) scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
-  }, [open, messages.length, showBook, booked])
+  }, [open, messages.length, showBook, booked, typing])
 
   if (!open) return null
 
-  function send(t?: string) {
+  async function send(t?: string) {
     const msg = (t ?? text).trim()
-    if (!msg) return
-    dispatch({ type: 'SEND_CHAT', text: msg })
+    if (!msg || typing) return
     setText('')
+    // Show the user's message immediately, then a typing indicator.
+    dispatch({ type: 'PUSH_CHAT', role: 'user', text: msg })
+    setTyping(true)
+    try {
+      // Real Claude coach (via the serverless endpoint).
+      const reply = await askCoach(state, msg)
+      dispatch({ type: 'PUSH_CHAT', role: 'coach', text: reply })
+    } catch {
+      // Graceful fallback to the on-device rules engine so the demo always
+      // responds — used when no API key/endpoint is configured.
+      dispatch({ type: 'PUSH_CHAT', role: 'coach', text: coachReply(state, msg) })
+    } finally {
+      setTyping(false)
+    }
   }
 
   function unlock() {
@@ -480,10 +495,19 @@ export function CoachChatSheet({ open, onClose }: Props) {
             </div>
           </div>
         ))}
+        {typing && (
+          <div className="flex justify-start">
+            <div className="flex items-center gap-1 rounded-2xl rounded-bl-md border border-white/8 bg-ink-800 px-4 py-3.5">
+              <span className="typing-dot" />
+              <span className="typing-dot" />
+              <span className="typing-dot" />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Suggestions */}
-      {showSuggestions && (
+      {showSuggestions && !typing && (
         <div className="no-scrollbar flex gap-2 overflow-x-auto px-4 pb-2">
           {CHAT_SUGGESTIONS.map((s) => (
             <button key={s} onClick={() => send(s)} className="shrink-0 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[12px] font-medium text-white/70 active:bg-white/[0.1]">{s}</button>
@@ -501,7 +525,7 @@ export function CoachChatSheet({ open, onClose }: Props) {
           placeholder="Message your coach…"
           className="max-h-28 min-h-[44px] flex-1 resize-none rounded-2xl border border-white/8 bg-ink-800 px-4 py-3 text-[15px] placeholder:text-white/30 focus:border-brand-400/60 focus:outline-none"
         />
-        <button onClick={() => send()} disabled={!text.trim()} className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-brand-400 text-black transition active:scale-90 disabled:opacity-40">
+        <button onClick={() => send()} disabled={!text.trim() || typing} className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-brand-400 text-black transition active:scale-90 disabled:opacity-40">
           <Send size={18} />
         </button>
       </div>

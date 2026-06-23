@@ -37,6 +37,7 @@ export type Action =
   | { type: 'ADD_COMMENT'; postId: string; text: string }
   | { type: 'SAVE_FOOD_REVIEW'; text: string; score: number }
   | { type: 'SEND_CHAT'; text: string }
+  | { type: 'PUSH_CHAT'; role: 'user' | 'coach'; text: string }
   | { type: 'MARK_CHAT_READ' }
   | { type: 'SAVE_SESSION'; session: WorkoutSession }
   | { type: 'TOGGLE_EXERCISE_DONE'; defId: string }
@@ -153,6 +154,21 @@ function reducer(state: AppState, action: Action): AppState {
       const userMsg: ChatMessage = { id: `c-${id}`, role: 'user', text, dateKey: todayKey, time: nowTime(), read: true }
       const coachMsg: ChatMessage = { id: `c-${id + 1}`, role: 'coach', text: coachReply(state, text), dateKey: todayKey, time: nowTime(), read: false }
       return { ...state, chat: [...state.chat, userMsg, coachMsg] }
+    }
+
+    case 'PUSH_CHAT': {
+      const text = action.text.trim()
+      if (!text) return state
+      const msg: ChatMessage = {
+        id: `c-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        role: action.role,
+        text,
+        dateKey: todayKey,
+        time: nowTime(),
+        // user messages are read by definition; coach replies are read while the thread is open
+        read: action.role === 'user',
+      }
+      return { ...state, chat: [...state.chat, msg] }
     }
 
     case 'MARK_CHAT_READ':

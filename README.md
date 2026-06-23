@@ -44,6 +44,33 @@ npm run build    # type-check + production build
 npm run preview  # preview the build
 ```
 
+## AI coach (Claude) — optional backend
+
+The 1:1 **coach messenger** (tap the chat icon on the dashboard) is wired to
+**Claude** (`claude-opus-4-8`) for genuinely high-quality replies in the demo.
+It degrades gracefully: if no key/endpoint is configured, it falls back to the
+built-in on-device rules engine, so the app always responds.
+
+How it works:
+- `api/coach.ts` — a serverless function (Vercel-style) that holds the API key,
+  builds a coach system prompt from the user's profile, and calls Claude.
+- `src/lib/coachApi.ts` — the browser client that POSTs the message + recent
+  history to `/api/coach`.
+
+**Security — the key is server-only.** The `ANTHROPIC_API_KEY` lives **only** in
+your host's environment variables; it is never bundled into the client and must
+never be committed (this repo is public). `.env` is gitignored — see
+`.env.example`.
+
+Enable it:
+```bash
+# 1. Get a key at https://console.anthropic.com
+# 2. Deploy to a host that runs /api as a serverless function (e.g. Vercel)
+# 3. Set ANTHROPIC_API_KEY in the host's environment settings
+```
+Without a key the messenger silently uses the local fallback — no errors, just
+shorter, rules-based answers.
+
 ## Project structure
 
 ```
