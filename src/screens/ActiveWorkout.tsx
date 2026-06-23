@@ -100,10 +100,11 @@ function mmss(total: number): string {
   return `${m}:${s}`
 }
 
-/** Rest ring colour: green at full → amber → red as it nears zero (hue 96 → 0). */
+/** Rest ring colour: brand green at full → muted amber → soft red near zero.
+ *  Kept at the site's calmer saturation/lightness so it never looks neon. */
 function restColor(frac: number): string {
   const f = Math.max(0, Math.min(1, frac))
-  return `hsl(${Math.round(96 * f)}, 82%, 52%)`
+  return `hsl(${Math.round(96 * f)}, 64%, 60%)`
 }
 
 export default function ActiveWorkout({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -785,7 +786,7 @@ function RestScreen({
             <circle
               cx="50" cy="50" r={radius} fill="none" stroke={color} strokeWidth={stroke} strokeLinecap="round"
               strokeDasharray={circumference} strokeDashoffset={offset}
-              style={{ transition: 'stroke-dashoffset 1s linear, stroke 1s linear', filter: `drop-shadow(0 0 6px ${color})` }}
+              style={{ transition: 'stroke-dashoffset 1s linear, stroke 1s linear' }}
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center leading-none">
