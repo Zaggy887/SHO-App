@@ -588,7 +588,7 @@ function WorkScreen({
             Exercise {exIndex + 1} of {exTotal} · Set {cursor.setIdx + 1} of {ex.sets.length}
           </p>
           <h2 className="mt-1.5 text-[26px] font-black leading-tight tracking-tight">{ex.name}</h2>
-          <p className="mx-auto mt-1.5 max-w-[19rem] text-[13px] leading-snug text-white/55">{detail.desc}</p>
+
           <p className="mx-auto mt-2 flex max-w-[20rem] items-start justify-center gap-1.5 text-[12.5px] leading-snug text-brand-400">
             <Target size={13} className="mt-0.5 shrink-0" />
             <span className="text-left">{why}</span>
