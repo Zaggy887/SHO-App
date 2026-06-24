@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 
 /* ------------------------------------------------------------------ */
-/*  ProgressRing — circular progress indicator                         */
+/*  ProgressRing: circular progress indicator                          */
 /* ------------------------------------------------------------------ */
 export function ProgressRing({
   value,
@@ -49,7 +49,7 @@ export function ProgressRing({
 }
 
 /* ------------------------------------------------------------------ */
-/*  ProgressBar — linear progress                                      */
+/*  ProgressBar: linear progress                                       */
 /* ------------------------------------------------------------------ */
 export function ProgressBar({
   value,
@@ -74,7 +74,7 @@ export function ProgressBar({
 }
 
 /* ------------------------------------------------------------------ */
-/*  SectionHeader — title with optional "See all" action               */
+/*  SectionHeader: title with optional "See all" action                */
 /* ------------------------------------------------------------------ */
 export function SectionHeader({
   title,
@@ -102,7 +102,7 @@ export function SectionHeader({
 }
 
 /* ------------------------------------------------------------------ */
-/*  SegmentedTabs — the underline tab bar used on every section        */
+/*  SegmentedTabs: the underline tab bar used on every section         */
 /* ------------------------------------------------------------------ */
 export function SegmentedTabs({
   tabs,
@@ -161,7 +161,7 @@ export function Chip({
 }
 
 /* ------------------------------------------------------------------ */
-/*  ScreenHeader — large page title with leading/trailing slots        */
+/*  ScreenHeader: large page title with leading/trailing slots         */
 /* ------------------------------------------------------------------ */
 export function ScreenHeader({
   title,

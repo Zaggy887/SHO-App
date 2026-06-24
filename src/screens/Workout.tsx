@@ -98,14 +98,14 @@ function TodayTab() {
         <div className="rounded-2xl border border-white/5 bg-ink-800 p-8 text-center">
           <p className="text-2xl">😌</p>
           <p className="mt-2 font-bold">Rest Day</p>
-          <p className="mt-1 text-[13px] text-white/50">Recovery is where you grow. Try a mobility flow, a walk — or log whatever you got up to below.</p>
+          <p className="mt-1 text-[13px] text-white/50">Recovery is where you grow. Try a mobility flow, a walk, or log whatever you got up to below.</p>
           <button onClick={() => nav.open('quick')} className="btn-primary mx-auto mt-4">Quick mobility</button>
         </div>
       )}
 
       <OtherActivities />
 
-      {/* Got 15 minutes? — express, no-equipment sessions */}
+      {/* Got 15 minutes? Express, no-equipment sessions */}
       <button onClick={() => nav.open('quick')} className="mt-8 flex w-full items-center gap-3 rounded-2xl border border-white/5 bg-ink-800 p-3.5 text-left transition active:scale-[0.99]">
         <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand-400/15"><Clock size={20} className="text-brand-400" /></div>
         <div className="flex-1"><p className="font-bold leading-tight">Got 15 minutes?</p><p className="text-[12px] text-white/50">Express workouts between lectures</p></div>
@@ -116,7 +116,7 @@ function TodayTab() {
   )
 }
 
-/* Self-logged activities — anything the app didn't prescribe. */
+/* Self-logged activities: anything the app didn't prescribe. */
 function OtherActivities() {
   const { state, dispatch } = useStore()
   const nav = useNav()
@@ -136,7 +136,7 @@ function OtherActivities() {
           <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand-400/15"><Activity size={20} className="text-brand-400" /></div>
           <div className="flex-1">
             <p className="font-bold leading-tight">Log a workout, sport or activity</p>
-            <p className="text-[12px] text-white/50">Swim, run, football, pickleball — anything counts</p>
+            <p className="text-[12px] text-white/50">Swim, run, football, pickleball, anything counts</p>
           </div>
           <ChevronRight size={18} className="text-white/30" />
         </button>

@@ -81,7 +81,7 @@ function dayMeetsGoals(h: HabitDay, s: AppState): boolean {
 
 export function streakStats(s: AppState) {
   const byKey = new Map(s.habits.map((h) => [h.dateKey, h]))
-  // current: count back from yesterday (today is in-progress) — include today if it already qualifies
+  // current: count back from yesterday (today is in-progress), including today if it already qualifies
   let current = 0
   const todayQualifies = (() => {
     const t = byKey.get(todayKey)
@@ -283,7 +283,7 @@ export function weeklyIndex(s: AppState): WeeklyIndex {
   const n = Math.max(1, days.length)
 
   const avg = (sel: (h: HabitDay) => number) => days.reduce((a, h) => a + sel(h), 0) / n
-  // Count prescribed sessions and self-logged activities — all fitness counts.
+  // Count prescribed sessions and self-logged activities. All fitness counts.
   const workouts = workoutsInRange(s, 7) + activitiesInRange(s, 7).length
 
   // Each ratio: 1.0 means the target was met across the week.
@@ -315,11 +315,11 @@ export function weeklyIndex(s: AppState): WeeklyIndex {
     off: 'Off track',
   }[band]
   const blurb = {
-    crushing: 'Outstanding week. You are well past your targets — keep this rhythm.',
+    crushing: 'Outstanding week. You are well past your targets, so keep this rhythm.',
     ahead: 'Strong week. You are pushing beyond your goals nicely.',
     ontrack: 'Right where you want to be. Hold this and the results come.',
     behind: 'A little under pace this week. One or two better days turns it around.',
-    off: 'This week slipped. No guilt — pick one habit and start again today.',
+    off: 'This week slipped. No guilt. Pick one habit and start again today.',
   }[band]
 
   const pct = (x: number) => Math.round(Math.max(0, Math.min(1.2, x)) * 100)

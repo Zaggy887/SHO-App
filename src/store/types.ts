@@ -145,7 +145,7 @@ export interface LoggedActivity {
   calories: number
   note?: string
   time: string
-  /** marked as a regular weekly activity — only these count as "workouts this week" */
+  /** marked as a regular weekly activity; only these count as "workouts this week" */
   weekly?: boolean
 }
 

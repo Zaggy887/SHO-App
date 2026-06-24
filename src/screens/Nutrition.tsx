@@ -65,7 +65,7 @@ function CoachTab() {
           <p className="text-[13px] font-bold text-brand-400">{guide.headline}</p>
         </div>
         <p className="mt-2 text-[14px] leading-snug text-white/70">
-          Tell me what you ate today and I'll give you honest, friendly feedback for your goal — no calorie counting needed.
+          Tell me what you ate today and I'll give you honest, friendly feedback for your goal, no calorie counting needed.
         </p>
       </div>
 
@@ -337,7 +337,7 @@ function BudgetTab() {
   const weekTotal = grocery.reduce((a, [, c]) => a + c, 0)
 
   async function exportList() {
-    const lines = grocery.map(([item, cost]) => `• ${item} — $${cost.toFixed(2)}`).join('\n')
+    const lines = grocery.map(([item, cost]) => `• ${item}: $${cost.toFixed(2)}`).join('\n')
     const txt = `🛒 Shopping list (${meals.length} meals) · ~$${weekTotal.toFixed(2)}\n\n${lines}`
     try {
       if (navigator.share) await navigator.share({ text: txt })
@@ -523,7 +523,7 @@ function PlanTab() {
             <div key={d} className="rounded-2xl border border-white/5 bg-ink-800 p-3.5">
               <div className="mb-1.5 flex items-center justify-between">
                 <p className="font-bold">{d}</p>
-                <span className="text-[11px] text-white/35">{items.length ? `${items.length} planned` : '—'}</span>
+                <span className="text-[11px] text-white/35">{items.length ? `${items.length} planned` : '-'}</span>
               </div>
               {items.length === 0 ? (
                 <p className="text-[12px] text-white/35">Nothing planned</p>

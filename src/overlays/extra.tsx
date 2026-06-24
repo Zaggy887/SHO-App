@@ -232,7 +232,7 @@ export function ExerciseDetailSheet({ open, onClose, params }: Props) {
   const defId = (params?.defId as string) ?? 'bench'
   const def = exById(defId)
   const detail = exerciseDetail(defId)
-  const target = REP_TARGETS[defId] ?? '8–12'
+  const target = REP_TARGETS[defId] ?? '8-12'
   const sessionEx = todaySession(state)?.exercises.find((e) => e.defId === defId)
   const fallback = sessionEx ? Math.max(...sessionEx.sets.map((s) => s.weightKg)) : BASE_WEIGHTS[defId] ?? 20
   const rec = nextSetRecommendation(state, defId, sessionEx?.targetReps ?? target, fallback)
@@ -410,7 +410,7 @@ export function CoachChatSheet({ open, onClose }: Props) {
       dispatch({ type: 'PUSH_CHAT', role: 'coach', text: reply })
     } catch {
       // Graceful fallback to the on-device rules engine so the demo always
-      // responds — used when no API key/endpoint is configured.
+      // responds, used when no API key/endpoint is configured.
       dispatch({ type: 'PUSH_CHAT', role: 'coach', text: coachReply(state, msg) })
     } finally {
       setTyping(false)
@@ -419,7 +419,7 @@ export function CoachChatSheet({ open, onClose }: Props) {
 
   function unlock() {
     dispatch({ type: 'SET_PROFILE', patch: { premium: true } })
-    toast('Premium unlocked — enjoy your calls')
+    toast('Premium unlocked. Enjoy your calls')
   }
 
   function pickSlot(slot: string) {
@@ -560,7 +560,7 @@ export function LogActivitySheet({ open, onClose }: Props) {
 
   return (
     <Sheet open={open} onClose={onClose} title="Log an activity">
-      <p className="mb-3 text-[13px] text-white/55">Anything counts — a sport, a run, a class. Pick one or add your own.</p>
+      <p className="mb-3 text-[13px] text-white/55">Anything counts: a sport, a run, a class. Pick one or add your own.</p>
 
       <div className="grid grid-cols-4 gap-2">
         {ACTIVITY_PRESETS.map((a) => {
@@ -609,11 +609,11 @@ export function LogActivitySheet({ open, onClose }: Props) {
       <input
         value={note}
         onChange={(e) => setNote(e.target.value)}
-        placeholder="Note (optional) — how did it feel?"
+        placeholder="Note (optional): how did it feel?"
         className="mt-4 w-full rounded-xl border border-white/8 bg-ink-800 px-4 py-3 text-[14px] text-white placeholder:text-white/35 focus:border-brand-400/60 focus:outline-none"
       />
 
-      {/* Weekly activity — only these count toward "workouts this week" */}
+      {/* Weekly activity: only these count toward "workouts this week" */}
       <button onClick={() => setWeekly((v) => !v)} className="mt-3 flex w-full items-center gap-3 rounded-2xl border border-white/8 bg-ink-800 p-3.5 text-left active:scale-[0.99]">
         <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-brand-400/15"><Repeat size={18} className="text-brand-400" /></div>
         <div className="flex-1">

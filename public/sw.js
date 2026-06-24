@@ -1,4 +1,4 @@
-// StrengthHub Online — minimal offline service worker.
+// StrengthHub Online: minimal offline service worker.
 // Runtime "stale-while-revalidate" cache for the app shell & assets.
 const CACHE = 'sho-cache-v2'
 

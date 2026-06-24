@@ -1,36 +1,36 @@
 # StrengthHub Online
 
-A fully functional, mobile-first fitness app for **university students** — built with **React + TypeScript + Vite + Tailwind CSS**. Train, eat, track progress and stay accountable with friends, all in one installable PWA.
+A fully functional, mobile-first fitness app for **university students**, built with **React + TypeScript + Vite + Tailwind CSS**. Train, eat, track progress and stay accountable with friends, all in one installable PWA.
 
 ![Theme](https://img.shields.io/badge/theme-dark%20%2F%20light-0A0A0B) ![Stack](https://img.shields.io/badge/stack-React%20%7C%20TS%20%7C%20Vite%20%7C%20Tailwind-7ED957) ![PWA](https://img.shields.io/badge/PWA-installable%20%26%20offline-7ED957)
 
 ## It's actually functional
 
-There's no fake data on screens — everything is driven by a persistent store (`localStorage`) seeded with a realistic **40-day history** for the demo user (*Alex, 21, university student, lean-recomp goal, PPL split*). Stats are computed live, so logging anything updates the whole app.
+There's no fake data on screens. Everything is driven by a persistent store (`localStorage`) seeded with a realistic **40-day history** for the demo user (*Alex, 21, university student, lean-recomp goal, PPL split*). Stats are computed live, so logging anything updates the whole app.
 
 Out of the box the demo shows: **26 completed workouts**, a **14-day streak** (best 21), bodyweight down **1.4 kg over 4 weeks**, computed 1RM strength gains, 160 logged meals, badges, friends leaderboard and more.
 
 ## Features
 
 ### Core
-- **Onboarding** — goal, experience, days/week & equipment → personalised targets
-- **Active workout logger** — set-by-set weight/reps entry, tick-off, **rest timer** (+15s/skip), live volume & duration, finish → saves to history + updates streak
-- **Nutrition logging** — searchable food database, **barcode-scan simulation**, budget-meal filter, per-meal logging, diary with remove, live calorie ring & macro bars
-- **Weight & habit logging** — quick-add water, steps, sleep, mindset; weight log with trend chart
-- **Progress** — interactive weight chart (4/12-week toggle), 1RM strength progression, habit-consistency rings, streaks
-- **Community** — working like/bookmark, **create a post** (with photo upload), join groups/challenges, RSVP to events
+- **Onboarding:** goal, experience, days/week & equipment, then personalised targets
+- **Active workout logger:** set-by-set weight/reps entry, tick-off, **rest timer** (+15s/skip), live volume & duration, finish to save to history and update streak
+- **Nutrition logging:** searchable food database, **barcode-scan simulation**, budget-meal filter, per-meal logging, diary with remove, live calorie ring & macro bars
+- **Weight & habit logging:** quick-add water, steps, sleep, mindset; weight log with trend chart
+- **Progress:** interactive weight chart (4/12-week toggle), 1RM strength progression, habit-consistency rings, streaks
+- **Community:** working like/bookmark, **create a post** (with photo upload), join groups/challenges, RSVP to events
 
 ### Built for students
 - **Got 15 minutes?** express, no-equipment dorm workouts
-- **Exam Survival Protocol** — toggle a low-stress training mode for exam season
-- **Budget nutrition** — cheap, high-protein meal suggestions
+- **Exam Survival Protocol:** toggle a low-stress training mode for exam season
+- **Budget nutrition:** cheap, high-protein meal suggestions
 - **Friends leaderboard** by university, **badges/streaks** gamification
-- **Weekly recap** — shareable "your week in numbers"
-- **Progress photos** — private before/after timeline (camera/file upload)
+- **Weekly recap:** shareable "your week in numbers"
+- **Progress photos:** private before/after timeline (camera/file upload)
 
 ### Platform
 - **Light & dark themes** (CSS-variable driven, flips every screen)
-- **Units toggle** — kg/lb & L/oz everywhere
+- **Units toggle:** kg/lb & L/oz everywhere
 - **Notifications centre** with unread badges (+ optional browser notifications)
 - **Installable PWA** with offline service worker
 - **Reset / clear** demo data from Settings
@@ -44,7 +44,7 @@ npm run build    # type-check + production build
 npm run preview  # preview the build
 ```
 
-## AI coach (Claude) — optional backend
+## AI coach (Claude), optional backend
 
 The 1:1 **coach messenger** (tap the chat icon on the dashboard) is wired to
 **Claude** (`claude-opus-4-8`) for genuinely high-quality replies in the demo.
@@ -52,14 +52,14 @@ It degrades gracefully: if no key/endpoint is configured, it falls back to the
 built-in on-device rules engine, so the app always responds.
 
 How it works:
-- `api/coach.ts` — a serverless function (Vercel-style) that holds the API key,
+- `api/coach.ts` is a serverless function (Vercel-style) that holds the API key,
   builds a coach system prompt from the user's profile, and calls Claude.
-- `src/lib/coachApi.ts` — the browser client that POSTs the message + recent
+- `src/lib/coachApi.ts` is the browser client that POSTs the message plus recent
   history to `/api/coach`.
 
-**Security — the key is server-only.** The `ANTHROPIC_API_KEY` lives **only** in
+**Security: the key is server-only.** The `ANTHROPIC_API_KEY` lives **only** in
 your host's environment variables; it is never bundled into the client and must
-never be committed (this repo is public). `.env` is gitignored — see
+never be committed (this repo is public). `.env` is gitignored, see
 `.env.example`.
 
 Enable it:
@@ -68,7 +68,7 @@ Enable it:
 # 2. Deploy to a host that runs /api as a serverless function (e.g. Vercel)
 # 3. Set ANTHROPIC_API_KEY in the host's environment settings
 ```
-Without a key the messenger silently uses the local fallback — no errors, just
+Without a key the messenger silently uses the local fallback. No errors, just
 shorter, rules-based answers.
 
 ## Project structure
@@ -82,10 +82,10 @@ src/
 │   ├── types.ts            # domain model
 │   ├── seed.ts             # deterministic 40-day history generator
 │   ├── store.tsx           # context + reducer + localStorage persistence
-│   └── selectors.ts        # live derived stats (streaks, 1RM, nutrition…)
+│   └── selectors.ts        # live derived stats (streaks, 1RM, nutrition)
 ├── data/catalog.ts         # exercises, foods, program, quick workouts
-├── components/             # UI primitives, BottomNav, Sheet, Toast, Avatar…
-├── overlays/index.tsx      # all secondary flows (settings, logging, recap…)
+├── components/             # UI primitives, BottomNav, Sheet, Toast, Avatar
+├── overlays/index.tsx      # all secondary flows (settings, logging, recap)
 └── screens/                # Dashboard, Workout, Nutrition, Progress, Community,
                             # Onboarding, ActiveWorkout
 ```

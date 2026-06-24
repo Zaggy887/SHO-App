@@ -1,6 +1,6 @@
 import { Signal, Wifi, BatteryFull } from 'lucide-react'
 
-/** Faux iOS status bar — only visible inside the desktop phone-frame mockup. */
+/** Faux iOS status bar, only visible inside the desktop phone-frame mockup. */
 export function StatusBar() {
   return (
     <div className="hidden sm:flex items-center justify-between px-7 pt-3.5 pb-1 text-sm font-semibold text-white">

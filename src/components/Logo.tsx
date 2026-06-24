@@ -1,7 +1,7 @@
 /* ------------------------------------------------------------------ */
 /*  Brand marks for StrengthHub Online                                 */
-/*  LogoMark  — compact squircle monogram (SH) for tight spots         */
-/*  Wordmark  — the StrengthHub lockup, echoing the full logo          */
+/*  LogoMark:  compact squircle monogram (SH) for tight spots          */
+/*  Wordmark:  the StrengthHub lockup, echoing the full logo           */
 /* ------------------------------------------------------------------ */
 
 export function LogoMark({ size = 40, className = '' }: { size?: number; className?: string }) {

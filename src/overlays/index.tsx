@@ -393,17 +393,17 @@ export function LogHabitSheet({ open, onClose }: Props) {
 
   function save() {
     dispatch({ type: 'PATCH_TODAY_HABIT', patch: { steps, sleepH, mindsetMin: mindset } })
-    toast('Nice — habits logged 🙌')
+    toast('Nice work, habits logged 🙌')
     onClose()
   }
 
   const waterStep = units === 'imperial' ? 8 / 33.814 : 0.25
   return (
     <Sheet open={open} onClose={onClose} title="Log habits">
-      <p className="mb-3 text-[13px] text-white/50">Slide to log — done in seconds.</p>
+      <p className="mb-3 text-[13px] text-white/50">Slide to log. Done in seconds.</p>
 
       <div className="space-y-3.5">
-        {/* Water — fast tap logger */}
+        {/* Water: fast tap logger */}
         <div className="rounded-2xl border border-white/5 bg-ink-800 p-4">
           <div className="flex items-center gap-2">
             <Droplet size={18} className="text-brand-400" />
@@ -419,7 +419,7 @@ export function LogHabitSheet({ open, onClose }: Props) {
           <p className="mt-2 text-center text-[12px] text-white/40">Goal {fmtFluid(state.profile.waterTargetL, units)}</p>
         </div>
 
-        {/* Steps — ruler slider */}
+        {/* Steps: ruler slider */}
         <HabitSlider
           icon={<Footprints size={18} className="text-brand-400" />} label="Steps"
           value={steps} min={0} max={20000} step={250} onChange={setSteps}
@@ -427,7 +427,7 @@ export function LogHabitSheet({ open, onClose }: Props) {
           goalLabel={`${(state.profile.stepTarget / 1000).toFixed(0)}k`} goalPct={(state.profile.stepTarget / 20000) * 100}
         />
 
-        {/* Sleep — ruler slider */}
+        {/* Sleep: ruler slider */}
         <HabitSlider
           icon={<BedDouble size={18} className="text-brand-400" />} label="Sleep"
           value={sleepH} min={0} max={12} step={0.5} onChange={setSleepH}
@@ -435,7 +435,7 @@ export function LogHabitSheet({ open, onClose }: Props) {
           goalLabel={`${state.profile.sleepTargetH}h`} goalPct={(state.profile.sleepTargetH / 12) * 100}
         />
 
-        {/* Mindset — quick chips */}
+        {/* Mindset: quick chips */}
         <div className="rounded-2xl border border-white/5 bg-ink-800 p-4">
           <div className="flex items-center gap-2">
             <Leaf size={18} className="text-brand-400" />
@@ -707,7 +707,7 @@ export function QuickWorkoutsSheet({ open, onClose }: Props) {
   const toast = useToast()
   return (
     <Sheet open={open} onClose={onClose} title="Got 15 minutes?">
-      <p className="mb-3 text-[13px] text-white/50">Express sessions for between lectures — no gym needed.</p>
+      <p className="mb-3 text-[13px] text-white/50">Express sessions for between lectures. No gym needed.</p>
       <div className="space-y-3">
         {QUICK_WORKOUTS.map((q) => (
           <div key={q.id} className="rounded-2xl border border-white/5 bg-ink-800 p-4">

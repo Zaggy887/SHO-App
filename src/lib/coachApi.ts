@@ -7,7 +7,7 @@ import { streakStats } from '../store/selectors'
  * Posts to a serverless endpoint that holds the Anthropic API key
  * (see /api/coach.ts). The key is NEVER in the browser bundle. If the
  * endpoint is missing, unconfigured, or errors, `askCoach` throws and the
- * caller falls back to the on-device rules engine — so the demo always works.
+ * caller falls back to the on-device rules engine, so the demo always works.
  */
 const ENDPOINT = import.meta.env.VITE_COACH_API || '/api/coach'
 

@@ -44,10 +44,10 @@ function systemPrompt(p: CoachRequest['profile']): string {
     p?.experience ? `Training experience: ${p.experience}.` : '',
     p?.daysPerWeek ? `They train about ${p.daysPerWeek} days/week.` : '',
     typeof p?.streak === 'number' && p.streak > 0 ? `Current streak: ${p.streak} days.` : '',
-    p?.examMode ? `They are in exam season — keep expectations light and protect their study time.` : '',
+    p?.examMode ? `They are in exam season, so keep expectations light and protect their study time.` : '',
     '',
-    `Voice: warm, encouraging, and genuinely knowledgeable — like a great coach who texts back.`,
-    `Keep replies short and conversational (usually 2–4 sentences). Be specific and give one clear next step rather than long lists.`,
+    `Voice: warm, encouraging, and genuinely knowledgeable, like a great coach who texts back.`,
+    `Keep replies short and conversational (usually 2 to 4 sentences). Be specific and give one clear next step rather than long lists. Do not use em dashes; write plainly with commas and full stops.`,
     `You can help with: workouts and swapping exercises, soreness, motivation, plateaus, form cues, sleep, recovery, and student-friendly nutrition.`,
     `Safety: you are not a doctor. For sharp/lingering pain, possible injury, or disordered-eating concerns, gently recommend they see a professional. Never give crash-diet or extreme advice; keep it healthy and sustainable.`,
     `Use the student's first name occasionally, not every message. No markdown headers; plain friendly text. An occasional emoji is fine, sparingly.`,
@@ -63,7 +63,7 @@ export default async function handler(req: any, res: any) {
 
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) {
-    // No key configured — tell the client to use its local fallback.
+    // No key configured, tell the client to use its local fallback.
     res.status(503).json({ error: 'Coach API not configured' })
     return
   }

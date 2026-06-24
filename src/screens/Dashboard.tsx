@@ -127,7 +127,7 @@ export default function Dashboard() {
         </button>
       </div>
 
-      {/* Weekly performance index — the first thing you see, flush with the page */}
+      {/* Weekly performance index, the first thing you see, flush with the page */}
       <Reveal>
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
@@ -147,7 +147,7 @@ export default function Dashboard() {
 
         <p className="mt-2 text-center text-[13px] leading-snug text-white/55">{idx.blurb}</p>
 
-        {/* What's driving the needle — colour-coded by area */}
+        {/* What's driving the needle, colour-coded by area */}
         <div className="mt-4 flex justify-between gap-2">
           {idx.parts.map((p) => {
             const good = p.pct >= 85, mid = p.pct >= 55
@@ -165,7 +165,7 @@ export default function Dashboard() {
         </div>
       </Reveal>
 
-      {/* Week strip — tap a day to load its progress below */}
+      {/* Week strip: tap a day to load its progress below */}
       <Reveal delay={60}>
         <div className="mt-5 flex justify-between">
           {weekKeys.map((k, i) => {
@@ -194,7 +194,7 @@ export default function Dashboard() {
         </div>
       </Reveal>
 
-      {/* Plan / workout — follows the selected day */}
+      {/* Plan / workout: follows the selected day */}
       <Reveal delay={120}>
         <Section title={isToday ? 'Your plan' : `${selWeekday}'s workout`} action="Workouts" onAction={() => nav.goTab('workout')} />
         <div className="relative overflow-hidden rounded-2xl border border-white/5">
@@ -256,7 +256,7 @@ export default function Dashboard() {
         )}
       </Reveal>
 
-      {/* Per-day progress — driven by the day selected in the week strip */}
+      {/* Per-day progress, driven by the day selected in the week strip */}
       <Reveal delay={180}>
         <Section
           title={selTitle}
@@ -282,7 +282,7 @@ export default function Dashboard() {
         </div>
       </Reveal>
 
-      {/* To-do today — the day's tasks */}
+      {/* To-do today: the day's tasks */}
       <Reveal delay={240}>
         <Section
           title="To-do today"
@@ -297,7 +297,7 @@ export default function Dashboard() {
         </div>
       </Reveal>
 
-      {/* Coach presence — the human touch */}
+      {/* Coach presence: the human touch */}
       <Reveal delay={300}>
         <button onClick={() => nav.open('coach')} className="mt-5 w-full overflow-hidden rounded-2xl border border-brand-400/20 bg-brand-400/[0.06] p-4 text-left transition active:scale-[0.99]">
           <div className="flex items-center gap-2.5">

@@ -48,7 +48,7 @@ function beep() {
     osc.stop(ctx.currentTime + 0.16)
     osc.onended = () => ctx.close()
   } catch {
-    /* Audio not available — silently ignore. */
+    /* Audio not available; silently ignore. */
   }
 }
 
@@ -74,7 +74,7 @@ function successChime() {
     })
     setTimeout(() => ctx.close(), 700)
   } catch {
-    /* Audio not available — silently ignore. */
+    /* Audio not available; silently ignore. */
   }
 }
 
@@ -142,7 +142,7 @@ export default function ActiveWorkout({ open, onClose }: { open: boolean; onClos
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [finishing])
 
-  // Overall session clock — runs the whole time the sheet is open.
+  // Overall session clock. Runs the whole time the sheet is open.
   useEffect(() => {
     if (!open) return
     startRef.current = Date.now()
@@ -150,14 +150,14 @@ export default function ActiveWorkout({ open, onClose }: { open: boolean; onClos
     return () => clearInterval(t)
   }, [open])
 
-  // Work clock — counts up while performing a set.
+  // Work clock. Counts up while performing a set.
   useEffect(() => {
     if (!open || mode !== 'work') return
     const t = setInterval(() => setWorkElapsed((e) => e + 1), 1000)
     return () => clearInterval(t)
   }, [open, mode, cursor])
 
-  // Rest clock — counts down.
+  // Rest clock. Counts down.
   useEffect(() => {
     if (mode !== 'rest' || rest === null || rest <= 0) return
     const t = setTimeout(() => setRest((r) => (r === null ? null : r - 1)), 1000)
@@ -170,7 +170,7 @@ export default function ActiveWorkout({ open, onClose }: { open: boolean; onClos
       if (!prefersReducedMotion()) navigator.vibrate?.([200, 100, 200])
       beep()
       if (document.hidden && 'Notification' in window && Notification.permission === 'granted') {
-        try { new Notification('Rest done — start your next set') } catch { /* ignore */ }
+        try { new Notification('Rest done. Start your next set') } catch { /* ignore */ }
       }
       setMode('go')
     }
@@ -339,7 +339,7 @@ export default function ActiveWorkout({ open, onClose }: { open: boolean; onClos
   /* ================================ Overview ================================ */
   return (
     <Sheet open={open} onClose={onClose} title={session.name} full>
-      {/* The bold primary CTA — launches the follow-along flow */}
+      {/* The bold primary CTA that launches the follow-along flow */}
       {!allDone && (
         <button
           onClick={startGuided}
@@ -348,7 +348,7 @@ export default function ActiveWorkout({ open, onClose }: { open: boolean; onClos
           <div className="absolute -right-6 -top-8 h-32 w-32 rounded-full bg-black/10" />
           <div className="absolute -bottom-10 right-10 h-24 w-24 rounded-full bg-white/10" />
           <p className="relative text-[11px] font-black uppercase tracking-[0.2em] text-black/55">
-            {rest !== null ? 'Resume — resting' : prog.done > 0 ? 'Pick up where you left off' : "Let's move"}
+            {rest !== null ? 'Resume, resting' : prog.done > 0 ? 'Pick up where you left off' : "Let's move"}
           </p>
           <div className="relative mt-1 flex items-center justify-between">
             <span className="text-[26px] font-black leading-none tracking-tight">
@@ -370,7 +370,7 @@ export default function ActiveWorkout({ open, onClose }: { open: boolean; onClos
         </div>
       )}
 
-      {/* What today's session is for — tied to the user's overall goal */}
+      {/* What today's session is for, tied to the user's overall goal */}
       <div className="mb-4 rounded-2xl border border-brand-400/20 bg-brand-400/[0.06] p-4">
         <div className="mb-1.5 flex items-center gap-1.5">
           <Target size={14} className="text-brand-400" />
@@ -448,7 +448,7 @@ export default function ActiveWorkout({ open, onClose }: { open: boolean; onClos
       </button>
       <div className="h-2" />
 
-      {/* Form & video — pops out over the page instead of expanding inline */}
+      {/* Form & video. Pops out over the page instead of expanding inline */}
       {detailIdx !== null && session.exercises[detailIdx] && createPortal(
         (() => {
           const ex = session.exercises[detailIdx]
@@ -571,7 +571,7 @@ function WorkScreen({
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-ink-900/40 via-transparent to-ink-900" />
 
       <div className="relative flex flex-col" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
-        {/* Top bar — clear way back to the full list */}
+        {/* Top bar with a clear way back to the full list */}
         <div className="flex items-center justify-between px-5 pb-2 pt-4">
           <button onClick={onBack} className="flex items-center gap-1.5 rounded-full bg-white/[0.06] py-2 pl-2.5 pr-3.5 text-[13px] font-semibold text-white/80 active:bg-white/[0.12]">
             <ListChecks size={15} /> All exercises
@@ -581,7 +581,7 @@ function WorkScreen({
           </span>
         </div>
 
-        {/* Where am I — exercise position, name, what it is */}
+        {/* Where am I: exercise position, name, what it is */}
         <div className="px-6 text-center">
           <p className="text-[11px] font-black uppercase tracking-[0.24em] text-brand-400">
             Exercise {exIndex + 1} of {exTotal} · Set {cursor.setIdx + 1} of {ex.sets.length}
@@ -599,7 +599,7 @@ function WorkScreen({
         </div>
       </div>
 
-      {/* Big count-up timer — plain number, faint static green ring */}
+      {/* Big count-up timer: plain number, faint static green ring */}
       <div className="relative flex flex-1 items-center justify-center">
         <div className="relative grid place-items-center" style={{ width: 'min(74vw, 320px)', aspectRatio: '1 / 1' }}>
           <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full -rotate-90">
@@ -633,16 +633,16 @@ function WorkScreen({
       {/* Primary action + what's coming */}
       <div className="relative px-6 pb-12 pt-5" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 2.25rem)' }}>
         <button onClick={onStartRest} className="flex w-full items-center justify-center gap-2.5 rounded-2xl bg-brand-400 py-5 text-[18px] font-black uppercase tracking-wide text-black shadow-glow transition active:scale-[0.98]">
-          <Check size={20} strokeWidth={3} /> {lastSet ? 'Done — finish exercise' : 'Done — start rest'}
+          <Check size={20} strokeWidth={3} /> {lastSet ? 'Done, finish exercise' : 'Done, start rest'}
         </button>
         <p className="mt-3 text-center text-[12px] font-semibold text-white/40">
           {lastSet
-            ? (nextExName ? <>Up next: <span className="text-white/70">{nextExName}</span></> : <span className="text-brand-400">Last exercise — finish strong</span>)
+            ? (nextExName ? <>Up next: <span className="text-white/70">{nextExName}</span></> : <span className="text-brand-400">Last exercise. Finish strong</span>)
             : <>Then: <span className="text-white/70">Set {cursor.setIdx + 2} of {ex.sets.length}</span></>}
         </p>
       </div>
 
-      {/* On-demand "how to do this" — keeps the main screen simple */}
+      {/* On-demand "how to do this", keeps the main screen simple */}
       {showHow && (
         <div className="absolute inset-0 z-10 flex flex-col bg-ink-900/98 backdrop-blur-sm" style={{ animation: 'screen-in 0.2s ease-out', paddingTop: 'env(safe-area-inset-top)' }}>
           <div className="flex items-center justify-between px-5 pb-3 pt-4">
