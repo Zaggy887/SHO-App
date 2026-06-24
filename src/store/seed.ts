@@ -385,7 +385,7 @@ export function buildSeed(): AppState {
       {
         id: 'chat-welcome',
         role: 'coach',
-        text: `Hi ${profile.name}, I'm your coach 👋 Message me anytime, whether it's about how a session felt, an exercise you'd like to change, a niggle, or staying on track. What's on your mind?`,
+        text: `Hi ${profile.name}, I'm your coach 👋 Message me anytime about how a session felt, an exercise you'd like to change, a niggle, or staying on track. What's on your mind?`,
         dateKey: todayKey,
         time: '9:00 AM',
         read: true,

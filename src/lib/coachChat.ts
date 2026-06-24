@@ -93,7 +93,7 @@ export function coachReply(s: AppState, text: string): string {
 
 /** Coach's opening message for a fresh thread. */
 export function coachWelcome(s: AppState): string {
-  return `Hi ${name(s)}, I'm your coach 👋 Message me anytime, whether it's about how a session felt, an exercise you'd like to change, a niggle, or staying on track with ${GOAL_LABEL[s.profile.goal] ?? 'your goal'}. What's on your mind?`
+  return `Hi ${name(s)}, I'm your coach 👋 Message me anytime about how a session felt, an exercise you'd like to change, a niggle, or staying on track with ${GOAL_LABEL[s.profile.goal] ?? 'your goal'}. What's on your mind?`
 }
 
 export const CHAT_SUGGESTIONS = [
