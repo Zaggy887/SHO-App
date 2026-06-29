@@ -278,6 +278,14 @@
 }
 .animate-fade-up { animation: fade-up 0.4s ease-out both; }
 
+/* Chat bubble entrance: a small, springy pop from the bottom, the way a
+   sent message lands in WhatsApp. Origin set per side at the call site. */
+@keyframes msg-pop {
+  from { opacity: 0; transform: translateY(8px) scale(0.94); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.animate-msg-pop { animation: msg-pop 0.26s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
 /* Pop the "GO" end-of-rest cue. Neutralised by the reduced-motion block below. */
 @keyframes go-pop {
   from {

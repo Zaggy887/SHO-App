@@ -1,5 +1,9 @@
-import { useMemo, useState } from 'react'
-import { Sparkles, Send, Check, ArrowRight, ChevronDown, Droplet, Plus, Trash2, Share2, Wallet, Search, Lightbulb, CircleHelp as HelpCircle, Salad } from 'lucide-react'
+import { useMemo, useState, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
+import {
+  Sparkles, Send, Check, ArrowRight, ChevronDown, ChevronLeft, ChevronRight, Clock,
+  Droplet, Plus, Trash2, Share2, Wallet, Search, Lightbulb, Salad,
+} from 'lucide-react'
 import { Icon } from '../components/Icon'
 import { ProgressRing, SegmentedTabs, ScreenHeader } from '../components/ui'
 import { useStore } from '../store/store'
@@ -8,13 +12,10 @@ import {
   PLATE_GUIDE, FOOD_TIERS, GOAL_GUIDES, NUTRITION_LESSONS, NUTRITION_TAGS, TAG_TONE_VAR,
 } from '../data/nutrition'
 import { BUDGET_MEALS, FOODS } from '../data/catalog'
-import { foodReviewForDay, todayHabit, nutritionTagsForDay } from '../store/selectors'
+import { todayHabit, nutritionTagsForDay } from '../store/selectors'
 import { dailyTargets } from '../store/training'
 import { fmtFluid, pct } from '../lib/format'
-import {
-  reviewDay, answerQuestion, answerForQuestion, STARTER_QUESTIONS,
-  type DayReview, type QAResult,
-} from '../lib/nutritionCoach'
+import { coachRespond, STARTER_QUESTIONS, type DayReview } from '../lib/nutritionCoach'
 import type { Goal, MealName } from '../store/types'
 
 const TABS = ['Coach', 'Learn', 'Budget Eats', 'Plan']
@@ -38,65 +39,275 @@ export default function Nutrition() {
 }
 
 /* ============================ Coach tab ============================ */
+interface ChatMsg {
+  id: string
+  role: 'user' | 'coach'
+  text?: string
+  topic?: string
+  review?: DayReview
+  status?: 'sending' | 'sent'
+}
+
+let msgSeq = 0
+const nextId = () => `nc${++msgSeq}`
+
 function CoachTab() {
   const { state, dispatch } = useStore()
   const goal = state.profile.goal
-  const saved = foodReviewForDay(state)
   const guide = GOAL_GUIDES[goal]
 
-  const [text, setText] = useState(saved?.text ?? '')
-  const [review, setReview] = useState<DayReview | null>(() => (saved?.text ? reviewDay(saved.text, goal) : null))
+  const [open, setOpen] = useState(false)
+  const [messages, setMessages] = useState<ChatMsg[]>([])
+  const [input, setInput] = useState('')
+  const [typing, setTyping] = useState(false)
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLTextAreaElement>(null)
 
-  function runReview() {
-    const r = reviewDay(text, goal)
-    setReview(r)
-    if (!r.empty) dispatch({ type: 'SAVE_FOOD_REVIEW', text: text.trim(), score: r.score })
+  // Keep the newest message in view as the thread grows.
+  useEffect(() => {
+    if (open) scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
+  }, [open, messages.length, typing])
+
+  // Focus the input once the open transition has settled.
+  useEffect(() => {
+    if (!open) return
+    const t = window.setTimeout(() => inputRef.current?.focus(), 340)
+    return () => window.clearTimeout(t)
+  }, [open])
+
+  function send(raw?: string) {
+    const msg = (raw ?? input).trim()
+    if (!msg || typing) return
+    setInput('')
+
+    const id = nextId()
+    setMessages((m) => [...m, { id, role: 'user', text: msg, status: 'sending' }])
+    // A beat later the message reads as sent, the way a tick lands in WhatsApp.
+    window.setTimeout(() => {
+      setMessages((m) => m.map((x) => (x.id === id ? { ...x, status: 'sent' } : x)))
+    }, 480)
+
+    setTyping(true)
+    const reply = coachRespond(msg, goal)
+    // Keep saving day reviews so the dashboard food check-in stays in sync.
+    if (reply.kind === 'review' && !reply.review.empty) {
+      dispatch({ type: 'SAVE_FOOD_REVIEW', text: msg, score: reply.review.score })
+    }
+    const delay = 850 + Math.min(900, msg.length * 11)
+    window.setTimeout(() => {
+      setTyping(false)
+      setMessages((m) => [
+        ...m,
+        reply.kind === 'review'
+          ? { id: nextId(), role: 'coach', review: reply.review }
+          : { id: nextId(), role: 'coach', text: reply.answer.answer, topic: reply.answer.matched ? reply.answer.question : undefined },
+      ])
+    }, delay)
   }
+
+  function openChat(initial?: string) {
+    setOpen(true)
+    if (initial) send(initial)
+  }
+
+  const showSuggestions = messages.length === 0 && !typing
 
   return (
     <>
       {/* Quick day tags — fast, tap-only "how did today go" */}
       <DayTagsCard />
 
-      {/* Goal banner */}
-      <div className="mt-4 overflow-hidden rounded-2xl border border-brand-400/20 bg-brand-400/[0.06] p-4">
-        <div className="flex items-center gap-2">
-          <span className="grid h-7 w-7 place-items-center rounded-full bg-brand-400 text-black"><Sparkles size={15} /></span>
-          <p className="text-[13px] font-bold text-brand-400">{guide.headline}</p>
-        </div>
-        <p className="mt-2 text-[14px] leading-snug text-white/70">
-          Tell me what you ate today and I'll give you honest, friendly feedback for your goal, no calorie counting needed.
-        </p>
+      {/* Goal context */}
+      <div className="mt-4 flex items-center gap-2.5 rounded-2xl border border-brand-400/20 bg-brand-400/[0.06] px-4 py-3">
+        <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-brand-400 text-black"><Sparkles size={15} /></span>
+        <p className="text-[13px] font-semibold leading-snug text-brand-400">{guide.headline}</p>
       </div>
+
+      {/* Unified nutrition coach: one chat for "what I ate" and "ask anything" */}
+      <NutritionCoachCard onOpen={() => openChat()} onAsk={(q) => openChat(q)} />
 
       {/* Water quick-log */}
       <WaterCard />
+      <div className="h-2" />
 
-      {/* Free-text food log */}
-      <div className="mt-4">
-        <label className="mb-2 block text-[12px] font-bold uppercase tracking-[0.14em] text-white/40">What did you eat today?</label>
-        <textarea
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          rows={5}
-          placeholder={'e.g. Porridge with banana, chicken wrap and salad, pasta bolognese, a chocolate bar and lots of water…'}
-          className="w-full resize-none rounded-2xl border border-white/8 bg-ink-800 p-4 text-[15px] leading-relaxed placeholder:text-white/30 focus:border-brand-400/60 focus:outline-none"
-        />
-        <button
-          onClick={runReview}
-          disabled={!text.trim()}
-          className="btn-primary mt-3 w-full disabled:opacity-40"
+      {/* Full-screen chat experience, mounted at the frame so it sits above
+          the bottom nav and isn't trapped in the scroll area's stacking context. */}
+      {open && createPortal(
+        <div
+          className="absolute inset-0 z-50 flex flex-col bg-ink-900 text-white"
+          style={{ paddingTop: 'env(safe-area-inset-top)', animation: 'screen-in 0.3s cubic-bezier(0.22,1,0.36,1)' }}
         >
-          <Sparkles size={16} /> Review my day
-        </button>
+          {/* Header */}
+          <div className="relative flex items-center gap-2.5 px-3 py-2.5">
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-brand-400/[0.07] to-transparent" />
+            <button onClick={() => setOpen(false)} className="relative grid h-9 w-9 shrink-0 place-items-center rounded-full text-brand-400 active:bg-white/10"><ChevronLeft size={26} /></button>
+            <div className="relative shrink-0">
+              <div className="grid h-9 w-9 place-items-center rounded-full bg-gradient-to-br from-brand-300 to-brand-500 text-black shadow-[0_2px_8px_-2px_rgba(126,217,87,0.5)]"><Salad size={18} /></div>
+              <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-brand-400 ring-2 ring-ink-900" />
+            </div>
+            <div className="relative min-w-0 flex-1">
+              <p className="truncate text-[15px] font-bold leading-tight">Nutrition coach</p>
+              <p className="text-[12px] leading-tight text-white/45">Active now</p>
+            </div>
+          </div>
+          <div className="h-px bg-white/[0.06]" />
+
+          {/* Messages */}
+          <div ref={scrollRef} className="no-scrollbar flex-1 overflow-y-auto px-3 pb-3 pt-2">
+            {/* Thread intro */}
+            <div className="flex flex-col items-center px-6 pb-5 pt-4 text-center">
+              <div className="relative">
+                <div className="grid h-[68px] w-[68px] place-items-center rounded-full bg-gradient-to-br from-brand-300 to-brand-500 text-black shadow-[0_6px_20px_-6px_rgba(126,217,87,0.6)]"><Salad size={32} /></div>
+                <span className="absolute bottom-1 right-1 h-3.5 w-3.5 rounded-full bg-brand-400 ring-[3px] ring-ink-900" />
+              </div>
+              <p className="mt-3 text-[17px] font-bold">Nutrition coach</p>
+              <p className="mt-0.5 max-w-[16rem] text-[13px] leading-snug text-white/45">Tell me what you ate today for an honest review, or ask me anything about food. No calorie counting.</p>
+            </div>
+
+            {messages.map((m, i) => {
+              const isUser = m.role === 'user'
+              const isLast = i === messages.length - 1
+
+              if (m.review) {
+                return (
+                  <div key={m.id} className="mt-2.5 flex items-end gap-1.5 justify-start">
+                    <div className="grid h-6 w-6 shrink-0 place-items-center self-end rounded-full bg-gradient-to-br from-brand-300 to-brand-500 text-black"><Salad size={12} /></div>
+                    <div className={`max-w-[92%] origin-bottom-left ${isLast ? 'animate-msg-pop' : ''}`}>
+                      <ReviewBubble review={m.review} />
+                    </div>
+                  </div>
+                )
+              }
+
+              return (
+                <div key={m.id}>
+                  <div className={`flex items-end gap-1.5 ${isUser ? 'justify-end' : 'justify-start'} mt-2.5`}>
+                    {!isUser && <div className="grid h-6 w-6 shrink-0 place-items-center self-end rounded-full bg-gradient-to-br from-brand-300 to-brand-500 text-black"><Salad size={12} /></div>}
+                    <div
+                      className={`max-w-[82%] px-3.5 py-2.5 text-[14.5px] leading-snug ${isUser ? 'origin-bottom-right' : 'origin-bottom-left'} ${isLast ? 'animate-msg-pop' : ''} ${
+                        isUser
+                          ? 'rounded-[20px] rounded-br-md bg-brand-400 text-black'
+                          : 'rounded-[20px] rounded-bl-md bg-ink-700 text-white'
+                      }`}
+                    >
+                      {!isUser && m.topic && <p className="mb-1 text-[12.5px] font-bold text-brand-400">{m.topic}</p>}
+                      {m.text}
+                    </div>
+                  </div>
+                  {isUser && (
+                    <div className="mt-1 flex items-center justify-end gap-1 pr-1 text-[10.5px] font-medium text-white/35">
+                      {m.status === 'sending'
+                        ? <><Clock size={11} /> Sending</>
+                        : <><Check size={12} className="text-brand-400" /> Sent</>}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+
+            {typing && (
+              <div className="mt-2.5 flex items-end gap-1.5 justify-start">
+                <div className="grid h-6 w-6 shrink-0 place-items-center self-end rounded-full bg-gradient-to-br from-brand-300 to-brand-500 text-black"><Salad size={12} /></div>
+                <div className="flex items-center gap-1 rounded-[20px] rounded-bl-md bg-ink-700 px-4 py-3.5">
+                  <span className="typing-dot" />
+                  <span className="typing-dot" />
+                  <span className="typing-dot" />
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Quick-start chips */}
+          {showSuggestions && (
+            <div className="px-3 pb-2">
+              <p className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-wide text-white/35">Try asking</p>
+              <div className="flex flex-col gap-1.5">
+                <button
+                  onClick={() => inputRef.current?.focus()}
+                  className="flex items-center gap-2.5 rounded-2xl border border-white/8 bg-ink-800 px-3.5 py-2.5 text-left text-[13.5px] font-medium text-white/85 transition active:scale-[0.98] active:bg-ink-700"
+                >
+                  <Salad size={15} className="shrink-0 text-brand-400" />
+                  <span className="flex-1">Tell me what I ate today</span>
+                  <ChevronRight size={15} className="shrink-0 text-white/25" />
+                </button>
+                {STARTER_QUESTIONS.slice(0, 4).map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => send(s)}
+                    className="flex items-center gap-2.5 rounded-2xl border border-white/8 bg-ink-800 px-3.5 py-2.5 text-left text-[13.5px] font-medium text-white/85 transition active:scale-[0.98] active:bg-ink-700"
+                  >
+                    <Sparkles size={15} className="shrink-0 text-brand-400" />
+                    <span className="flex-1">{s}</span>
+                    <ChevronRight size={15} className="shrink-0 text-white/25" />
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Input */}
+          <div className="flex items-end gap-2 px-3 pb-3 pt-1.5" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 0.75rem)' }}>
+            <div className="flex flex-1 items-end rounded-[22px] bg-ink-800 px-1 py-1">
+              <textarea
+                ref={inputRef}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }}
+                rows={1}
+                placeholder="Tell me what you ate, or ask…"
+                className="max-h-28 min-h-[40px] flex-1 resize-none bg-transparent px-3.5 py-2 text-[15px] placeholder:text-white/30 focus:outline-none"
+              />
+            </div>
+            <button
+              onClick={() => send()}
+              disabled={!input.trim() || typing}
+              className={`grid h-11 w-11 shrink-0 place-items-center rounded-full text-black transition-all active:scale-90 ${input.trim() && !typing ? 'bg-brand-400 opacity-100' : 'scale-90 bg-brand-400/40 opacity-60'}`}
+            >
+              <Send size={18} />
+            </button>
+          </div>
+        </div>,
+        document.getElementById('app-frame') ?? document.body,
+      )}
+    </>
+  )
+}
+
+/* Entry point in the Coach tab: a compact DM-style preview that opens the
+   full-screen chat when tapped. */
+function NutritionCoachCard({ onOpen, onAsk }: { onOpen: () => void; onAsk: (q: string) => void }) {
+  return (
+    <div className="mt-4 overflow-hidden rounded-2xl border border-white/8 bg-ink-800 p-4">
+      <div className="flex items-center gap-3">
+        <div className="relative shrink-0">
+          <div className="grid h-11 w-11 place-items-center rounded-full bg-gradient-to-br from-brand-300 to-brand-500 text-black shadow-[0_2px_8px_-2px_rgba(126,217,87,0.5)]"><Salad size={20} /></div>
+          <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-brand-400 ring-2 ring-ink-800" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-[15px] font-bold leading-tight">Nutrition coach</p>
+          <p className="mt-0.5 text-[12.5px] leading-snug text-white/50">Tell me what you ate, or ask me anything</p>
+        </div>
       </div>
 
-      {review && !review.empty && <ReviewCard review={review} />}
+      <button
+        onClick={onOpen}
+        className="mt-3.5 flex w-full items-center gap-2 rounded-full border border-white/8 bg-ink-900/60 px-4 py-3 text-left transition active:scale-[0.99]"
+      >
+        <span className="flex-1 text-[14.5px] text-white/35">Message your coach…</span>
+        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-brand-400 text-black"><Send size={15} /></span>
+      </button>
 
-      {/* Ask anything */}
-      <AskBox />
-      <div className="h-2" />
-    </>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <button onClick={onOpen} className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[12.5px] font-medium text-white/70 active:bg-white/[0.1]">
+          🥗 Review what I ate
+        </button>
+        {STARTER_QUESTIONS.slice(0, 3).map((q) => (
+          <button key={q} onClick={() => onAsk(q)} className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[12.5px] font-medium text-white/70 active:bg-white/[0.1]">
+            {q}
+          </button>
+        ))}
+      </div>
+    </div>
   )
 }
 
@@ -135,23 +346,23 @@ function DayTagsCard() {
   )
 }
 
-function ReviewCard({ review }: { review: DayReview }) {
+/* Compact day-review rendered as a coach chat bubble. */
+function ReviewBubble({ review }: { review: DayReview }) {
   const tierVar: Record<string, string> = { great: '--brand-500', good: '--brand-400', moderate: '--accent-orange', limit: '--danger' }
   return (
-    <div className="mt-4 animate-screen-in rounded-2xl border border-white/8 bg-ink-800 p-5">
-      <div className="flex items-center gap-4">
-        <ProgressRing value={review.score * 10} size={84} stroke={8} color={review.score >= 5 ? 'rgb(var(--brand-400))' : 'rgb(var(--accent-orange))'}>
-          <span className="text-2xl font-extrabold leading-none">{review.score}</span>
-          <span className="text-[10px] text-white/45">/ 10</span>
+    <div className="rounded-[20px] rounded-bl-md bg-ink-700 p-3.5">
+      <div className="flex items-center gap-3">
+        <ProgressRing value={review.score * 10} size={58} stroke={6} color={review.score >= 5 ? 'rgb(var(--brand-400))' : 'rgb(var(--accent-orange))'}>
+          <span className="text-lg font-extrabold leading-none">{review.score}</span>
         </ProgressRing>
         <div className="min-w-0 flex-1">
-          <p className="text-lg font-extrabold leading-tight">{review.verdict}</p>
-          <p className="mt-1 text-[13px] leading-snug text-white/60">{review.summary}</p>
+          <p className="text-[15px] font-extrabold leading-tight">{review.verdict}</p>
+          <p className="mt-0.5 text-[12.5px] leading-snug text-white/60">{review.summary}</p>
         </div>
       </div>
 
       {review.found.length > 0 && (
-        <div className="mt-4 flex flex-wrap gap-1.5">
+        <div className="mt-3 flex flex-wrap gap-1.5">
           {review.found.map((f, i) => (
             <span key={i} className="rounded-full px-2.5 py-1 text-[11px] font-semibold" style={{ backgroundColor: `rgb(var(${tierVar[f.tier]}) / 0.14)`, color: `rgb(var(${tierVar[f.tier]}))` }}>
               {f.label}
@@ -161,12 +372,12 @@ function ReviewCard({ review }: { review: DayReview }) {
       )}
 
       {review.highlights.length > 0 && (
-        <div className="mt-4">
-          <p className="mb-2 text-[12px] font-bold uppercase tracking-wide text-white/40">What went well</p>
-          <ul className="space-y-2">
+        <div className="mt-3">
+          <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-white/40">What went well</p>
+          <ul className="space-y-1.5">
             {review.highlights.map((h, i) => (
-              <li key={i} className="flex items-start gap-2.5 text-[13px] leading-snug text-white/75">
-                <Check size={16} strokeWidth={3} className="mt-0.5 shrink-0 text-brand-400" /> {h}
+              <li key={i} className="flex items-start gap-2 text-[12.5px] leading-snug text-white/75">
+                <Check size={15} strokeWidth={3} className="mt-0.5 shrink-0 text-brand-400" /> {h}
               </li>
             ))}
           </ul>
@@ -174,69 +385,21 @@ function ReviewCard({ review }: { review: DayReview }) {
       )}
 
       {review.improvements.length > 0 && (
-        <div className="mt-4">
-          <p className="mb-2 text-[12px] font-bold uppercase tracking-wide text-white/40">Try this next</p>
-          <ul className="space-y-2">
+        <div className="mt-3">
+          <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-white/40">Try this next</p>
+          <ul className="space-y-1.5">
             {review.improvements.map((h, i) => (
-              <li key={i} className="flex items-start gap-2.5 text-[13px] leading-snug text-white/75">
-                <ArrowRight size={16} strokeWidth={2.5} className="mt-0.5 shrink-0 text-accent-orange" /> {h}
+              <li key={i} className="flex items-start gap-2 text-[12.5px] leading-snug text-white/75">
+                <ArrowRight size={15} strokeWidth={2.5} className="mt-0.5 shrink-0 text-accent-orange" /> {h}
               </li>
             ))}
           </ul>
         </div>
       )}
 
-      <div className="mt-4 flex items-start gap-2.5 rounded-xl bg-brand-400/10 p-3">
-        <Sparkles size={16} className="mt-0.5 shrink-0 text-brand-400" />
-        <p className="text-[13px] font-medium leading-snug text-white/80">{review.encouragement}</p>
-      </div>
-    </div>
-  )
-}
-
-function AskBox() {
-  const [q, setQ] = useState('')
-  const [result, setResult] = useState<QAResult | null>(null)
-
-  function ask(question?: string) {
-    const text = question ?? q
-    if (!text.trim()) return
-    setResult(question ? answerForQuestion(question) : answerQuestion(text))
-    if (question) setQ(question)
-  }
-
-  return (
-    <div className="mt-7">
-      <div className="mb-2 flex items-center gap-2">
-        <HelpCircle size={16} className="text-brand-400" />
-        <p className="text-[12px] font-bold uppercase tracking-[0.14em] text-white/40">Ask anything about food</p>
-      </div>
-      <div className="flex items-center gap-2 rounded-2xl border border-white/8 bg-ink-800 p-1.5">
-        <input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && ask()}
-          placeholder="How much protein do I need?"
-          className="min-w-0 flex-1 bg-transparent px-3 py-2 text-[15px] placeholder:text-white/30 focus:outline-none"
-        />
-        <button onClick={() => ask()} disabled={!q.trim()} className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand-400 text-black transition active:scale-90 disabled:opacity-40">
-          <Send size={17} />
-        </button>
-      </div>
-
-      {result && (
-        <div className="mt-3 animate-screen-in rounded-2xl border border-white/8 bg-ink-800 p-4">
-          {result.question && <p className="mb-1.5 text-[13px] font-bold text-brand-400">{result.question}</p>}
-          <p className="text-[14px] leading-relaxed text-white/80">{result.answer}</p>
-        </div>
-      )}
-
-      <div className="mt-3 flex flex-wrap gap-2">
-        {STARTER_QUESTIONS.map((sq) => (
-          <button key={sq} onClick={() => ask(sq)} className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[12px] font-medium text-white/70 active:bg-white/[0.1]">
-            {sq}
-          </button>
-        ))}
+      <div className="mt-3 flex items-start gap-2 rounded-xl bg-brand-400/10 p-2.5">
+        <Sparkles size={15} className="mt-0.5 shrink-0 text-brand-400" />
+        <p className="text-[12.5px] font-medium leading-snug text-white/80">{review.encouragement}</p>
       </div>
     </div>
   )
