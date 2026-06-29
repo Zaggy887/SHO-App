@@ -542,7 +542,9 @@ function BudgetTab() {
 
   return (
     <>
-      <div className="rounded-2xl border border-white/8 bg-ink-800 p-4">
+      <MyMealsTab />
+
+      <div className="mt-6 rounded-2xl border border-white/8 bg-ink-800 p-4">
         <Wallet size={22} className="text-brand-400" />
         <h3 className="mt-2 text-lg font-extrabold tracking-tight">Cheap food that tastes great</h3>
         <p className="mt-1 text-[13px] leading-snug text-white/60">Real meals on a student budget, matched to your goal. Cook once, eat for days.</p>
@@ -644,7 +646,6 @@ function BudgetTab() {
           </div>
         )}
       </div>
-      <MyMealsTab />
       <div className="h-2" />
     </>
   )
@@ -789,7 +790,7 @@ function MyMealsTab() {
 
   return (
     <>
-      <div className="mt-6">
+      <div>
         <SectionLabel>My meals</SectionLabel>
       </div>
       <div className="rounded-2xl border border-white/8 bg-ink-800 p-4">
