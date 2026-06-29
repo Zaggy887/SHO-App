@@ -14,6 +14,7 @@ import type {
   PostComment,
   Profile,
   Settings,
+  UserMeal,
   WorkoutSession,
 } from './types'
 
@@ -58,6 +59,8 @@ export type Action =
   | { type: 'COMPLETE_LESSON'; id: string }
   | { type: 'GIVE_KUDOS'; postId: string }
   | { type: 'CONNECT_PARTNER'; id: string }
+  | { type: 'ADD_MY_MEAL'; meal: Omit<UserMeal, 'id' | 'createdAtKey'> }
+  | { type: 'REMOVE_MY_MEAL'; id: string }
   | { type: 'RESET_DEMO' }
   | { type: 'RESET_EMPTY' }
 
@@ -312,6 +315,14 @@ function reducer(state: AppState, action: Action): AppState {
       const partners = state.partners.map((p) => (p.id === action.id ? { ...p, connected: !p.connected } : p))
       return { ...state, partners }
     }
+
+    case 'ADD_MY_MEAL': {
+      const meal: UserMeal = { ...action.meal, id: `um-${Date.now()}`, createdAtKey: todayKey }
+      return { ...state, myMeals: [...(state.myMeals ?? []), meal] }
+    }
+
+    case 'REMOVE_MY_MEAL':
+      return { ...state, myMeals: (state.myMeals ?? []).filter((m) => m.id !== action.id) }
 
     case 'RESET_DEMO':
       return buildSeed()

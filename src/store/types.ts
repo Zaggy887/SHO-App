@@ -328,6 +328,19 @@ export interface BudgetMeal {
   flavour?: string
 }
 
+/** A user-created recipe meal saved in "My Meals". */
+export interface UserMeal {
+  id: string
+  name: string
+  notes?: string
+  kcal: number
+  p: number
+  c: number
+  f: number
+  ingredients: string[]
+  createdAtKey: string
+}
+
 /** A lesson in the New to the Gym first-90-days track. */
 export interface BeginnerLesson {
   id: string
@@ -394,6 +407,8 @@ export interface AppState {
   photos: ProgressPhoto[]
   partners: PartnerCandidate[]
   coachThread: CoachMessage[]
+  /** user-created recipe meals */
+  myMeals?: UserMeal[]
   /** completed beginner-track lesson ids */
   beginnerProgress: string[]
   /** schema version for migrations */
