@@ -315,9 +315,6 @@ function DayTagsCard() {
   return (
     <div className="rounded-2xl bg-ink-800 p-5">
       <p className="text-center text-[17px] font-bold leading-tight">How Did Today Go?</p>
-      <p className="mt-2 text-center text-[13px] leading-snug text-white/50">
-        Tap what happened. It shows up on your dashboard — no typing needed.
-      </p>
       <div className="mt-4 grid grid-cols-3 gap-2">
         {NUTRITION_TAGS.map((tag) => {
           const on = selected.includes(tag.id)
