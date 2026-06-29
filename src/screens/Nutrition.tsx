@@ -54,8 +54,6 @@ const nextId = () => `nc${++msgSeq}`
 function CoachTab() {
   const { state, dispatch } = useStore()
   const goal = state.profile.goal
-  const guide = GOAL_GUIDES[goal]
-
   const [open, setOpen] = useState(false)
   const [closing, setClosing] = useState(false)
   const [messages, setMessages] = useState<ChatMsg[]>([])
@@ -122,12 +120,6 @@ function CoachTab() {
     <>
       {/* Quick day tags — fast, tap-only "how did today go" */}
       <DayTagsCard />
-
-      {/* Goal context */}
-      <div className="mt-4 flex items-center gap-2.5 rounded-2xl border border-brand-400/20 bg-brand-400/[0.06] px-4 py-3">
-        <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-brand-400 text-black"><Sparkles size={15} /></span>
-        <p className="text-[13px] font-semibold leading-snug text-brand-400">{guide.headline}</p>
-      </div>
 
       {/* Unified nutrition coach: one chat for "what I ate" and "ask anything" */}
       <NutritionCoachCard onOpen={() => openChat()} onAsk={(q) => openChat(q)} />
