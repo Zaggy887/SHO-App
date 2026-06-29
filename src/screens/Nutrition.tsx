@@ -296,7 +296,7 @@ function NutritionCoachCard({ onOpen, onAsk }: { onOpen: () => void; onAsk: (q: 
 
       <div className="mt-3 flex flex-wrap gap-2">
         <button onClick={onOpen} className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[12.5px] font-medium text-white/70 active:bg-white/[0.1]">
-          🥗 Review what I ate
+          Are sanwhiches healthy?
         </button>
         {STARTER_QUESTIONS.slice(0, 3).map((q) => (
           <button key={q} onClick={() => onAsk(q)} className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[12.5px] font-medium text-white/70 active:bg-white/[0.1]">
