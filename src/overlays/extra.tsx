@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import {
-  Sparkles, Check, CheckCheck, ChevronRight, ChevronDown, Wallet, Trophy, Flame,
+  Sparkles, Check, CheckCheck, ChevronRight, ChevronDown, Salad, Trophy, Flame,
   GraduationCap, Dumbbell, Lightbulb, ShieldQuestion, Share2, Plus, MapPin, Phone,
   Send, Video, Lock, Crown, Clock, Repeat, Heart, MessageCircle, Award, Swords, Users, X,
 } from 'lucide-react'
@@ -136,14 +136,6 @@ export function BudgetEatsSheet({ open, onClose }: Props) {
   const { dispatch } = useStore()
   const toast = useToast()
   const [openId, setOpenId] = useState<string | null>(null)
-  const [showList, setShowList] = useState(false)
-
-  const grocery = (() => {
-    const map = new Map<string, number>()
-    for (const m of BUDGET_MEALS) for (const ing of m.ingredients) map.set(ing.item, (map.get(ing.item) ?? 0) + ing.cost)
-    return [...map.entries()]
-  })()
-  const weekTotal = grocery.reduce((a, [, c]) => a + c, 0)
 
   function logMeal(id: string) {
     const m = BUDGET_MEALS.find((x) => x.id === id)!
@@ -152,34 +144,12 @@ export function BudgetEatsSheet({ open, onClose }: Props) {
   }
 
   return (
-    <Sheet open={open} onClose={onClose} title="Eat well for less">
+    <Sheet open={open} onClose={onClose} title="Easy recipes">
       <div className="rounded-3xl border border-white/8 bg-ink-800 p-5">
-        <Wallet size={26} className="text-brand-400" />
-        <h3 className="mt-2 text-xl font-extrabold tracking-tight">Cheap, high protein, fast</h3>
-        <p className="mt-1 text-[14px] leading-snug text-white/60">Real meals for a student budget, with rough costs. Cook once, eat across a couple of days.</p>
+        <Salad size={26} className="text-brand-400" />
+        <h3 className="mt-2 text-xl font-extrabold tracking-tight">Tasty, simple, cheap</h3>
+        <p className="mt-1 text-[14px] leading-snug text-white/60">Easy meals with every step laid out. Pick one and cook along.</p>
       </div>
-
-      <button onClick={() => setShowList((v) => !v)} className="mt-4 flex w-full items-center gap-3 rounded-2xl border border-white/5 bg-ink-800 p-4 text-left">
-        <div className="grid h-10 w-10 place-items-center rounded-xl bg-brand-400/15 text-brand-400 font-bold text-sm">${weekTotal.toFixed(0)}</div>
-        <div className="flex-1">
-          <p className="font-bold leading-tight">This week's grocery list</p>
-          <p className="text-[12px] text-white/50">Everything for all meals below</p>
-        </div>
-        <ChevronDown size={18} className={`text-white/30 transition-transform ${showList ? 'rotate-180' : ''}`} />
-      </button>
-      {showList && (
-        <div className="mt-2 rounded-2xl border border-white/5 bg-ink-800 p-4">
-          {grocery.map(([item, cost]) => (
-            <div key={item} className="flex items-center justify-between border-b border-white/5 py-2 text-[13px] last:border-0">
-              <span className="text-white/70">{item}</span>
-              <span className="font-semibold text-white/50">${cost.toFixed(2)}</span>
-            </div>
-          ))}
-          <div className="mt-2 flex items-center justify-between text-[14px] font-bold">
-            <span>Estimated total</span><span className="text-brand-400">${weekTotal.toFixed(2)}</span>
-          </div>
-        </div>
-      )}
 
       <div className="mt-4 space-y-2.5">
         {BUDGET_MEALS.map((m) => {
@@ -190,21 +160,22 @@ export function BudgetEatsSheet({ open, onClose }: Props) {
                 <img src={m.image} alt="" className="h-14 w-14 rounded-xl object-cover" loading="lazy" />
                 <div className="min-w-0 flex-1">
                   <p className="font-bold leading-tight">{m.name}</p>
-                  <p className="text-[12px] text-white/50">{m.kcal} kcal · {m.p}g protein</p>
+                  <p className="text-[12px] text-white/50">{m.minutes} min · serves {m.serves}</p>
                   <div className="mt-1 flex flex-wrap gap-1">{m.tags.slice(0, 2).map((t) => <Chip key={t} color="green">{t}</Chip>)}</div>
                 </div>
-                <div className="text-right">
-                  <p className="font-extrabold text-brand-400">${m.cost.toFixed(2)}</p>
-                  <p className="text-[10px] text-white/40">per serve</p>
-                </div>
+                <ChevronDown size={18} className={`shrink-0 text-white/30 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
               </button>
               {isOpen && (
                 <div className="space-y-3 border-t border-white/5 px-4 py-3 text-[14px]">
                   <div>
                     <p className="mb-1 text-[12px] font-bold uppercase tracking-wide text-white/40">Ingredients</p>
-                    {m.ingredients.map((ing) => (
-                      <div key={ing.item} className="flex justify-between py-0.5 text-white/70"><span>{ing.item}</span><span className="text-white/45">${ing.cost.toFixed(2)}</span></div>
-                    ))}
+                    <ul className="space-y-1">
+                      {m.ingredients.map((ing) => (
+                        <li key={ing} className="flex items-start gap-2 text-white/70">
+                          <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-brand-400" /> {ing}
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                   <div>
                     <p className="mb-1 text-[12px] font-bold uppercase tracking-wide text-white/40">Method</p>

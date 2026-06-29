@@ -2,7 +2,7 @@ import { useMemo, useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import {
   Sparkles, Send, Check, ArrowRight, ChevronDown, ChevronRight, Clock,
-  Droplet, Plus, Trash2, Share2, Wallet, Search, Lightbulb, Salad, X,
+  Droplet, Plus, Trash2, Share2, Search, Lightbulb, Salad, X,
 } from 'lucide-react'
 import { Icon } from '../components/Icon'
 import { ProgressRing, SegmentedTabs, ScreenHeader } from '../components/ui'
@@ -16,7 +16,7 @@ import { todayHabit, nutritionTagsForDay } from '../store/selectors'
 import { dailyTargets } from '../store/training'
 import { fmtFluid, pct } from '../lib/format'
 import { coachRespond, STARTER_QUESTIONS, type DayReview } from '../lib/nutritionCoach'
-import type { Goal, MealName } from '../store/types'
+import type { MealName, MealCategory } from '../store/types'
 
 const TABS = ['Coach', 'Help', 'Eats', 'My Meal Plan']
 const PLAN_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
@@ -496,65 +496,41 @@ function LearnTab() {
   )
 }
 
-/* ============================ Budget tab ============================ */
-const GOAL_FILTERS: { label: string; goal: Goal | 'all' }[] = [
-  { label: 'All', goal: 'all' },
-  { label: 'Build muscle', goal: 'build-muscle' },
-  { label: 'Lose fat', goal: 'lose-fat' },
-  { label: 'Strength', goal: 'gain-strength' },
-  { label: 'Healthy', goal: 'stay-healthy' },
-]
+/* ============================ Eats tab ============================ */
+const MEAL_CATEGORIES: (MealCategory | 'All')[] = ['All', 'Breakfast', 'Lunch', 'Dinner', 'Snack', 'Sweet']
 
 function BudgetTab() {
-  const { state } = useStore()
   const toast = useToast()
-  const [filter, setFilter] = useState<Goal | 'all'>(state.profile.goal)
+  const [cat, setCat] = useState<MealCategory | 'All'>('All')
   const [q, setQ] = useState('')
   const [openId, setOpenId] = useState<string | null>(null)
 
   const meals = useMemo(() => {
     return BUDGET_MEALS.filter((m) => {
-      const goalOk = filter === 'all' || (m.goals?.includes(filter) ?? false)
+      const catOk = cat === 'All' || m.category === cat
       const qOk = !q || m.name.toLowerCase().includes(q.toLowerCase()) || (m.flavour ?? '').toLowerCase().includes(q.toLowerCase())
-      return goalOk && qOk
+      return catOk && qOk
     })
-  }, [filter, q])
-
-  const grocery = useMemo(() => {
-    const map = new Map<string, number>()
-    for (const m of meals) for (const ing of m.ingredients) map.set(ing.item, (map.get(ing.item) ?? 0) + ing.cost)
-    return [...map.entries()]
-  }, [meals])
-  const [showList, setShowList] = useState(false)
-  const weekTotal = grocery.reduce((a, [, c]) => a + c, 0)
-
-  async function exportList() {
-    const lines = grocery.map(([item, cost]) => `• ${item}: $${cost.toFixed(2)}`).join('\n')
-    const txt = `🛒 Shopping list (${meals.length} meals) · ~$${weekTotal.toFixed(2)}\n\n${lines}`
-    try {
-      if (navigator.share) await navigator.share({ text: txt })
-      else { await navigator.clipboard.writeText(txt); toast('Shopping list copied') }
-    } catch { /* cancelled */ }
-  }
+  }, [cat, q])
 
   return (
     <>
       <MyMealsTab />
 
       <div className="mt-6 rounded-2xl border border-white/8 bg-ink-800 p-4">
-        <Wallet size={22} className="text-brand-400" />
-        <h3 className="mt-2 text-lg font-extrabold tracking-tight">Cheap food that tastes great</h3>
-        <p className="mt-1 text-[13px] leading-snug text-white/60">Real meals on a student budget, matched to your goal. Cook once, eat for days.</p>
+        <Salad size={22} className="text-brand-400" />
+        <h3 className="mt-2 text-lg font-extrabold tracking-tight">Easy recipes worth cooking</h3>
+        <p className="mt-1 text-[13px] leading-snug text-white/60">Simple, tasty meals with every step laid out. Pick one and cook along.</p>
       </div>
 
-      {/* Goal filter */}
+      {/* Category filter */}
       <div className="no-scrollbar -mx-5 mt-4 overflow-x-auto px-5">
         <div className="flex gap-2">
-          {GOAL_FILTERS.map((g) => {
-            const active = filter === g.goal
+          {MEAL_CATEGORIES.map((c) => {
+            const active = cat === c
             return (
-              <button key={g.label} onClick={() => setFilter(g.goal)} className={`shrink-0 rounded-full px-3.5 py-2 text-[13px] font-semibold transition ${active ? 'bg-brand-400 text-black' : 'border border-white/10 bg-white/[0.04] text-white/70'}`}>
-                {g.label}
+              <button key={c} onClick={() => setCat(c)} className={`shrink-0 rounded-full px-3.5 py-2 text-[13px] font-semibold transition ${active ? 'bg-brand-400 text-black' : 'border border-white/10 bg-white/[0.04] text-white/70'}`}>
+                {c}
               </button>
             )
           })}
@@ -564,35 +540,11 @@ function BudgetTab() {
       {/* Search */}
       <div className="mt-3 flex items-center gap-2 rounded-xl border border-white/8 bg-ink-800 px-3">
         <Search size={16} className="text-white/35" />
-        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search meals…" className="w-full bg-transparent py-2.5 text-sm placeholder:text-white/30 focus:outline-none" />
+        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search recipes…" className="w-full bg-transparent py-2.5 text-sm placeholder:text-white/30 focus:outline-none" />
       </div>
 
-      {/* Grocery list */}
-      {meals.length > 0 && (
-        <>
-          <button onClick={() => setShowList((v) => !v)} className="mt-3 flex w-full items-center gap-3 rounded-2xl border border-white/5 bg-ink-800 p-3.5 text-left">
-            <div className="grid h-9 w-9 place-items-center rounded-xl bg-brand-400/15 text-sm font-bold text-brand-400">${weekTotal.toFixed(0)}</div>
-            <div className="flex-1"><p className="text-sm font-bold leading-tight">Shopping list for these meals</p><p className="text-[12px] text-white/50">Rough total for everything below</p></div>
-            <ChevronDown size={18} className={`text-white/30 transition-transform ${showList ? 'rotate-180' : ''}`} />
-          </button>
-          {showList && (
-            <div className="mt-2 rounded-2xl border border-white/5 bg-ink-800 p-4">
-              {grocery.map(([item, cost]) => (
-                <div key={item} className="flex items-center justify-between border-b border-white/5 py-2 text-[13px] last:border-0">
-                  <span className="text-white/70">{item}</span><span className="font-semibold text-white/50">${cost.toFixed(2)}</span>
-                </div>
-              ))}
-              <div className="mt-2 flex items-center justify-between text-[14px] font-bold"><span>Estimated total</span><span className="text-brand-400">${weekTotal.toFixed(2)}</span></div>
-              <button onClick={exportList} className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-brand-400/15 py-2.5 text-sm font-semibold text-brand-400 active:bg-brand-400/25">
-                <Share2 size={15} /> Copy / share list
-              </button>
-            </div>
-          )}
-        </>
-      )}
-
-      {/* Meal cards */}
-      <p className="mt-4 text-[12px] font-bold uppercase tracking-[0.14em] text-white/35">{meals.length} {meals.length === 1 ? 'meal' : 'meals'}</p>
+      {/* Recipe cards */}
+      <p className="mt-4 text-[12px] font-bold uppercase tracking-[0.14em] text-white/35">{meals.length} {meals.length === 1 ? 'recipe' : 'recipes'}</p>
       <div className="mt-2 space-y-2.5">
         {meals.map((m) => {
           const open = openId === m.id
@@ -603,12 +555,13 @@ function BudgetTab() {
                 <div className="min-w-0 flex-1">
                   <p className="font-bold leading-tight">{m.name}</p>
                   {m.flavour && <p className="mt-0.5 line-clamp-2 text-[12px] leading-snug text-white/55">{m.flavour}</p>}
-                  <p className="mt-1 text-[12px] font-semibold text-brand-400">{m.kcal} kcal · {m.p}g protein</p>
+                  <p className="mt-1 flex items-center gap-2 text-[12px] font-semibold text-brand-400">
+                    <span className="inline-flex items-center gap-1"><Clock size={12} /> {m.minutes} min</span>
+                    <span className="text-white/25">·</span>
+                    <span>Serves {m.serves}</span>
+                  </p>
                 </div>
-                <div className="text-right">
-                  <p className="font-extrabold text-brand-400">${m.cost.toFixed(2)}</p>
-                  <p className="text-[10px] text-white/40">per serve</p>
-                </div>
+                <ChevronDown size={18} className={`shrink-0 text-white/30 transition-transform ${open ? 'rotate-180' : ''}`} />
               </button>
               {open && (
                 <div className="space-y-3 border-t border-white/5 px-4 py-3.5 text-[14px]">
@@ -616,20 +569,40 @@ function BudgetTab() {
                     {m.tags.map((t) => <span key={t} className="rounded-full bg-brand-400/15 px-2.5 py-1 text-[11px] font-semibold text-brand-300">{t}</span>)}
                   </div>
                   <div>
-                    <p className="mb-1 text-[12px] font-bold uppercase tracking-wide text-white/40">Ingredients</p>
-                    {m.ingredients.map((ing) => (
-                      <div key={ing.item} className="flex justify-between py-0.5 text-white/70"><span>{ing.item}</span><span className="text-white/45">${ing.cost.toFixed(2)}</span></div>
-                    ))}
+                    <p className="mb-1.5 text-[12px] font-bold uppercase tracking-wide text-white/40">Ingredients</p>
+                    <ul className="space-y-1">
+                      {m.ingredients.map((ing) => (
+                        <li key={ing} className="flex items-start gap-2 text-white/70">
+                          <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-brand-400" /> {ing}
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                   <div>
-                    <p className="mb-1 text-[12px] font-bold uppercase tracking-wide text-white/40">Method</p>
-                    <ol className="list-decimal space-y-1 pl-4 text-white/70">{m.steps.map((s, i) => <li key={i}>{s}</li>)}</ol>
+                    <p className="mb-1.5 text-[12px] font-bold uppercase tracking-wide text-white/40">Method</p>
+                    <ol className="space-y-2">
+                      {m.steps.map((s, i) => (
+                        <li key={i} className="flex items-start gap-2.5 text-white/75">
+                          <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-brand-400/15 text-[11px] font-bold text-brand-400">{i + 1}</span>
+                          <span className="leading-snug">{s}</span>
+                        </li>
+                      ))}
+                    </ol>
                   </div>
                   {m.cookOnce && (
                     <div className="flex gap-2 rounded-xl bg-brand-400/10 p-3 text-[13px] text-white/70">
                       <Lightbulb size={16} className="shrink-0 text-brand-400" /> {m.cookOnce}
                     </div>
                   )}
+                  <button
+                    onClick={() => {
+                      const txt = `${m.name}\n\nIngredients\n${m.ingredients.map((i) => `- ${i}`).join('\n')}\n\nMethod\n${m.steps.map((s, i) => `${i + 1}. ${s}`).join('\n')}`
+                      navigator.clipboard?.writeText(txt).then(() => toast('Recipe copied')).catch(() => {})
+                    }}
+                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-400/15 py-2.5 text-sm font-semibold text-brand-400 active:bg-brand-400/25"
+                  >
+                    <Share2 size={15} /> Copy recipe
+                  </button>
                 </div>
               )}
             </div>
@@ -638,8 +611,8 @@ function BudgetTab() {
         {meals.length === 0 && (
           <div className="flex flex-col items-center rounded-2xl border border-dashed border-white/12 px-6 py-10 text-center">
             <Salad size={26} className="text-white/30" />
-            <p className="mt-2 text-sm font-semibold text-white/60">No meals match that</p>
-            <p className="mt-1 text-[12px] text-white/40">Try another goal filter or clear your search.</p>
+            <p className="mt-2 text-sm font-semibold text-white/60">No recipes match that</p>
+            <p className="mt-1 text-[12px] text-white/40">Try another category or clear your search.</p>
           </div>
         )}
       </div>

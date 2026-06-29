@@ -307,24 +307,27 @@ export interface QuickWorkout {
   exercises: string[]
 }
 
-/** Cheap, high-protein meals built for a student budget. */
+/** Recipe categories used to filter the Eats browser. */
+export type MealCategory = 'Breakfast' | 'Lunch' | 'Dinner' | 'Snack' | 'Sweet'
+
+/** Easy, tasty, budget-friendly recipes with full step-by-step method. */
 export interface BudgetMeal {
   id: string
   name: string
   image: string
-  cost: number
+  category: MealCategory
+  /** Total hands-on + cook time, in minutes. */
+  minutes: number
   serves: number
   kcal: number
   p: number
   c: number
   f: number
-  ingredients: { item: string; cost: number }[]
+  ingredients: string[]
   steps: string[]
   cookOnce?: string
   tags: string[]
-  /** Which goals this meal suits best, for filtering. */
-  goals?: Goal[]
-  /** One-line "why it tastes good / why it fits" note. */
+  /** One-line "why it tastes good" note. */
   flavour?: string
 }
 
