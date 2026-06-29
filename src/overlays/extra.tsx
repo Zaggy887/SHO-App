@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import {
-  Sparkles, Check, CheckCheck, ChevronRight, ChevronLeft, ChevronDown, Wallet, Trophy, Flame,
-  GraduationCap, Dumbbell, Lightbulb, ShieldQuestion, Share2, Plus, MapPin, Phone,
-  Send, Video, Lock, Crown, Clock, Repeat, Heart, MessageCircle, Award, Swords, Users,
+  Sparkles, Check, ChevronRight, ChevronDown, Wallet, Trophy, Flame,
+  GraduationCap, Dumbbell, Lightbulb, ShieldQuestion, Share2, Plus, MapPin,
+  Send, Video, Lock, Crown, X, Clock, Repeat, Heart, MessageCircle, Award, Swords, Users,
 } from 'lucide-react'
 import { Sheet } from '../components/Sheet'
 import { Avatar } from '../components/Avatar'
@@ -427,31 +427,23 @@ export function CoachChatSheet({ open, onClose }: Props) {
     toast('Video call booked')
   }
 
-  // Find the last message the user sent, to show a Seen / Delivered receipt.
-  let lastUserIdx = -1
-  for (let i = messages.length - 1; i >= 0; i--) { if (messages[i].role === 'user') { lastUserIdx = i; break } }
-  const seen = lastUserIdx >= 0 && messages.slice(lastUserIdx + 1).some((m) => m.role === 'coach')
-
   return (
     <div className="absolute inset-0 z-50 flex flex-col bg-ink-900 text-white" style={{ paddingTop: 'env(safe-area-inset-top)', animation: 'screen-in 0.28s cubic-bezier(0.22,1,0.36,1)' }}>
       {/* Header */}
-      <div className="relative flex items-center gap-2.5 px-3 py-2.5">
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-brand-400/[0.07] to-transparent" />
-        <button onClick={onClose} className="relative grid h-9 w-9 shrink-0 place-items-center rounded-full text-brand-400 active:bg-white/10"><ChevronLeft size={26} /></button>
-        <div className="relative shrink-0">
-          <div className="grid h-9 w-9 place-items-center rounded-full bg-gradient-to-br from-brand-300 to-brand-500 text-black shadow-[0_2px_8px_-2px_rgba(126,217,87,0.5)]"><Sparkles size={18} /></div>
+      <div className="flex items-center gap-3 border-b border-white/8 px-4 py-3">
+        <button onClick={onClose} className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/8 text-white/70 active:bg-white/15"><X size={18} /></button>
+        <div className="relative">
+          <div className="grid h-10 w-10 place-items-center rounded-full bg-brand-400 text-black"><Sparkles size={20} /></div>
           <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-brand-400 ring-2 ring-ink-900" />
         </div>
-        <div className="relative min-w-0 flex-1">
-          <p className="truncate text-[15px] font-bold leading-tight">Coach</p>
-          <p className="text-[12px] leading-tight text-white/45">Active now</p>
+        <div className="min-w-0 flex-1">
+          <p className="font-bold leading-tight">Coach</p>
+          <p className="text-[12px] text-brand-400">Online · usually replies instantly</p>
         </div>
-        <button className="relative grid h-9 w-9 shrink-0 place-items-center rounded-full text-brand-400 active:bg-white/10"><Phone size={20} /></button>
-        <button onClick={() => setShowBook((v) => !v)} className="relative grid h-9 w-9 shrink-0 place-items-center rounded-full text-brand-400 active:bg-white/10">
-          <Video size={21} />
+        <button onClick={() => setShowBook((v) => !v)} className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand-400/15 text-brand-400 active:bg-brand-400/25">
+          <Video size={18} />
         </button>
       </div>
-      <div className="h-px bg-white/[0.06]" />
 
       {/* Book-a-call panel */}
       {showBook && (
@@ -494,61 +486,18 @@ export function CoachChatSheet({ open, onClose }: Props) {
       )}
 
       {/* Messages */}
-      <div ref={scrollRef} className="no-scrollbar flex-1 overflow-y-auto px-3 pb-3 pt-2">
-        {/* Thread intro — gives the empty thread warmth, like IG/Messenger */}
-        <div className="flex flex-col items-center px-6 pb-5 pt-4 text-center">
-          <div className="relative">
-            <div className="grid h-[68px] w-[68px] place-items-center rounded-full bg-gradient-to-br from-brand-300 to-brand-500 text-black shadow-[0_6px_20px_-6px_rgba(126,217,87,0.6)]"><Sparkles size={32} /></div>
-            <span className="absolute bottom-1 right-1 h-3.5 w-3.5 rounded-full bg-brand-400 ring-[3px] ring-ink-900" />
-          </div>
-          <p className="mt-3 text-[17px] font-bold">Coach</p>
-          <p className="mt-0.5 max-w-[15rem] text-[13px] leading-snug text-white/45">Your personal AI strength &amp; nutrition coach. Ask me anything about your training.</p>
-        </div>
-
-        {messages.map((m, i) => {
-          const prev = messages[i - 1]
-          const next = messages[i + 1]
-          const isUser = m.role === 'user'
-          const firstInRun = !prev || prev.role !== m.role
-          const lastInRun = !next || next.role !== m.role
-          const showDay = !prev || prev.dateKey !== m.dateKey
-          const isLast = i === messages.length - 1
-          return (
-            <div key={m.id}>
-              {showDay && (
-                <div className="py-3 text-center text-[11px] font-semibold uppercase tracking-wide text-white/30">
-                  {relativeLabel(m.dateKey)} · {m.time}
-                </div>
-              )}
-              <div className={`flex items-end gap-1.5 ${isUser ? 'justify-end' : 'justify-start'} ${firstInRun ? 'mt-2.5' : 'mt-0.5'}`}>
-                {!isUser && (
-                  lastInRun
-                    ? <div className="grid h-6 w-6 shrink-0 place-items-center self-end rounded-full bg-gradient-to-br from-brand-300 to-brand-500 text-black"><Sparkles size={12} /></div>
-                    : <div className="w-6 shrink-0" />
-                )}
-                <div
-                  className={`max-w-[76%] px-3.5 py-2.5 text-[14.5px] leading-snug ${isLast ? 'animate-fade-up' : ''} ${
-                    isUser
-                      ? `bg-brand-400 text-black ${lastInRun ? 'rounded-[20px] rounded-br-md' : 'rounded-[20px]'}`
-                      : `bg-ink-700 text-white ${lastInRun ? 'rounded-[20px] rounded-bl-md' : 'rounded-[20px]'}`
-                  }`}
-                >
-                  {m.text}
-                </div>
-              </div>
-              {isUser && i === lastUserIdx && (
-                <div className="mt-1 flex items-center justify-end gap-1 pr-1 text-[10.5px] font-medium text-white/35">
-                  {seen ? <><CheckCheck size={12} className="text-brand-400" /> Seen</> : <><Check size={12} /> Delivered</>}
-                </div>
-              )}
+      <div ref={scrollRef} className="no-scrollbar flex-1 space-y-3 overflow-y-auto px-4 py-4">
+        {messages.map((m) => (
+          <div key={m.id} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+            <div className={`max-w-[82%] rounded-2xl px-3.5 py-2.5 text-[14px] leading-snug ${m.role === 'user' ? 'rounded-br-md bg-brand-400 text-black' : 'rounded-bl-md border border-white/8 bg-ink-800 text-white/85'}`}>
+              {m.text}
+              <span className={`mt-1 block text-[10px] ${m.role === 'user' ? 'text-black/50' : 'text-white/35'}`}>{m.time}</span>
             </div>
-          )
-        })}
-
+          </div>
+        ))}
         {typing && (
-          <div className="mt-2.5 flex items-end gap-1.5 justify-start">
-            <div className="grid h-6 w-6 shrink-0 place-items-center self-end rounded-full bg-gradient-to-br from-brand-300 to-brand-500 text-black"><Sparkles size={12} /></div>
-            <div className="flex items-center gap-1 rounded-[20px] rounded-bl-md bg-ink-700 px-4 py-3.5">
+          <div className="flex justify-start">
+            <div className="flex items-center gap-1 rounded-2xl rounded-bl-md border border-white/8 bg-ink-800 px-4 py-3.5">
               <span className="typing-dot" />
               <span className="typing-dot" />
               <span className="typing-dot" />
@@ -557,43 +506,26 @@ export function CoachChatSheet({ open, onClose }: Props) {
         )}
       </div>
 
-      {/* Suggested questions — premium quick-start chips */}
+      {/* Suggestions */}
       {showSuggestions && !typing && (
-        <div className="px-3 pb-2">
-          <p className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-wide text-white/35">Ask your coach</p>
-          <div className="flex flex-col gap-1.5">
-            {CHAT_SUGGESTIONS.map((s) => (
-              <button
-                key={s}
-                onClick={() => send(s)}
-                className="flex items-center gap-2.5 rounded-2xl border border-white/8 bg-ink-800 px-3.5 py-2.5 text-left text-[13.5px] font-medium text-white/85 transition active:scale-[0.98] active:bg-ink-700"
-              >
-                <Sparkles size={15} className="shrink-0 text-brand-400" />
-                <span className="flex-1">{s}</span>
-                <ChevronRight size={15} className="shrink-0 text-white/25" />
-              </button>
-            ))}
-          </div>
+        <div className="no-scrollbar flex gap-2 overflow-x-auto px-4 pb-2">
+          {CHAT_SUGGESTIONS.map((s) => (
+            <button key={s} onClick={() => send(s)} className="shrink-0 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[12px] font-medium text-white/70 active:bg-white/[0.1]">{s}</button>
+          ))}
         </div>
       )}
 
       {/* Input */}
-      <div className="flex items-end gap-2 px-3 pb-3 pt-1.5" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 0.75rem)' }}>
-        <div className="flex flex-1 items-end rounded-[22px] bg-ink-800 px-1 py-1">
-          <textarea
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }}
-            rows={1}
-            placeholder="Message…"
-            className="max-h-28 min-h-[40px] flex-1 resize-none bg-transparent px-3.5 py-2 text-[15px] placeholder:text-white/30 focus:outline-none"
-          />
-        </div>
-        <button
-          onClick={() => send()}
-          disabled={!text.trim() || typing}
-          className={`grid h-11 w-11 shrink-0 place-items-center rounded-full text-black transition-all active:scale-90 ${text.trim() && !typing ? 'bg-brand-400 opacity-100' : 'scale-90 bg-brand-400/40 opacity-60'}`}
-        >
+      <div className="flex items-end gap-2 border-t border-white/8 px-3 py-3" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 0.75rem)' }}>
+        <textarea
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }}
+          rows={1}
+          placeholder="Message your coach…"
+          className="max-h-28 min-h-[44px] flex-1 resize-none rounded-2xl border border-white/8 bg-ink-800 px-4 py-3 text-[15px] placeholder:text-white/30 focus:border-brand-400/60 focus:outline-none"
+        />
+        <button onClick={() => send()} disabled={!text.trim() || typing} className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-brand-400 text-black transition active:scale-90 disabled:opacity-40">
           <Send size={18} />
         </button>
       </div>

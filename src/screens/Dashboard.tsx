@@ -10,9 +10,8 @@ import { currentWeekKeys, todayKey, longDate, shortDate, fromKey, TODAY } from '
 import { fmtFluid, fmtWeightNum, weightUnit, fmtVolume, pct } from '../lib/format'
 import {
   todayHabit, habitForDay, todaySession, sessionForDay, activitiesForDay, weightStats, regularWorkoutsInWeek,
-  strengthProgress, unreadChat, streakStats, foodReviewForDay, weeklyIndex, nutritionTagsForDay,
+  strengthProgress, unreadChat, streakStats, foodReviewForDay, weeklyIndex,
 } from '../store/selectors'
-import { tagById, TAG_TONE_VAR } from '../data/nutrition'
 import { coachDaily } from '../store/coach'
 import { dailyTargets, examState } from '../store/training'
 import { Wordmark } from '../components/Logo'
@@ -64,7 +63,6 @@ export default function Dashboard() {
   const selHabit = habitForDay(state, selDate)
   const selSession = sessionForDay(state, selDate)
   const selActivities = activitiesForDay(state, selDate)
-  const selTags = nutritionTagsForDay(state, selDate)
   const selWeekday = FULL_WD[fromKey(selDate).getDay()]
   const selTitle = isToday ? "Today's progress" : `${selWeekday}'s progress`
 
@@ -281,38 +279,6 @@ export default function Dashboard() {
               </div>
             ))}
           </button>
-
-          {/* Nutrition day tags chosen for this date */}
-          <div className="mt-4 border-t border-white/[0.06] pt-3.5">
-            <div className="mb-2 flex items-center gap-2">
-              <Leaf size={14} className="text-brand-400" />
-              <p className="text-[12px] font-bold uppercase tracking-wide text-white/40">Food check-in</p>
-            </div>
-            {selTags.length > 0 ? (
-              <div className="flex flex-wrap gap-1.5">
-                {selTags.map((id) => {
-                  const tag = tagById(id)
-                  if (!tag) return null
-                  const v = TAG_TONE_VAR[tag.tone]
-                  return (
-                    <span
-                      key={id}
-                      className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[12px] font-semibold"
-                      style={{ backgroundColor: `rgb(var(${v}) / 0.14)`, color: `rgb(var(${v}))` }}
-                    >
-                      <span>{tag.emoji}</span> {tag.label}
-                    </span>
-                  )
-                })}
-              </div>
-            ) : isToday ? (
-              <button onClick={() => nav.goTab('nutrition')} className="text-[13px] font-semibold text-brand-400 active:opacity-70">
-                Tag how your eating went →
-              </button>
-            ) : (
-              <p className="text-[13px] text-white/35">No food tags for this day</p>
-            )}
-          </div>
         </div>
       </Reveal>
 

@@ -8,10 +8,10 @@ import { ProgressRing, SegmentedTabs, ScreenHeader } from '../components/ui'
 import { useStore } from '../store/store'
 import { useToast } from '../components/Toast'
 import {
-  PLATE_GUIDE, FOOD_TIERS, GOAL_GUIDES, NUTRITION_LESSONS, NUTRITION_TAGS, TAG_TONE_VAR,
+  PLATE_GUIDE, FOOD_TIERS, GOAL_GUIDES, NUTRITION_LESSONS,
 } from '../data/nutrition'
 import { BUDGET_MEALS, FOODS } from '../data/catalog'
-import { foodReviewForDay, todayHabit, nutritionTagsForDay } from '../store/selectors'
+import { foodReviewForDay, todayHabit } from '../store/selectors'
 import { dailyTargets } from '../store/training'
 import { fmtFluid, pct } from '../lib/format'
 import {
@@ -58,11 +58,8 @@ function CoachTab() {
 
   return (
     <>
-      {/* Quick day tags — fast, tap-only "how did today go" */}
-      <DayTagsCard />
-
       {/* Goal banner */}
-      <div className="mt-4 overflow-hidden rounded-2xl border border-brand-400/20 bg-brand-400/[0.06] p-4">
+      <div className="overflow-hidden rounded-2xl border border-brand-400/20 bg-brand-400/[0.06] p-4">
         <div className="flex items-center gap-2">
           <span className="grid h-7 w-7 place-items-center rounded-full bg-brand-400 text-black"><Sparkles size={15} /></span>
           <p className="text-[13px] font-bold text-brand-400">{guide.headline}</p>
@@ -100,41 +97,6 @@ function CoachTab() {
       <AskBox />
       <div className="h-2" />
     </>
-  )
-}
-
-function DayTagsCard() {
-  const { state, dispatch } = useStore()
-  const selected = nutritionTagsForDay(state)
-
-  return (
-    <div className="rounded-2xl border border-white/8 bg-ink-800 p-4">
-      <p className="text-[15px] font-bold">How did today go?</p>
-      <p className="mt-0.5 text-[13px] leading-snug text-white/55">
-        Tap what happened. No typing needed, and it shows up on your dashboard.
-      </p>
-      <div className="mt-3.5 flex flex-wrap gap-2">
-        {NUTRITION_TAGS.map((tag) => {
-          const on = selected.includes(tag.id)
-          const v = TAG_TONE_VAR[tag.tone]
-          return (
-            <button
-              key={tag.id}
-              onClick={() => dispatch({ type: 'TOGGLE_NUTRITION_TAG', tag: tag.id })}
-              className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[13px] font-semibold transition active:scale-95"
-              style={
-                on
-                  ? { backgroundColor: `rgb(var(${v}) / 0.16)`, color: `rgb(var(${v}))`, borderColor: `rgb(var(${v}) / 0.5)` }
-                  : { backgroundColor: 'rgba(255,255,255,0.03)', color: 'rgb(var(--fg) / 0.7)', borderColor: 'rgba(255,255,255,0.1)' }
-              }
-            >
-              <span>{tag.emoji}</span>
-              {tag.label}
-            </button>
-          )
-        })}
-      </div>
-    </div>
   )
 }
 
