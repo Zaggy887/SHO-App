@@ -118,7 +118,7 @@ function CoachTab() {
 
   return (
     <>
-      {/* Quick day tags — fast, tap-only "how did today go" */}
+      {/* Quick day tags — fast, tap-only "how did your eating today go" */}
       <DayTagsCard />
 
       {/* Unified nutrition coach: one chat for "what I ate" and "ask anything" */}
