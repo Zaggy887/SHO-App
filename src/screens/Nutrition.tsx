@@ -18,7 +18,7 @@ import { fmtFluid, pct } from '../lib/format'
 import { coachRespond, STARTER_QUESTIONS, type DayReview } from '../lib/nutritionCoach'
 import type { Goal, MealName } from '../store/types'
 
-const TABS = ['Coach', 'Help', 'Budget Eats', 'Plan']
+const TABS = ['Coach', 'Help', 'Budget Eats', 'My Meal Plan']
 const PLAN_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 const SLOTS: MealName[] = ['Breakfast', 'Lunch', 'Snack', 'Dinner']
 
@@ -32,7 +32,7 @@ export default function Nutrition() {
         {tab === 'Coach' && <CoachTab />}
         {tab === 'Help' && <LearnTab />}
         {tab === 'Budget Eats' && <BudgetTab />}
-        {tab === 'Plan' && <PlanTab />}
+        {tab === 'My Meal Plan' && <PlanTab />}
       </div>
     </div>
   )
