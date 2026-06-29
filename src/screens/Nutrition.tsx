@@ -18,7 +18,7 @@ import { fmtFluid, pct } from '../lib/format'
 import { coachRespond, STARTER_QUESTIONS, type DayReview } from '../lib/nutritionCoach'
 import type { Goal, MealName } from '../store/types'
 
-const TABS = ['Coach', 'Learn', 'Budget Eats', 'My Meals', 'Plan']
+const TABS = ['Coach', 'Learn', 'Budget Eats', 'Plan']
 const PLAN_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 const SLOTS: MealName[] = ['Breakfast', 'Lunch', 'Snack', 'Dinner']
 
@@ -32,7 +32,6 @@ export default function Nutrition() {
         {tab === 'Coach' && <CoachTab />}
         {tab === 'Learn' && <LearnTab />}
         {tab === 'Budget Eats' && <BudgetTab />}
-        {tab === 'My Meals' && <MyMealsTab />}
         {tab === 'Plan' && <PlanTab />}
       </div>
     </div>
@@ -645,6 +644,7 @@ function BudgetTab() {
           </div>
         )}
       </div>
+      <MyMealsTab />
       <div className="h-2" />
     </>
   )
@@ -789,10 +789,13 @@ function MyMealsTab() {
 
   return (
     <>
+      <div className="mt-6">
+        <SectionLabel>My meals</SectionLabel>
+      </div>
       <div className="rounded-2xl border border-white/8 bg-ink-800 p-4">
         <div className="flex items-center gap-2">
           <div className="flex-1">
-            <h3 className="text-lg font-extrabold tracking-tight">My Meals</h3>
+            <h3 className="text-[15px] font-extrabold tracking-tight">My Meals</h3>
             <p className="mt-0.5 text-[13px] leading-snug text-white/60">Save your own recipes and use them in the meal planner.</p>
           </div>
           {!creating && (
@@ -872,7 +875,6 @@ function MyMealsTab() {
           ))}
         </div>
       )}
-      <div className="h-2" />
     </>
   )
 }
