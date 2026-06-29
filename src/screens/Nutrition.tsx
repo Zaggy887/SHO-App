@@ -753,6 +753,7 @@ function MyMealsTab() {
   const { state, dispatch } = useStore()
   const toast = useToast()
   const meals = state.myMeals ?? []
+  const [open, setOpen] = useState(false)
   const [creating, setCreating] = useState(false)
   const [name, setName] = useState('')
   const [notes, setNotes] = useState('')
@@ -789,94 +790,88 @@ function MyMealsTab() {
   const inputCls = 'rounded-xl border border-white/8 bg-ink-900/60 px-3 py-2.5 text-sm text-white placeholder:text-white/30 focus:border-brand-400/60 focus:outline-none'
 
   return (
-    <>
-      <div>
-        <SectionLabel>My meals</SectionLabel>
-      </div>
-      <div className="rounded-2xl border border-white/8 bg-ink-800 p-4">
-        <div className="flex items-center gap-2">
-          <div className="flex-1">
-            <h3 className="text-[15px] font-extrabold tracking-tight">My Meals</h3>
-            <p className="mt-0.5 text-[13px] leading-snug text-white/60">Save your own recipes and use them in the meal planner.</p>
-          </div>
-          {!creating && (
-            <button onClick={() => setCreating(true)} className="flex items-center gap-1.5 rounded-xl bg-brand-400/20 px-3.5 py-2 text-[13px] font-semibold text-brand-400 active:bg-brand-400/30">
-              <Plus size={15} /> New
-            </button>
-          )}
+    <div className="overflow-hidden rounded-2xl border border-white/8 bg-ink-800">
+      {/* Clickable header */}
+      <button
+        onClick={() => { setOpen((v) => !v); if (open) resetForm() }}
+        className="flex w-full items-center gap-3 p-4 text-left"
+      >
+        <div className="min-w-0 flex-1">
+          <h3 className="text-[15px] font-extrabold tracking-tight">My Meals</h3>
+          <p className="mt-0.5 text-[13px] leading-snug text-white/60">
+            {meals.length === 0 ? 'Save your own recipes and use them in the meal planner.' : `${meals.length} saved recipe${meals.length === 1 ? '' : 's'} · tap to manage`}
+          </p>
         </div>
+        <ChevronDown size={18} className={`shrink-0 text-white/30 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+      </button>
 
-        {creating && (
-          <div className="mt-4 space-y-2.5">
-            <input
-              value={name} onChange={(e) => setName(e.target.value)}
-              placeholder="Meal name *"
-              className={`${inputCls} w-full`}
-            />
-            <textarea
-              value={notes} onChange={(e) => setNotes(e.target.value)}
-              placeholder="Description (optional)"
-              rows={2}
-              className={`${inputCls} w-full resize-none`}
-            />
-            <div className="grid grid-cols-2 gap-2">
-              <input value={kcal} onChange={(e) => setKcal(e.target.value)} type="number" min="0" placeholder="Calories" className={inputCls} />
-              <input value={protein} onChange={(e) => setProtein(e.target.value)} type="number" min="0" placeholder="Protein (g)" className={inputCls} />
-              <input value={carbs} onChange={(e) => setCarbs(e.target.value)} type="number" min="0" placeholder="Carbs (g)" className={inputCls} />
-              <input value={fat} onChange={(e) => setFat(e.target.value)} type="number" min="0" placeholder="Fat (g)" className={inputCls} />
+      {open && (
+        <div className="border-t border-white/5">
+          {/* Saved meals list */}
+          {meals.length === 0 ? (
+            <div className="flex flex-col items-center px-6 py-8 text-center">
+              <Salad size={26} className="text-white/25" />
+              <p className="mt-2 text-[14px] font-semibold text-white/50">No saved meals yet</p>
+              <p className="mt-1 text-[12px] leading-snug text-white/35">Add a recipe below — it'll appear in the Plan tab too.</p>
             </div>
-            <textarea
-              value={ingLine} onChange={(e) => setIngLine(e.target.value)}
-              placeholder={"Ingredients (one per line)\ne.g. 2 eggs\n100g oats"}
-              rows={4}
-              className={`${inputCls} w-full resize-none`}
-            />
-            <div className="flex gap-2">
-              <button onClick={save} disabled={!name.trim()} className="btn-primary flex-1"><Plus size={15} /> Save meal</button>
-              <button onClick={resetForm} className="rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-sm font-semibold text-white/60 active:bg-white/[0.08]">Cancel</button>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {meals.length === 0 ? (
-        <div className="mt-4 flex flex-col items-center rounded-2xl border border-dashed border-white/12 px-6 py-12 text-center">
-          <Salad size={28} className="text-white/25" />
-          <p className="mt-3 text-[15px] font-semibold text-white/50">No saved meals yet</p>
-          <p className="mt-1 text-[13px] leading-snug text-white/35">Tap "New" to add a recipe. Saved meals appear in the Plan tab.</p>
-        </div>
-      ) : (
-        <div className="mt-4 space-y-2.5">
-          {meals.map((m) => (
-            <div key={m.id} className="overflow-hidden rounded-2xl border border-white/5 bg-ink-800 p-4">
-              <div className="flex items-start gap-3">
-                <div className="min-w-0 flex-1">
-                  <p className="font-bold leading-tight">{m.name}</p>
-                  {m.notes && <p className="mt-0.5 text-[12px] leading-snug text-white/50">{m.notes}</p>}
-                  {(m.kcal > 0 || m.p > 0) && (
-                    <p className="mt-1.5 text-[12px] font-semibold text-brand-400">
-                      {m.kcal > 0 ? `${m.kcal} kcal` : ''}
-                      {m.kcal > 0 && m.p > 0 ? ' · ' : ''}
-                      {m.p > 0 ? `${m.p}g protein` : ''}
-                    </p>
-                  )}
-                  {m.ingredients.length > 0 && (
-                    <div className="mt-2 flex flex-wrap gap-1">
-                      {m.ingredients.map((ing, i) => (
-                        <span key={i} className="rounded-full bg-white/[0.05] px-2.5 py-1 text-[11px] text-white/55">{ing}</span>
-                      ))}
-                    </div>
-                  )}
+          ) : (
+            <div className="divide-y divide-white/5">
+              {meals.map((m) => (
+                <div key={m.id} className="flex items-start gap-3 px-4 py-3.5">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-bold leading-tight">{m.name}</p>
+                    {m.notes && <p className="mt-0.5 text-[12px] leading-snug text-white/50">{m.notes}</p>}
+                    {(m.kcal > 0 || m.p > 0) && (
+                      <p className="mt-1 text-[12px] font-semibold text-brand-400">
+                        {m.kcal > 0 ? `${m.kcal} kcal` : ''}
+                        {m.kcal > 0 && m.p > 0 ? ' · ' : ''}
+                        {m.p > 0 ? `${m.p}g protein` : ''}
+                      </p>
+                    )}
+                    {m.ingredients.length > 0 && (
+                      <div className="mt-1.5 flex flex-wrap gap-1">
+                        {m.ingredients.map((ing, i) => (
+                          <span key={i} className="rounded-full bg-white/[0.05] px-2.5 py-1 text-[11px] text-white/55">{ing}</span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <button onClick={() => dispatch({ type: 'REMOVE_MY_MEAL', id: m.id })} className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/5 text-white/40 active:bg-white/10">
+                    <Trash2 size={14} />
+                  </button>
                 </div>
-                <button onClick={() => dispatch({ type: 'REMOVE_MY_MEAL', id: m.id })} className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/5 text-white/40 active:bg-white/10">
-                  <Trash2 size={14} />
-                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Add meal form */}
+          {creating ? (
+            <div className="border-t border-white/5 p-4 space-y-2.5">
+              <p className="text-[12px] font-bold uppercase tracking-wide text-white/40">New recipe</p>
+              <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Meal name *" className={`${inputCls} w-full`} />
+              <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Description (optional)" rows={2} className={`${inputCls} w-full resize-none`} />
+              <div className="grid grid-cols-2 gap-2">
+                <input value={kcal} onChange={(e) => setKcal(e.target.value)} type="number" min="0" placeholder="Calories" className={inputCls} />
+                <input value={protein} onChange={(e) => setProtein(e.target.value)} type="number" min="0" placeholder="Protein (g)" className={inputCls} />
+                <input value={carbs} onChange={(e) => setCarbs(e.target.value)} type="number" min="0" placeholder="Carbs (g)" className={inputCls} />
+                <input value={fat} onChange={(e) => setFat(e.target.value)} type="number" min="0" placeholder="Fat (g)" className={inputCls} />
+              </div>
+              <textarea value={ingLine} onChange={(e) => setIngLine(e.target.value)} placeholder={"Ingredients (one per line)\ne.g. 2 eggs\n100g oats"} rows={4} className={`${inputCls} w-full resize-none`} />
+              <div className="flex gap-2">
+                <button onClick={save} disabled={!name.trim()} className="btn-primary flex-1"><Plus size={15} /> Save meal</button>
+                <button onClick={resetForm} className="rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-sm font-semibold text-white/60 active:bg-white/[0.08]">Cancel</button>
               </div>
             </div>
-          ))}
+          ) : (
+            <div className="border-t border-white/5 p-3">
+              <button onClick={() => setCreating(true)} className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-400/15 py-2.5 text-[13px] font-semibold text-brand-400 active:bg-brand-400/25">
+                <Plus size={15} /> Add a meal
+              </button>
+            </div>
+          )}
         </div>
       )}
-    </>
+    </div>
   )
 }
 
