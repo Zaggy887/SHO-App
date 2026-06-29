@@ -105,12 +105,12 @@ function DayTagsCard() {
   const selected = nutritionTagsForDay(state)
 
   return (
-    <div className="rounded-2xl bg-ink-800 p-4">
-      <p className="text-[15px] font-bold">How did today go?</p>
-      <p className="mt-0.5 text-[13px] leading-snug text-white/55">
-        Tap what happened. No typing needed, and it shows up on your dashboard.
+    <div className="rounded-2xl bg-ink-800 p-5">
+      <p className="text-center text-[17px] font-bold leading-tight">How Did Today Go?</p>
+      <p className="mt-2 text-center text-[13px] leading-snug text-white/50">
+        Tap what happened. It shows up on your dashboard — no typing needed.
       </p>
-      <div className="mt-3.5 flex flex-wrap gap-2">
+      <div className="mt-4 grid grid-cols-3 gap-2">
         {NUTRITION_TAGS.map((tag) => {
           const on = selected.includes(tag.id)
           const v = TAG_TONE_VAR[tag.tone]
@@ -118,15 +118,15 @@ function DayTagsCard() {
             <button
               key={tag.id}
               onClick={() => dispatch({ type: 'TOGGLE_NUTRITION_TAG', tag: tag.id })}
-              className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-semibold backdrop-blur-sm transition active:scale-95"
+              className="flex flex-col items-center gap-1 rounded-xl py-3 text-[12px] font-semibold transition active:scale-95"
               style={
                 on
-                  ? { backgroundColor: `rgb(var(${v}) / 0.16)`, color: `rgb(var(${v}))` }
-                  : { backgroundColor: 'rgba(255,255,255,0.06)', color: 'rgb(var(--fg) / 0.7)' }
+                  ? { backgroundColor: `rgb(var(${v}) / 0.16)`, color: `rgb(var(${v}))`, border: `1px solid rgb(var(${v}) / 0.35)` }
+                  : { backgroundColor: 'rgba(255,255,255,0.05)', color: 'rgb(var(--fg) / 0.65)', border: '1px solid rgba(255,255,255,0.08)' }
               }
             >
-              <span>{tag.emoji}</span>
-              {tag.label}
+              <span className="text-[18px] leading-none">{tag.emoji}</span>
+              <span className="leading-tight">{tag.label}</span>
             </button>
           )
         })}
