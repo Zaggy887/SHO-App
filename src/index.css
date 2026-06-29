@@ -144,6 +144,20 @@
   animation: screen-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+@keyframes screen-out {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+.animate-screen-out {
+  animation: screen-out 0.25s cubic-bezier(0.4, 0, 1, 1) both;
+}
+
 /* Bottom-sheet slide-up + backdrop fade. */
 @keyframes sheet-up {
   from { transform: translateY(100%); }
