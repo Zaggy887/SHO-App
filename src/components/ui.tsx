@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { Sun } from 'lucide-react'
 
 /* ------------------------------------------------------------------ */
 /*  ProgressRing: circular progress indicator                          */
@@ -126,7 +127,7 @@ export function SegmentedTabs({
                 isActive ? 'text-brand-400' : 'text-white/45'
               }`}
             >
-              {t}
+              {t === 'Coach' ? <Sun size={18} /> : t}
               {isActive && (
                 <span className="absolute -bottom-px left-0 right-0 h-0.5 rounded-full bg-brand-400" />
               )}
