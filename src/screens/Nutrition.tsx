@@ -314,7 +314,7 @@ function DayTagsCard() {
 
   return (
     <div className="rounded-2xl bg-ink-800 p-5">
-      <p className="text-center text-[17px] font-bold leading-tight">How Did your eating today Go?</p>
+      <p className="text-center text-[17px] font-bold leading-tight">How did your eating today go?</p>
       <div className="mt-4 grid grid-cols-3 gap-2">
         {NUTRITION_TAGS.map((tag) => {
           const on = selected.includes(tag.id)
