@@ -1,8 +1,8 @@
 import { useMemo, useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import {
-  Sparkles, Send, Check, ArrowRight, ChevronDown, ChevronLeft, ChevronRight, Clock,
-  Droplet, Plus, Trash2, Share2, Wallet, Search, Lightbulb, Salad,
+  Sparkles, Send, Check, ArrowRight, ChevronDown, ChevronRight, Clock,
+  Droplet, Plus, Trash2, Share2, Wallet, Search, Lightbulb, Salad, X,
 } from 'lucide-react'
 import { Icon } from '../components/Icon'
 import { ProgressRing, SegmentedTabs, ScreenHeader } from '../components/ui'
@@ -146,7 +146,7 @@ function CoachTab() {
           {/* Header */}
           <div className="relative flex items-center gap-2.5 px-3 py-2.5">
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-brand-400/[0.07] to-transparent" />
-            <button onClick={handleClose} className="relative grid h-9 w-9 shrink-0 place-items-center rounded-full text-brand-400 active:bg-white/10"><ChevronLeft size={26} /></button>
+            <button onClick={handleClose} className="relative grid h-9 w-9 shrink-0 place-items-center rounded-full text-brand-400 active:bg-white/10"><X size={22} /></button>
             <div className="relative shrink-0">
               <div className="grid h-9 w-9 place-items-center rounded-full bg-gradient-to-br from-brand-300 to-brand-500 text-black shadow-[0_2px_8px_-2px_rgba(126,217,87,0.5)]"><Salad size={18} /></div>
               <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-brand-400 ring-2 ring-ink-900" />
