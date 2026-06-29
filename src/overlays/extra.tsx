@@ -377,6 +377,7 @@ export function CoachChatSheet({ open, onClose }: Props) {
   const { state, dispatch } = useStore()
   const toast = useToast()
   const [text, setText] = useState('')
+  const [closing, setClosing] = useState(false)
   const [showBook, setShowBook] = useState(false)
   const [booked, setBooked] = useState<string | null>(null)
   const [typing, setTyping] = useState(false)
@@ -432,12 +433,17 @@ export function CoachChatSheet({ open, onClose }: Props) {
   for (let i = messages.length - 1; i >= 0; i--) { if (messages[i].role === 'user') { lastUserIdx = i; break } }
   const seen = lastUserIdx >= 0 && messages.slice(lastUserIdx + 1).some((m) => m.role === 'coach')
 
+  function handleClose() {
+    setClosing(true)
+    setTimeout(() => { setClosing(false); onClose() }, 240)
+  }
+
   return (
-    <div className="absolute inset-0 z-50 flex flex-col bg-ink-900 text-white" style={{ paddingTop: 'env(safe-area-inset-top)', animation: 'screen-in 0.28s cubic-bezier(0.22,1,0.36,1)' }}>
+    <div className="absolute inset-0 z-50 flex flex-col bg-ink-900 text-white" style={{ paddingTop: 'env(safe-area-inset-top)', animation: closing ? 'screen-out 0.24s cubic-bezier(0.4,0,1,1) both' : 'screen-in 0.28s cubic-bezier(0.22,1,0.36,1)' }}>
       {/* Header */}
       <div className="relative flex items-center gap-2.5 px-3 py-2.5">
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-brand-400/[0.07] to-transparent" />
-        <button onClick={onClose} className="relative grid h-9 w-9 shrink-0 place-items-center rounded-full text-brand-400 active:bg-white/10"><ChevronLeft size={26} /></button>
+        <button onClick={handleClose} className="relative grid h-9 w-9 shrink-0 place-items-center rounded-full text-brand-400 active:bg-white/10"><ChevronLeft size={26} /></button>
         <div className="relative shrink-0">
           <div className="grid h-9 w-9 place-items-center rounded-full bg-gradient-to-br from-brand-300 to-brand-500 text-black shadow-[0_2px_8px_-2px_rgba(126,217,87,0.5)]"><Sparkles size={18} /></div>
           <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-brand-400 ring-2 ring-ink-900" />
