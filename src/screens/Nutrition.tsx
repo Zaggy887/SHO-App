@@ -282,8 +282,7 @@ function NutritionCoachCard({ onOpen, onAsk }: { onOpen: () => void; onAsk: (q: 
           <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-brand-400 ring-2 ring-ink-800" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-[15px] font-bold leading-tight">Nutrition coach</p>
-          <p className="mt-0.5 text-[12.5px] leading-snug text-white/50">Tell me what you ate, or ask me anything</p>
+          <p className="text-[15px] font-bold leading-tight">Tell me what you ate, or ask me anything</p>
         </div>
       </div>
 
