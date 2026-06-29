@@ -1,8 +1,5 @@
 import { useMemo, useState } from 'react'
-import {
-  Sparkles, Send, Check, ArrowRight, ChevronDown, Droplet, Plus, Trash2, Share2,
-  Wallet, Search, Lightbulb, HelpCircle, Salad,
-} from 'lucide-react'
+import { Sparkles, Send, Check, ArrowRight, ChevronDown, Droplet, Plus, Trash2, Share2, Wallet, Search, Lightbulb, CircleHelp as HelpCircle, Salad } from 'lucide-react'
 import { Icon } from '../components/Icon'
 import { ProgressRing, SegmentedTabs, ScreenHeader } from '../components/ui'
 import { useStore } from '../store/store'
@@ -121,11 +118,11 @@ function DayTagsCard() {
             <button
               key={tag.id}
               onClick={() => dispatch({ type: 'TOGGLE_NUTRITION_TAG', tag: tag.id })}
-              className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[13px] font-semibold transition active:scale-95"
+              className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-semibold backdrop-blur-sm transition active:scale-95"
               style={
                 on
-                  ? { backgroundColor: `rgb(var(${v}) / 0.16)`, color: `rgb(var(${v}))`, borderColor: `rgb(var(${v}) / 0.5)` }
-                  : { backgroundColor: 'rgba(255,255,255,0.03)', color: 'rgb(var(--fg) / 0.7)', borderColor: 'rgba(255,255,255,0.1)' }
+                  ? { backgroundColor: `rgb(var(${v}) / 0.16)`, color: `rgb(var(${v}))` }
+                  : { backgroundColor: 'rgba(255,255,255,0.06)', color: 'rgb(var(--fg) / 0.7)' }
               }
             >
               <span>{tag.emoji}</span>
