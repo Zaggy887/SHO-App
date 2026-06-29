@@ -105,7 +105,7 @@ function DayTagsCard() {
   const selected = nutritionTagsForDay(state)
 
   return (
-    <div className="rounded-2xl border border-white/8 bg-ink-800 p-4">
+    <div className="rounded-2xl bg-ink-800 p-4">
       <p className="text-[15px] font-bold">How did today go?</p>
       <p className="mt-0.5 text-[13px] leading-snug text-white/55">
         Tap what happened. No typing needed, and it shows up on your dashboard.
