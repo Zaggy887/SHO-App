@@ -379,6 +379,8 @@ export interface AppState {
   mealPlan?: PlannedMeal[]
   /** comments per community post */
   postComments?: PostComment[]
+  /** quick "how did eating go" tag ids chosen per day, keyed by dateKey */
+  nutritionTags?: Record<string, string[]>
   foods: FoodItem[]
   sessions: WorkoutSession[]
   program: ProgramDay[]

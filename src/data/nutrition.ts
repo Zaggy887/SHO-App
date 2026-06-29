@@ -1,6 +1,43 @@
 import type { Goal } from '../store/types'
 
 /* ------------------------------------------------------------------ */
+/*  Quick day tags: a fast, tap-only way to log how eating went.       */
+/*  Positive but honest, chilled student-friendly language.            */
+/*  tone drives the chip colour: good (green), neutral, soft (amber).  */
+/* ------------------------------------------------------------------ */
+export type TagTone = 'good' | 'neutral' | 'soft'
+export interface DayTag {
+  id: string
+  label: string
+  emoji: string
+  tone: TagTone
+}
+
+export const NUTRITION_TAGS: DayTag[] = [
+  { id: 'champ', label: 'Ate like a champ', emoji: '🥇', tone: 'good' },
+  { id: 'solid', label: 'Solid day', emoji: '✅', tone: 'good' },
+  { id: 'protein', label: 'Smashed my protein', emoji: '💪', tone: 'good' },
+  { id: 'hydrated', label: 'Stayed hydrated', emoji: '💧', tone: 'good' },
+  { id: 'veg', label: 'Veg loaded', emoji: '🥗', tone: 'good' },
+  { id: 'treat', label: 'Treated myself', emoji: '🍫', tone: 'neutral' },
+  { id: 'takeout', label: 'Takeout kinda day', emoji: '🍕', tone: 'neutral' },
+  { id: 'coffee', label: 'Running on coffee', emoji: '☕', tone: 'neutral' },
+  { id: 'meh', label: 'Meh, been better', emoji: '😐', tone: 'neutral' },
+  { id: 'latenight', label: 'Late-night snacks', emoji: '🌙', tone: 'soft' },
+  { id: 'skipped', label: 'Skipped meals', emoji: '🥲', tone: 'soft' },
+  { id: 'drinks', label: 'Few too many drinks', emoji: '🍻', tone: 'soft' },
+]
+
+export const tagById = (id: string): DayTag | undefined => NUTRITION_TAGS.find((t) => t.id === id)
+
+/** Maps a tag tone to a theme CSS colour variable, for chip styling. */
+export const TAG_TONE_VAR: Record<TagTone, string> = {
+  good: '--brand-400',
+  neutral: '--accent-blue',
+  soft: '--accent-orange',
+}
+
+/* ------------------------------------------------------------------ */
 /*  Food knowledge base: powers the on-device food-log review.         */
 /*  Plain-language, education-first. Not a calorie tracker.            */
 /* ------------------------------------------------------------------ */

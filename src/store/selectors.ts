@@ -130,6 +130,11 @@ export function foodReviewForDay(s: AppState, key: string = todayKey) {
   return s.foodReviews.find((r) => r.dateKey === key) ?? null
 }
 
+/** Quick "how did eating go" tag ids chosen for a given day. */
+export function nutritionTagsForDay(s: AppState, key: string = todayKey): string[] {
+  return s.nutritionTags?.[key] ?? []
+}
+
 /* -------------------------- Self-logged activities -------------------------- */
 export function activitiesForDay(s: AppState, key: string = todayKey) {
   return (s.activities ?? []).filter((a) => a.dateKey === key)

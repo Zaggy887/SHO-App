@@ -36,6 +36,7 @@ export type Action =
   | { type: 'REMOVE_PLANNED_MEAL'; id: string }
   | { type: 'ADD_COMMENT'; postId: string; text: string }
   | { type: 'SAVE_FOOD_REVIEW'; text: string; score: number }
+  | { type: 'TOGGLE_NUTRITION_TAG'; tag: string }
   | { type: 'SEND_CHAT'; text: string }
   | { type: 'PUSH_CHAT'; role: 'user' | 'coach'; text: string }
   | { type: 'MARK_CHAT_READ' }
@@ -145,6 +146,17 @@ function reducer(state: AppState, action: Action): AppState {
       // Reflect the day's food quality in today's habit ring too.
       const habits = state.habits.map((h) => (h.dateKey === todayKey ? { ...h, nutritionScore: action.score } : h))
       return { ...state, foodReviews: [...others, ...review], habits }
+    }
+
+    case 'TOGGLE_NUTRITION_TAG': {
+      const map = { ...(state.nutritionTags ?? {}) }
+      const current = map[todayKey] ?? []
+      const next = current.includes(action.tag)
+        ? current.filter((t) => t !== action.tag)
+        : [...current, action.tag]
+      if (next.length) map[todayKey] = next
+      else delete map[todayKey]
+      return { ...state, nutritionTags: map }
     }
 
     case 'SEND_CHAT': {
