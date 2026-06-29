@@ -282,21 +282,22 @@ function NutritionCoachCard({ onOpen, onAsk }: { onOpen: () => void; onAsk: (q: 
           <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-brand-400 ring-2 ring-ink-800" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-[15px] font-bold leading-tight">Tell me what you ate, or ask me anything</p>
+          <p className="text-[15px] font-bold leading-tight">Nutrition coach</p>
+          <p className="mt-0.5 text-[12.5px] leading-snug text-white/50">Tell me what you ate, or ask me anything</p>
         </div>
       </div>
 
       <button
         onClick={onOpen}
-        className="mt-3.5 flex w-full items-center gap-2 rounded-full border border-white/8 bg-ink-900/60 px-4 py-3 text-left transition active:scale-[0.99]"
+        className="mt-4 flex w-full items-center gap-2 rounded-full border border-white/8 bg-ink-900/60 px-4 py-3 text-left transition active:scale-[0.99]"
       >
         <span className="flex-1 text-[14.5px] text-white/35">Message your coach…</span>
         <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-brand-400 text-black"><Send size={15} /></span>
       </button>
 
       <div className="mt-3 flex flex-wrap gap-2">
-        <button onClick={onOpen} className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[12.5px] font-medium text-white/70 active:bg-white/[0.1]">
-          Are sanwhiches healthy?
+        <button onClick={() => onAsk('Are sandwiches healthy?')} className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[12.5px] font-medium text-white/70 active:bg-white/[0.1]">
+          Are sandwiches healthy?
         </button>
         {STARTER_QUESTIONS.slice(0, 3).map((q) => (
           <button key={q} onClick={() => onAsk(q)} className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[12.5px] font-medium text-white/70 active:bg-white/[0.1]">
