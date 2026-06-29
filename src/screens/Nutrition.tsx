@@ -18,7 +18,7 @@ import { fmtFluid, pct } from '../lib/format'
 import { coachRespond, STARTER_QUESTIONS, type DayReview } from '../lib/nutritionCoach'
 import type { Goal, MealName } from '../store/types'
 
-const TABS = ['Coach', 'Learn', 'Budget Eats', 'Plan']
+const TABS = ['Coach', 'Help', 'Budget Eats', 'Plan']
 const PLAN_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 const SLOTS: MealName[] = ['Breakfast', 'Lunch', 'Snack', 'Dinner']
 
@@ -30,7 +30,7 @@ export default function Nutrition() {
       <SegmentedTabs tabs={TABS} active={tab} onChange={setTab} />
       <div className="mt-5">
         {tab === 'Coach' && <CoachTab />}
-        {tab === 'Learn' && <LearnTab />}
+        {tab === 'Help' && <LearnTab />}
         {tab === 'Budget Eats' && <BudgetTab />}
         {tab === 'Plan' && <PlanTab />}
       </div>
