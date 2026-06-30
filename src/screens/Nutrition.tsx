@@ -404,7 +404,7 @@ function LearnTab() {
   const [openLesson, setOpenLesson] = useState<string | null>(null)
 
   return (
-    <div className="space-y-7">
+    <div className="space-y-9 pb-2">
 
       {/* The balanced plate: a big, tappable visual that does the explaining */}
       <section>
@@ -415,18 +415,18 @@ function LearnTab() {
       {/* Portion sizes by hand */}
       <section>
         <SectionLabel>Portion sizes, by hand</SectionLabel>
-        <p className="-mt-1 mb-3 text-[12.5px] leading-snug text-white/50">No scales needed. Your own hand is a guide that scales with you.</p>
-        <div className="grid grid-cols-2 gap-2.5">
+        <p className="-mt-1 text-[12.5px] leading-snug text-white/50">No scales needed. Your own hand is a guide that scales with you.</p>
+        <div className="mt-1 divide-y divide-white/[0.06]">
           {PORTION_GUIDE.map((p) => (
-            <div key={p.title} className="rounded-2xl border border-white/5 bg-ink-800 p-3.5">
-              <div className="flex items-center gap-2">
-                <span className="text-[22px] leading-none">{p.emoji}</span>
-                <div className="min-w-0">
-                  <p className="text-[14px] font-bold leading-tight" style={{ color: p.color }}>{p.title}</p>
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-white/35">{p.hand}</p>
-                </div>
+            <div key={p.title} className="flex items-center gap-3.5 py-3.5">
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-[24px]" style={{ backgroundColor: p.color.replace(/\)$/, ' / 0.12)') }}>{p.emoji}</span>
+              <div className="min-w-0 flex-1">
+                <p className="flex items-baseline gap-2 leading-tight">
+                  <span className="text-[14px] font-bold" style={{ color: p.color }}>{p.title}</span>
+                  <span className="text-[11px] font-semibold uppercase tracking-wide text-white/35">{p.hand}</span>
+                </p>
+                <p className="mt-0.5 text-[12.5px] leading-snug text-white/60">{p.desc}</p>
               </div>
-              <p className="mt-2 text-[12px] leading-snug text-white/60">{p.desc}</p>
             </div>
           ))}
         </div>
@@ -435,15 +435,12 @@ function LearnTab() {
       {/* Eat more / balance / sometimes */}
       <section>
         <SectionLabel>What to eat more, and less, of</SectionLabel>
-        <div className="space-y-2.5">
+        <div className="divide-y divide-white/[0.06]">
           {FOOD_TIERS.map((t) => (
-            <div key={t.tier} className="overflow-hidden rounded-2xl border border-white/5 bg-ink-800">
-              <div className="h-1 w-full" style={{ backgroundColor: t.color }} />
-              <div className="p-4">
-                <div className="flex items-center gap-2">
-                  <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: t.color }} />
-                  <p className="font-bold" style={{ color: t.color }}>{t.title}</p>
-                </div>
+            <div key={t.tier} className="flex gap-3 py-4">
+              <span className="w-1 shrink-0 self-stretch rounded-full" style={{ backgroundColor: t.color }} />
+              <div className="min-w-0 flex-1">
+                <p className="font-bold" style={{ color: t.color }}>{t.title}</p>
                 <p className="mt-1 text-[12.5px] leading-snug text-white/60">{t.desc}</p>
                 <div className="mt-2.5 flex flex-wrap gap-1.5">
                   {t.items.map((it) => (
@@ -459,10 +456,10 @@ function LearnTab() {
       {/* Simple everyday wins */}
       <section>
         <SectionLabel>Simple everyday wins</SectionLabel>
-        <div className="space-y-2.5">
+        <div className="divide-y divide-white/[0.06]">
           {EATING_PRINCIPLES.map((p) => (
-            <div key={p.title} className="flex items-start gap-3 rounded-2xl border border-white/5 bg-ink-800 p-3.5">
-              <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-brand-400/15"><Icon name={p.icon} size={18} color="rgb(var(--brand-400))" /></div>
+            <div key={p.title} className="flex items-start gap-3.5 py-3.5">
+              <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand-400/[0.12]"><Icon name={p.icon} size={18} color="rgb(var(--brand-400))" /></div>
               <div className="min-w-0 flex-1">
                 <p className="text-[14px] font-bold leading-tight">{p.title}</p>
                 <p className="mt-0.5 text-[12.5px] leading-snug text-white/60">{p.text}</p>
@@ -475,22 +472,21 @@ function LearnTab() {
       {/* Go deeper: short reads */}
       <section>
         <SectionLabel>Go deeper</SectionLabel>
-        <div className="space-y-2.5">
+        <div className="divide-y divide-white/[0.06]">
           {NUTRITION_LESSONS.map((l) => {
             const open = openLesson === l.id
             return (
-              <div key={l.id} className="overflow-hidden rounded-2xl border border-white/5 bg-ink-800">
-                <button onClick={() => setOpenLesson(open ? null : l.id)} className="flex w-full items-center gap-3 p-4 text-left">
-                  <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-brand-400/15"><Icon name={l.icon} size={20} color="rgb(var(--brand-400))" /></div>
+              <div key={l.id}>
+                <button onClick={() => setOpenLesson(open ? null : l.id)} className="flex w-full items-center gap-3 py-3.5 text-left">
+                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-brand-400/[0.12]"><Icon name={l.icon} size={19} color="rgb(var(--brand-400))" /></div>
                   <div className="min-w-0 flex-1">
                     <p className="font-bold leading-tight">{l.title}</p>
-                    <p className="truncate text-[12px] text-white/55">{l.summary}</p>
-                    <p className="mt-0.5 text-[11px] text-white/35">{l.minutes} min read</p>
+                    <p className="truncate text-[12px] text-white/50">{l.summary} · {l.minutes} min</p>
                   </div>
                   <ChevronDown size={18} className={`shrink-0 text-white/30 transition-transform ${open ? 'rotate-180' : ''}`} />
                 </button>
                 {open && (
-                  <div className="space-y-2.5 border-t border-white/5 px-4 py-3.5">
+                  <div className="space-y-2.5 pb-4 pl-[52px] pr-1">
                     {l.body.map((para, i) => (
                       <p key={i} className="text-[13px] leading-relaxed text-white/70">{para}</p>
                     ))}
@@ -501,7 +497,6 @@ function LearnTab() {
           })}
         </div>
       </section>
-      <div className="h-2" />
     </div>
   )
 }
@@ -528,9 +523,9 @@ function BalancedPlate() {
   const active = PLATE_GUIDE[sel]
 
   return (
-    <div className="rounded-2xl border border-white/8 bg-ink-800 p-5">
+    <div className="animate-fade-in">
       {/* Donut */}
-      <div className="relative mx-auto h-[224px] w-[224px] animate-fade-in">
+      <div className="relative mx-auto mt-1 h-[230px] w-[230px]">
         <svg viewBox="0 0 42 42" className="h-full w-full -rotate-90">
           <circle cx="21" cy="21" r="15.915" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="5" />
           {PLATE_SEGMENTS.map((s, i) => {
@@ -567,10 +562,10 @@ function BalancedPlate() {
             <button
               key={s.title}
               onClick={() => setSel(i)}
-              className="flex items-center gap-2 rounded-xl border px-3 py-2 text-left transition active:scale-[0.98]"
+              className="flex items-center gap-2 rounded-full px-3 py-2 text-left transition active:scale-[0.98]"
               style={{
-                borderColor: on ? s.color : 'rgba(255,255,255,0.08)',
-                backgroundColor: on ? s.color.replace(/\)$/, ' / 0.12)') : 'rgba(255,255,255,0.02)',
+                border: `1px solid ${on ? s.color.replace(/\)$/, ' / 0.45)') : 'transparent'}`,
+                backgroundColor: on ? s.color.replace(/\)$/, ' / 0.14)') : 'rgba(255,255,255,0.045)',
               }}
             >
               <span className="grid h-6 w-6 shrink-0 place-items-center rounded-lg text-[13px] font-black" style={{ color: s.color }}>{s.portion}</span>
