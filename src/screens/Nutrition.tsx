@@ -84,6 +84,9 @@ function CoachTab() {
     if (!msg || typing) return
     setInput('')
 
+    // Asking the coach ticks the dashboard "Ask a Q" goal for today.
+    dispatch({ type: 'MARK_NUTRITION_ASKED' })
+
     const id = nextId()
     setMessages((m) => [...m, { id, role: 'user', text: msg, status: 'sending' }])
     // A beat later the message reads as sent, the way a tick lands in WhatsApp.

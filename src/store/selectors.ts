@@ -135,6 +135,16 @@ export function nutritionTagsForDay(s: AppState, key: string = todayKey): string
   return s.nutritionTags?.[key] ?? []
 }
 
+/** Did the user ask the nutrition coach a question on this day? */
+export function nutritionAskedForDay(s: AppState, key: string = todayKey): boolean {
+  return (s.nutritionAskedKeys ?? []).includes(key)
+}
+
+/** Did the user start a workout on this day? */
+export function workoutStartedForDay(s: AppState, key: string = todayKey): boolean {
+  return (s.workoutStartedKeys ?? []).includes(key)
+}
+
 /* -------------------------- Self-logged activities -------------------------- */
 export function activitiesForDay(s: AppState, key: string = todayKey) {
   return (s.activities ?? []).filter((a) => a.dateKey === key)

@@ -132,6 +132,9 @@ export default function ActiveWorkout({ open, onClose }: { open: boolean; onClos
     if (!open) return
     setMode('overview'); setCursor(null); setRest(null); setWorkElapsed(0); setTotal(0)
     setFinishing(false); setFinishPR(null); setDetailIdx(null)
+    // Opening the workout counts as starting it for today's dashboard tick.
+    if (session) dispatch({ type: 'MARK_WORKOUT_STARTED' })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
 
   // After the completion tick, hand off to a PR moment or close.

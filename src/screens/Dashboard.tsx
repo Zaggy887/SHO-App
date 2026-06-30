@@ -11,6 +11,7 @@ import { fmtFluid, fmtWeightNum, weightUnit, fmtVolume, pct } from '../lib/forma
 import {
   todayHabit, habitForDay, todaySession, sessionForDay, activitiesForDay, weightStats, regularWorkoutsInRange,
   strengthProgress, unreadChat, streakStats, foodReviewForDay, weeklyIndex, nutritionTagsForDay,
+  nutritionAskedForDay, workoutStartedForDay,
 } from '../store/selectors'
 import { tagById, TAG_TONE_VAR } from '../data/nutrition'
 import { coachDaily } from '../store/coach'
@@ -68,14 +69,22 @@ export default function Dashboard() {
   const selWeekday = FULL_WD[fromKey(selDate).getDay()]
   const selTitle = isToday ? "Today's progress" : `${selWeekday}'s progress`
 
-  const habitRings = [
-    { icon: 'footprints', label: 'Steps', value: selHabit.steps.toLocaleString(), pct: pct(selHabit.steps, t.steps), color: 'rgb(var(--brand-400))' },
-    { icon: 'bed', label: 'Sleep', value: `${selHabit.sleepH} hrs`, pct: pct(selHabit.sleepH, t.sleepH), color: 'rgb(var(--brand-400))' },
-    { icon: 'droplet', label: 'Water', value: fmtFluid(selHabit.waterL, units), pct: pct(selHabit.waterL, t.waterL), color: 'rgb(var(--brand-400))' },
-    { icon: 'utensils', label: 'Nutrition', value: `${selHabit.nutritionScore}/10`, pct: selHabit.nutritionScore * 10, color: 'rgb(var(--brand-400))' },
-    { icon: 'leaf', label: 'Mindset', value: `${selHabit.mindsetMin} min`, pct: pct(selHabit.mindsetMin, 10), color: 'rgb(var(--brand-400))' },
+  // Two of the goals are simple done/not-done ticks rather than progress rings.
+  const asked = nutritionAskedForDay(state, selDate)
+  const isRestDay = !selSession
+  const workoutDone = isRestDay || workoutStartedForDay(state, selDate) || (selSession?.completed ?? false)
+
+  type Ring =
+    | { kind: 'progress'; icon: string; label: string; value: string; pct: number; onClick: () => void }
+    | { kind: 'tick'; icon: string; label: string; value: string; done: boolean; onClick: () => void }
+  const habitRings: Ring[] = [
+    { kind: 'progress', icon: 'footprints', label: 'Steps', value: selHabit.steps.toLocaleString(), pct: pct(selHabit.steps, t.steps), onClick: () => nav.open('logHabit') },
+    { kind: 'progress', icon: 'bed', label: 'Sleep', value: `${selHabit.sleepH} hrs`, pct: pct(selHabit.sleepH, t.sleepH), onClick: () => nav.open('logHabit') },
+    { kind: 'progress', icon: 'droplet', label: 'Water', value: fmtFluid(selHabit.waterL, units), pct: pct(selHabit.waterL, t.waterL), onClick: () => nav.open('logHabit') },
+    { kind: 'tick', icon: 'utensils', label: 'Ask a Q', value: asked ? 'Asked' : 'Ask', done: asked, onClick: () => nav.goTab('nutrition') },
+    { kind: 'tick', icon: 'dumbbell', label: 'Workout', value: workoutDone ? (isRestDay && !workoutStartedForDay(state, selDate) ? 'Rest' : 'Done') : 'Start', done: workoutDone, onClick: () => (selSession ? nav.open('activeWorkout') : nav.goTab('workout')) },
   ]
-  const ringsOnTrack = habitRings.filter((h) => h.pct >= 100).length
+  const ringsOnTrack = habitRings.filter((h) => (h.kind === 'tick' ? h.done : h.pct >= 100)).length
 
   // The day's actionable to-dos, computed from real targets vs what's logged.
   const tasks: Task[] = []
@@ -271,15 +280,27 @@ export default function Dashboard() {
             <span className="font-semibold text-white/55">{ringsOnTrack} of {habitRings.length} goals on track</span>
             <span className="ml-auto text-white/30">{isToday ? 'Tap to update' : shortDate(selDate)}</span>
           </div>
-          <button onClick={isToday ? () => nav.open('logHabit') : undefined} className={`flex w-full justify-between ${isToday ? 'active:opacity-80' : 'cursor-default'}`}>
-            {habitRings.map((h) => (
-              <div key={h.label} className="flex flex-col items-center gap-1.5">
-                <ProgressRing value={h.pct} size={54} stroke={4} color={h.color}><Icon name={h.icon} size={19} color={h.color} /></ProgressRing>
-                <span className="text-[11px] font-semibold text-white/80">{h.label}</span>
-                <span className="text-[11px] font-bold">{h.value}</span>
-              </div>
-            ))}
-          </button>
+          <div className="flex w-full justify-between">
+            {habitRings.map((h) => {
+              const filled = h.kind === 'tick' ? (h.done ? 100 : 0) : h.pct
+              const showTick = h.kind === 'tick' && h.done
+              return (
+                <button
+                  key={h.label}
+                  onClick={isToday ? h.onClick : undefined}
+                  className={`flex flex-col items-center gap-1.5 ${isToday ? 'active:opacity-80' : 'cursor-default'}`}
+                >
+                  <ProgressRing value={filled} size={54} stroke={4} color="rgb(var(--brand-400))">
+                    {showTick
+                      ? <Check size={20} strokeWidth={3} className="text-brand-400" />
+                      : <Icon name={h.icon} size={19} color={h.kind === 'tick' ? 'rgb(var(--fg) / 0.4)' : 'rgb(var(--brand-400))'} />}
+                  </ProgressRing>
+                  <span className="text-[11px] font-semibold text-white/80">{h.label}</span>
+                  <span className={`text-[11px] font-bold ${showTick ? 'text-brand-400' : ''}`}>{h.value}</span>
+                </button>
+              )
+            })}
+          </div>
 
           {/* Nutrition day tags chosen for this date */}
           <div className="mt-4 border-t border-white/[0.06] pt-3.5">

@@ -41,6 +41,8 @@ export type Action =
   | { type: 'SEND_CHAT'; text: string }
   | { type: 'PUSH_CHAT'; role: 'user' | 'coach'; text: string }
   | { type: 'MARK_CHAT_READ' }
+  | { type: 'MARK_WORKOUT_STARTED' }
+  | { type: 'MARK_NUTRITION_ASKED' }
   | { type: 'SAVE_SESSION'; session: WorkoutSession }
   | { type: 'TOGGLE_EXERCISE_DONE'; defId: string }
   | { type: 'COMPLETE_WORKOUT'; id: string }
@@ -160,6 +162,18 @@ function reducer(state: AppState, action: Action): AppState {
       if (next.length) map[todayKey] = next
       else delete map[todayKey]
       return { ...state, nutritionTags: map }
+    }
+
+    case 'MARK_WORKOUT_STARTED': {
+      const keys = state.workoutStartedKeys ?? []
+      if (keys.includes(todayKey)) return state
+      return { ...state, workoutStartedKeys: [...keys, todayKey] }
+    }
+
+    case 'MARK_NUTRITION_ASKED': {
+      const keys = state.nutritionAskedKeys ?? []
+      if (keys.includes(todayKey)) return state
+      return { ...state, nutritionAskedKeys: [...keys, todayKey] }
     }
 
     case 'SEND_CHAT': {

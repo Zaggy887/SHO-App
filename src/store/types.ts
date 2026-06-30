@@ -412,6 +412,10 @@ export interface AppState {
   coachThread: CoachMessage[]
   /** user-created recipe meals */
   myMeals?: UserMeal[]
+  /** day keys on which the user started a workout */
+  workoutStartedKeys?: string[]
+  /** day keys on which the user asked the nutrition coach a question */
+  nutritionAskedKeys?: string[]
   /** completed beginner-track lesson ids */
   beginnerProgress: string[]
   /** schema version for migrations */
