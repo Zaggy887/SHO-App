@@ -518,11 +518,7 @@ function BudgetTab() {
     <>
       <MyMealsTab />
 
-      <div className="mt-6 rounded-2xl border border-white/8 bg-ink-800 p-4">
-        <Salad size={22} className="text-brand-400" />
-        <h3 className="mt-2 text-lg font-extrabold tracking-tight">Easy recipes worth cooking</h3>
-        <p className="mt-1 text-[13px] leading-snug text-white/60">Simple, tasty meals with every step laid out. Pick one and cook along.</p>
-      </div>
+      <h3 className="mt-6 text-lg font-extrabold tracking-tight">Easy recipes worth cooking</h3>
 
       {/* Category filter */}
       <div className="no-scrollbar -mx-5 mt-4 overflow-x-auto px-5">
