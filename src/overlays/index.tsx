@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import {
   Bell, Moon, Sun, GraduationCap, Wallet, RotateCcw, Trash2, Camera, Trophy,
   Flame, Plus, Check, Share2, ChevronRight, User, Sparkles, Dumbbell,
@@ -9,7 +9,6 @@ import { Sheet, EmptyState } from '../components/Sheet'
 import { Avatar } from '../components/Avatar'
 import { LogoMark } from '../components/Logo'
 import { Icon } from '../components/Icon'
-import { Chip } from '../components/ui'
 import { useStore } from '../store/store'
 import { useToast } from '../components/Toast'
 import { useNav } from '../nav'
@@ -210,44 +209,77 @@ export function SettingsSheet({ open, onClose }: Props) {
 export function ProfileSheet({ open, onClose }: Props) {
   const { state } = useStore()
   const nav = useNav()
-  const units = state.settings.units
-  const w = weightStats(state)
-  const streak = streakStats(state)
-  const totalWorkouts = state.sessions.filter((s) => s.completed).length
+  const p = state.profile
   const earned = state.badges.filter((b) => b.earned).length
+  const unread = state.notifications.filter((n) => !n.read).length
   const goalLabel: Record<string, string> = { 'build-muscle': 'Build Muscle', 'lose-fat': 'Lose Fat', 'gain-strength': 'Get Stronger', 'stay-healthy': 'Stay Healthy' }
+  const go = (o: Parameters<typeof nav.open>[0]) => () => nav.open(o)
+  const greenIcon = 'text-brand-400'
 
   return (
-    <Sheet open={open} onClose={onClose} title="Profile">
-      <div className="flex items-center gap-4">
-        <Avatar name={`${state.profile.name} M`} size={64} />
-        <div>
-          <p className="text-xl font-extrabold">{state.profile.name} Morgan</p>
-          <p className="text-[13px] text-white/50">{state.profile.age} · {state.profile.university}</p>
-          <Chip color="green" className="mt-1">{goalLabel[state.profile.goal]}</Chip>
+    <Sheet open={open} onClose={onClose} title="Menu">
+      {/* Who you are */}
+      <div className="flex items-center gap-3.5 rounded-2xl border border-white/5 bg-ink-800 p-4">
+        <Avatar name={`${p.name} M`} size={54} />
+        <div className="min-w-0">
+          <p className="truncate text-[17px] font-extrabold leading-tight">{p.name} Morgan</p>
+          <p className="mt-0.5 truncate text-[12.5px] text-white/50">{goalLabel[p.goal]} · {p.university}</p>
         </div>
       </div>
 
-      <p className="mt-3 text-[13px] text-white/45">{state.profile.dorm} · {state.profile.cohort}</p>
+      <MenuSection title="Your progress">
+        <MenuRow icon={<Sparkles size={17} className={greenIcon} />} title="Weekly recap" sub="Your week in numbers" onClick={go('recap')} />
+        <MenuRow icon={<Award size={17} className={greenIcon} />} title="Badges" sub={`${earned} earned`} onClick={go('badges')} />
+        <MenuRow icon={<Camera size={17} className={greenIcon} />} title="Progress photos" sub={`${state.photos.length} photos`} onClick={go('photos')} />
+      </MenuSection>
 
-      <div className="mt-4 grid grid-cols-3 gap-3 text-center">
-        <Stat label="Workouts" value={String(totalWorkouts)} />
-        <Stat label="Day streak" value={`${streak.current}`} />
-        <Stat label="Weight" value={fmtWeight(w.current, units, 1)} />
-      </div>
+      <MenuSection title="Coaching">
+        <MenuRow icon={<Sparkles size={17} className={greenIcon} />} title="Your coach" sub="Daily check-ins and milestones" onClick={go('coach')} />
+        <MenuRow icon={<GraduationCap size={17} className={greenIcon} />} title="Exam Survival Protocol" sub={p.examMode ? 'On' : 'Off'} onClick={go('examMode')} />
+        {p.newToGym && <MenuRow icon={<Leaf size={17} className={greenIcon} />} title="New to the gym" sub="Your first 90 days" onClick={go('beginner')} />}
+      </MenuSection>
 
-      <div className="mt-4 space-y-2.5">
-        <LinkRow icon={<Sparkles size={18} className="text-brand-400" />} title="Your coach" sub="Daily check ins and milestones" onClick={() => nav.open('coach')} />
-        <LinkRow icon={<Bell size={18} className="text-brand-400" />} title="Notifications" sub="Reminders, streaks & social" onClick={() => nav.open('notifications')} />
-        <LinkRow icon={<Award size={18} className="text-brand-400" />} title="Badges" sub={`${earned} earned`} onClick={() => nav.open('badges')} />
-        <LinkRow icon={<Camera size={18} className="text-brand-400" />} title="Progress photos" sub={`${state.photos.length} photos`} onClick={() => nav.open('photos')} />
-        <LinkRow icon={<Trophy size={18} className="text-brand-400" />} title="Campus leaderboard" sub={state.profile.university} onClick={() => nav.open('leaderboard')} />
-        <LinkRow icon={<Sparkles size={18} className="text-brand-400" />} title="Weekly recap" sub="Your week in numbers" onClick={() => nav.open('recap')} />
-        <LinkRow icon={<GraduationCap size={18} className="text-brand-400" />} title="Exam Survival Protocol" sub={state.profile.examMode ? 'On' : 'Off'} onClick={() => nav.open('examMode')} />
-        {state.profile.newToGym && <LinkRow icon={<Leaf size={18} className="text-brand-400" />} title="New to the gym" sub="Your first 90 days" onClick={() => nav.open('beginner')} />}
-        <LinkRow icon={<User size={18} className="text-white/70" />} title="Settings" sub="Units, theme and data" onClick={() => nav.open('settings')} />
-      </div>
+      <MenuSection title="Community">
+        <MenuRow icon={<Trophy size={17} className={greenIcon} />} title="Campus leaderboard" sub={p.university} onClick={go('leaderboard')} />
+        <MenuRow
+          icon={<Bell size={17} className={greenIcon} />}
+          title="Notifications"
+          sub="Reminders, streaks & social"
+          onClick={go('notifications')}
+          badge={unread > 0 ? <span className="grid h-5 min-w-[20px] place-items-center rounded-full bg-brand-400 px-1.5 text-[11px] font-bold text-black">{unread}</span> : undefined}
+        />
+      </MenuSection>
+
+      <MenuSection title="App">
+        <MenuRow icon={<User size={17} className="text-white/70" />} title="Settings" sub="Units, theme and data" onClick={go('settings')} />
+      </MenuSection>
+      <div className="h-2" />
     </Sheet>
+  )
+}
+
+function MenuSection({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <div className="mt-5">
+      <p className="mb-2 px-1 text-[12px] font-bold uppercase tracking-wide text-white/40">{title}</p>
+      <div className="divide-y divide-white/[0.06] overflow-hidden rounded-2xl border border-white/5 bg-ink-800">
+        {children}
+      </div>
+    </div>
+  )
+}
+
+function MenuRow({ icon, title, sub, onClick, badge }: { icon: ReactNode; title: string; sub?: string; onClick: () => void; badge?: ReactNode }) {
+  return (
+    <button onClick={onClick} className="flex w-full items-center gap-3 p-3.5 text-left transition active:bg-white/[0.03]">
+      <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand-400/[0.12]">{icon}</div>
+      <div className="min-w-0 flex-1">
+        <p className="font-semibold leading-tight">{title}</p>
+        {sub && <p className="mt-0.5 truncate text-[12px] text-white/45">{sub}</p>}
+      </div>
+      {badge}
+      <ChevronRight size={18} className="shrink-0 text-white/25" />
+    </button>
   )
 }
 
@@ -773,19 +805,6 @@ function Row({ icon, title, sub, children }: { icon: JSX.Element; title: string;
   )
 }
 
-function LinkRow({ icon, title, sub, onClick }: { icon: JSX.Element; title: string; sub: string; onClick: () => void }) {
-  return (
-    <button onClick={onClick} className="flex w-full items-center gap-3 rounded-2xl border border-white/5 bg-ink-800 p-4 text-left active:scale-[0.99]">
-      <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white/5">{icon}</div>
-      <div className="flex-1">
-        <p className="font-bold leading-tight">{title}</p>
-        <p className="text-[12px] text-white/50">{sub}</p>
-      </div>
-      <ChevronRight size={18} className="text-white/30" />
-    </button>
-  )
-}
-
 function Toggle({ on, onClick }: { on: boolean; onClick: () => void }) {
   return (
     <button onClick={onClick} className={`relative h-7 w-12 rounded-full transition-colors ${on ? 'bg-brand-400' : 'bg-white/15'}`}>
@@ -806,11 +825,3 @@ function Segmented<T extends string>({ value, options, onChange }: { value: T; o
   )
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-2xl border border-white/5 bg-ink-800 p-3">
-      <p className="text-lg font-extrabold">{value}</p>
-      <p className="text-[11px] text-white/45">{label}</p>
-    </div>
-  )
-}
