@@ -201,7 +201,7 @@ export default function Dashboard() {
 
       {/* Plan / workout: follows the selected day */}
       <Reveal delay={120}>
-        <Section title={isToday ? 'Your plan' : `${selWeekday}'s workout`} action="Workouts" onAction={() => nav.goTab('workout')} />
+        <Section title={isToday ? 'Your plan' : `${selWeekday}'s workout`} />
         <div className="relative overflow-hidden rounded-2xl border border-white/5">
           <img src={selSession?.image ?? session?.image ?? ''} alt="" className="absolute inset-0 h-full w-full object-cover" loading="lazy" />
           <div className="relative bg-gradient-to-r from-ink-900 via-ink-900/90 to-ink-900/30 p-5">
@@ -264,8 +264,6 @@ export default function Dashboard() {
       <Reveal delay={180}>
         <Section
           title={selTitle}
-          action={isToday ? 'Log' : 'Today'}
-          onAction={() => (isToday ? nav.open('logHabit') : setSelDate(todayKey))}
           tight
         />
         {isToday && t.adjusted && <p className="-mt-1 mb-3 text-[12px] text-accent-purple">Targets eased for exam season</p>}
@@ -348,7 +346,7 @@ export default function Dashboard() {
 
       {/* Progress overview */}
       <Reveal delay={360}>
-        <Section title="Progress overview" action="See all" onAction={() => nav.goTab('progress')} />
+        <Section title="Progress overview" />
         <div className="grid grid-cols-3 gap-3">
           {dashboardStatIds(state).map((id, i) => {
             const m = statById(id)
@@ -405,11 +403,11 @@ function TaskRow({ task }: { task: Task }) {
   )
 }
 
-function Section({ title, action, onAction, right, tight }: { title: string; action?: string; onAction?: () => void; right?: ReactNode; tight?: boolean }) {
+function Section({ title, right, tight }: { title: string; right?: ReactNode; tight?: boolean }) {
   return (
     <div className={`mb-2.5 flex items-center justify-between ${tight ? 'mt-5' : 'mt-7'}`}>
       <h2 className="section-title">{title}</h2>
-      {right ? right : action && <button className="see-all" onClick={onAction}>{action}</button>}
+      {right}
     </div>
   )
 }
