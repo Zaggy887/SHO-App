@@ -405,16 +405,6 @@ function LearnTab() {
 
   return (
     <div className="space-y-7">
-      {/* Welcoming intro: sets a light, approachable tone */}
-      <div className="overflow-hidden rounded-2xl border border-brand-400/25 bg-gradient-to-br from-brand-400/[0.12] to-brand-400/[0.03] p-5">
-        <div className="flex items-center gap-2">
-          <span className="grid h-7 w-7 place-items-center rounded-full bg-brand-400 text-black"><Salad size={15} /></span>
-          <p className="text-[17px] font-extrabold tracking-tight">Eating well, made simple</p>
-        </div>
-        <p className="mt-2 text-[13.5px] leading-relaxed text-white/75">
-          No fads and no calorie counting. Just the handful of basics that help you feel good and make easy, healthier choices, whatever is on your plate.
-        </p>
-      </div>
 
       {/* The balanced plate: a visual that does the explaining */}
       <section>
