@@ -63,15 +63,6 @@ export default function Progress() {
         trailing={<button onClick={() => nav.open('recap')} className="grid h-10 w-10 place-items-center rounded-xl text-brand-400 active:bg-white/5"><SlidersHorizontal size={22} /></button>}
       />
 
-      <div className="relative overflow-hidden rounded-2xl border border-white/5">
-        <img src="https://images.unsplash.com/photo-1454496522488-7a8e488e8606?auto=format&fit=crop&w=800&q=70" alt="" className="absolute inset-0 h-full w-full object-cover" loading="lazy" />
-        <div className="relative bg-gradient-to-r from-ink-900 via-ink-900/90 to-ink-900/20 p-5">
-          <h3 className="max-w-[260px] text-xl font-extrabold leading-tight">Discipline today, <span className="text-brand-400">freedom</span> tomorrow.</h3>
-          <p className="mt-2 max-w-[230px] text-[13px] leading-snug text-white/60">You don't rise to the level of your goals, you fall to the level of your systems.</p>
-          <div className="mt-3 h-0.5 w-10 rounded-full bg-brand-400" />
-        </div>
-      </div>
-
       <SectionHeader title="Overview" />
       <div className="grid grid-cols-2 gap-3">
         {cards.map((c) => (
