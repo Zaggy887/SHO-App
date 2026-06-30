@@ -555,8 +555,6 @@ function BudgetTab() {
               {m.flavour && <p className="mt-0.5 line-clamp-2 text-[12px] leading-snug text-white/55">{m.flavour}</p>}
               <p className="mt-1 flex items-center gap-2 text-[12px] font-semibold text-brand-400">
                 <span className="inline-flex items-center gap-1"><Clock size={12} /> {m.minutes} min</span>
-                <span className="text-white/25">·</span>
-                <span>Serves {m.serves}</span>
               </p>
             </div>
             <ChevronRight size={18} className="shrink-0 text-white/30" />
@@ -617,8 +615,6 @@ function RecipeModal({ meal, onClose }: { meal: BudgetMeal; onClose: () => void 
             <p className="text-[19px] font-extrabold leading-tight">{meal.name}</p>
             <p className="mt-1 flex items-center gap-2 text-[12.5px] font-semibold text-brand-300">
               <span className="inline-flex items-center gap-1"><Clock size={13} /> {meal.minutes} min</span>
-              <span className="opacity-40">·</span>
-              <span>Serves {meal.serves}</span>
             </p>
           </div>
         </div>
