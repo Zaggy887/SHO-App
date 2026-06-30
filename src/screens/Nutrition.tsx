@@ -814,7 +814,7 @@ function MyMealsTab() {
         className="flex w-full items-center gap-3 p-4 text-left"
       >
         <div className="min-w-0 flex-1">
-          <h3 className="text-[15px] font-extrabold tracking-tight">My Meals</h3>
+          <h3 className="text-[15px] font-extrabold tracking-tight">My Recipes</h3>
           <p className="mt-0.5 text-[13px] leading-snug text-white/60">
             {meals.length === 0 ? 'Save your own recipes and use them in the meal planner.' : `${meals.length} saved recipe${meals.length === 1 ? '' : 's'} · tap to manage`}
           </p>
