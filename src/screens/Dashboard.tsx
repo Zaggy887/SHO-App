@@ -9,11 +9,12 @@ import { useNav } from '../nav'
 import { currentWeekKeys, todayKey, longDate, shortDate, fromKey, TODAY } from '../lib/date'
 import { fmtFluid, fmtWeightNum, weightUnit, fmtVolume, pct } from '../lib/format'
 import {
-  todayHabit, habitForDay, todaySession, sessionForDay, activitiesForDay, weightStats, regularWorkoutsInRange,
-  strengthProgress, unreadChat, streakStats, foodReviewForDay, weeklyIndex, nutritionTagsForDay,
+  todayHabit, habitForDay, todaySession, sessionForDay, activitiesForDay,
+  unreadChat, streakStats, foodReviewForDay, weeklyIndex, nutritionTagsForDay,
   nutritionAskedForDay, workoutStartedForDay,
 } from '../store/selectors'
 import { tagById, TAG_TONE_VAR } from '../data/nutrition'
+import { dashboardStatIds, statById } from '../lib/metrics'
 import { coachDaily } from '../store/coach'
 import { dailyTargets, examState } from '../store/training'
 import { Wordmark } from '../components/Logo'
@@ -42,11 +43,6 @@ export default function Dashboard() {
   const units = state.settings.units
   const habit = todayHabit(state)
   const session = todaySession(state)
-  const w = weightStats(state)
-  const thisWeek = regularWorkoutsInRange(state, 6, 0)
-  const lastWeek = regularWorkoutsInRange(state, 13, 7)
-  const sp = strengthProgress(state)
-  const strengthAvg = sp.length ? Math.round(sp.reduce((a, s) => a + s.pct, 0) / sp.length) : 0
   const unread = unreadChat(state)
   const coach = coachDaily(state)
   const t = dailyTargets(state)
@@ -376,9 +372,12 @@ export default function Dashboard() {
       <Reveal delay={360}>
         <Section title="Progress overview" action="See all" onAction={() => nav.goTab('progress')} />
         <div className="grid grid-cols-3 gap-3">
-          <OverviewCard icon="dumbbell" label="Workouts" value={String(thisWeek)} sub="Last 7 days" delta={`${thisWeek >= lastWeek ? '↑' : '↓'} ${Math.abs(thisWeek - lastWeek)}`} />
-          <OverviewCard icon="trending" label="Strength" value={`+${strengthAvg}%`} sub="4 weeks" delta="↑" />
-          <OverviewCard icon="scale" label="Body weight" value={fmtWeightNum(w.current, units)} unit={weightUnit(units)} sub="" delta={`${w.delta <= 0 ? '↓' : '↑'} ${Math.abs(w.delta).toFixed(1)}`} />
+          {dashboardStatIds(state).map((id, i) => {
+            const m = statById(id)
+            if (!m) return null
+            const r = m.compute(state, units)
+            return <OverviewCard key={`${id}-${i}`} icon={r.icon} label={r.label} value={r.value} unit={r.unit} sub={r.sub} delta={r.delta} />
+          })}
         </div>
       </Reveal>
 

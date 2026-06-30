@@ -27,6 +27,7 @@ import {
   ExamModeSheet,
   CoachSheet,
   CoachChatSheet,
+  CustomizeSheet,
   BeginnerSheet,
   BudgetEatsSheet,
   ExerciseDetailSheet,
@@ -99,6 +100,7 @@ function Shell() {
       <ExamModeSheet open={overlay === 'examMode'} onClose={nav.close} />
       <CoachSheet open={overlay === 'coach'} onClose={nav.close} />
       <CoachChatSheet open={overlay === 'coachChat'} onClose={nav.close} />
+      <CustomizeSheet open={overlay === 'customize'} onClose={nav.close} />
       <BeginnerSheet open={overlay === 'beginner'} onClose={nav.close} />
       <BudgetEatsSheet open={overlay === 'budgetEats'} onClose={nav.close} />
       <ExerciseDetailSheet open={overlay === 'exerciseDetail'} onClose={nav.close} params={params} />

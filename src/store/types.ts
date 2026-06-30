@@ -77,6 +77,10 @@ export interface Settings {
   language?: Language
   /** Connected third-party integrations, e.g. { strava: true }. */
   connections?: Record<string, boolean>
+  /** Which metric the main Progress chart shows (default 'weight'). */
+  progressMetric?: string
+  /** The three stat ids shown in the dashboard Progress overview. */
+  dashboardStats?: string[]
 }
 
 export interface WeightEntry {

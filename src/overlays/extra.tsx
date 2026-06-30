@@ -23,6 +23,8 @@ import { CHAT_SUGGESTIONS, coachReply } from '../lib/coachChat'
 import { askCoach } from '../lib/coachApi'
 import { todaySession, leaderboardSorted, youRank } from '../store/selectors'
 import { relativeLabel } from '../lib/date'
+import { CHART_METRICS, STAT_METRICS, progressMetricId, dashboardStatIds } from '../lib/metrics'
+import { weightVal, toKg, weightUnit } from '../lib/format'
 import type { CoachKind } from '../store/types'
 
 type Props = { open: boolean; onClose: () => void; params?: Record<string, unknown> }
@@ -771,5 +773,129 @@ export function ChallengeDetailSheet({ open, onClose, params }: Props) {
         </>
       )}
     </Sheet>
+  )
+}
+
+/* ===================== Customise progress & goals ================= */
+export function CustomizeSheet({ open, onClose }: Props) {
+  const { state, dispatch } = useStore()
+  const toast = useToast()
+  const units = state.settings.units
+  const p = state.profile
+
+  const metric = progressMetricId(state)
+  const stats = dashboardStatIds(state)
+
+  // Goal inputs are edited locally, then saved in one go.
+  const [goalW, setGoalW] = useState(() => String(Math.round(weightVal(p.goalWeightKg, units) * 10) / 10))
+  const [steps, setSteps] = useState(() => String(p.stepTarget))
+  const [sleep, setSleep] = useState(() => String(p.sleepTargetH))
+  const [water, setWater] = useState(() => String(p.waterTargetL))
+  const [days, setDays] = useState(() => String(p.daysPerWeek))
+
+  function saveGoals() {
+    dispatch({
+      type: 'SET_PROFILE',
+      patch: {
+        goalWeightKg: Math.round(toKg(parseFloat(goalW) || weightVal(p.goalWeightKg, units), units) * 10) / 10,
+        stepTarget: Math.max(0, Math.round(Number(steps) || 0)),
+        sleepTargetH: Math.max(0, Math.min(14, Number(sleep) || 0)),
+        waterTargetL: Math.max(0, Number(water) || 0),
+        daysPerWeek: Math.max(1, Math.min(7, Math.round(Number(days) || 1))),
+      },
+    })
+    toast('Goals updated')
+  }
+
+  function pickMetric(id: string) {
+    dispatch({ type: 'SET_SETTINGS', patch: { progressMetric: id } })
+  }
+
+  function toggleStat(id: string) {
+    const has = stats.includes(id)
+    let next: string[]
+    if (has) {
+      if (stats.length <= 1) return // keep at least one
+      next = stats.filter((x) => x !== id)
+    } else {
+      // Always keep exactly three: adding a fourth swaps out the oldest pick.
+      next = stats.length >= 3 ? [...stats.slice(1), id] : [...stats, id]
+    }
+    dispatch({ type: 'SET_SETTINGS', patch: { dashboardStats: next } })
+  }
+
+  const inputCls = 'w-24 rounded-xl border border-white/8 bg-ink-900/60 px-3 py-2 text-right text-[15px] font-bold text-white focus:border-brand-400/60 focus:outline-none'
+
+  return (
+    <Sheet open={open} onClose={onClose} title="Customise">
+      {/* Goals */}
+      <p className="mb-2 text-[12px] font-bold uppercase tracking-wide text-white/40">Your goals</p>
+      <div className="space-y-2 rounded-2xl border border-white/8 bg-ink-800 p-3">
+        <GoalRow label="Goal weight" unit={weightUnit(units)}>
+          <input value={goalW} onChange={(e) => setGoalW(e.target.value.replace(/[^\d.]/g, ''))} inputMode="decimal" className={inputCls} />
+        </GoalRow>
+        <GoalRow label="Daily steps" unit="steps">
+          <input value={steps} onChange={(e) => setSteps(e.target.value.replace(/\D/g, ''))} inputMode="numeric" className={inputCls} />
+        </GoalRow>
+        <GoalRow label="Sleep" unit="hours">
+          <input value={sleep} onChange={(e) => setSleep(e.target.value.replace(/[^\d.]/g, ''))} inputMode="decimal" className={inputCls} />
+        </GoalRow>
+        <GoalRow label="Water" unit="litres">
+          <input value={water} onChange={(e) => setWater(e.target.value.replace(/[^\d.]/g, ''))} inputMode="decimal" className={inputCls} />
+        </GoalRow>
+        <GoalRow label="Workouts / week" unit="days">
+          <input value={days} onChange={(e) => setDays(e.target.value.replace(/\D/g, '').slice(0, 1))} inputMode="numeric" className={inputCls} />
+        </GoalRow>
+        <button onClick={saveGoals} className="btn-primary mt-1 w-full py-2.5 text-sm">Save goals</button>
+      </div>
+
+      {/* Main chart metric */}
+      <p className="mb-2 mt-6 text-[12px] font-bold uppercase tracking-wide text-white/40">Main chart shows</p>
+      <div className="space-y-2">
+        {CHART_METRICS.map((m) => {
+          const on = metric === m.id
+          return (
+            <button key={m.id} onClick={() => pickMetric(m.id)} className={`flex w-full items-center gap-3 rounded-2xl border p-3.5 text-left transition active:scale-[0.99] ${on ? 'border-brand-400 bg-brand-400/10' : 'border-white/8 bg-ink-800'}`}>
+              <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-brand-400/15"><Icon name={m.icon} size={18} color="rgb(var(--brand-400))" /></div>
+              <span className="flex-1 font-semibold">{m.label}</span>
+              {on && <Check size={18} strokeWidth={3} className="text-brand-400" />}
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Dashboard stats */}
+      <div className="mb-2 mt-6 flex items-center justify-between">
+        <p className="text-[12px] font-bold uppercase tracking-wide text-white/40">Dashboard stats</p>
+        <p className="text-[11px] text-white/35">Pick 3</p>
+      </div>
+      <div className="space-y-2">
+        {STAT_METRICS.map((m) => {
+          const on = stats.includes(m.id)
+          return (
+            <button
+              key={m.id}
+              onClick={() => toggleStat(m.id)}
+              className={`flex w-full items-center gap-3 rounded-2xl border p-3.5 text-left transition active:scale-[0.99] ${on ? 'border-brand-400 bg-brand-400/10' : 'border-white/8 bg-ink-800'}`}
+            >
+              <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-brand-400/15"><Icon name={m.icon} size={18} color="rgb(var(--brand-400))" /></div>
+              <span className="flex-1 font-semibold">{m.label}</span>
+              <span className={`grid h-5 w-5 place-items-center rounded-md border ${on ? 'border-brand-400 bg-brand-400 text-black' : 'border-white/20'}`}>{on && <Check size={13} strokeWidth={3.5} />}</span>
+            </button>
+          )
+        })}
+      </div>
+      <div className="h-2" />
+    </Sheet>
+  )
+}
+
+function GoalRow({ label, unit, children }: { label: string; unit: string; children: React.ReactNode }) {
+  return (
+    <div className="flex items-center gap-3 rounded-xl px-1 py-1.5">
+      <span className="flex-1 text-[14px] font-semibold">{label}</span>
+      {children}
+      <span className="w-12 text-[12px] text-white/40">{unit}</span>
+    </div>
   )
 }

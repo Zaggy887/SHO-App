@@ -5,12 +5,13 @@ import { Icon } from '../components/Icon'
 import { ProgressRing, ProgressBar, ScreenHeader, SectionHeader } from '../components/ui'
 import { useStore } from '../store/store'
 import { useNav } from '../nav'
-import { dayKey, shortDate, weekday } from '../lib/date'
+import { dayKey, weekday } from '../lib/date'
 import { fmtWeight, fmtWeightNum, weightUnit, weightVal } from '../lib/format'
 import {
   weightStats, strengthProgress, habitConsistency7d, streakStats,
   workoutsInRange, volumeByWeek,
 } from '../store/selectors'
+import { buildChartData, progressMetricId } from '../lib/metrics'
 
 export default function Progress() {
   const { state } = useStore()
@@ -27,15 +28,12 @@ export default function Progress() {
   const streak = streakStats(state)
   const workouts4w = workoutsInRange(state, 28)
 
-  // Weight trend chart
+  // Main chart: whichever metric the user picked (weight, a lift, or steps)
   const days = range === '4 Weeks' ? 28 : 84
-  const cutoff = dayKey(days)
-  const chart = w.series.filter((s) => s.dateKey >= cutoff).map((s) => ({ date: shortDate(s.dateKey), weight: Math.round(weightVal(s.kg, units) * 10) / 10 }))
-  const vals = chart.map((c) => c.weight)
-  const yMin = Math.floor(Math.min(...vals) - 1)
-  const yMax = Math.ceil(Math.max(...vals) + 1)
+  const metricId = progressMetricId(state)
+  const cd = buildChartData(state, metricId, days, units)
 
-  // Weight goal bar
+  // Weight goal bar (only shown when the chart is body weight)
   const goalKg = p.goalWeightKg
   const losing = goalKg <= w.start
   const span = Math.abs(w.start - goalKg) || 1
@@ -78,53 +76,62 @@ export default function Progress() {
     <div className="px-5 pt-2">
       <ScreenHeader
         title="Progress"
-        trailing={<button onClick={() => nav.open('recap')} className="grid h-10 w-10 place-items-center rounded-xl text-brand-400 active:bg-white/5"><SlidersHorizontal size={22} /></button>}
+        trailing={<button onClick={() => nav.open('customize')} aria-label="Customise progress" className="grid h-10 w-10 place-items-center rounded-xl text-brand-400 active:bg-white/5"><SlidersHorizontal size={22} /></button>}
       />
 
-      {/* ---------------- Weight: trend line + goal bar ---------------- */}
+      {/* ---------------- Main chart (customisable metric) ---------------- */}
       <div className="card p-4">
         <div className="mb-1 flex items-start justify-between">
-          <div>
-            <h2 className="section-title">Weight</h2>
+          <div className="min-w-0">
+            <h2 className="section-title truncate">{cd.title}</h2>
             <div className="mt-0.5 flex items-baseline gap-2">
-              <span className="text-3xl font-extrabold leading-none">{fmtWeightNum(w.current, units)}<span className="ml-1 text-sm font-semibold text-white/45">{weightUnit(units)}</span></span>
-              <span className={`text-[12px] font-semibold ${w.delta <= 0 ? 'text-brand-400' : 'text-white/50'}`}>{w.delta <= 0 ? '↓' : '↑'} {fmtWeight(Math.abs(w.delta), units, 1)}</span>
+              <span className="text-3xl font-extrabold leading-none">{cd.currentLabel}<span className="ml-1 text-sm font-semibold text-white/45">{cd.unit}</span></span>
+              {cd.points.length >= 2 && <span className={`text-[12px] font-semibold ${cd.deltaGood ? 'text-brand-400' : 'text-white/50'}`}>{cd.deltaText}</span>}
             </div>
           </div>
-          <button onClick={() => setRange((r) => (r === '4 Weeks' ? '12 Weeks' : '4 Weeks'))} className="flex items-center gap-1 rounded-lg border border-white/10 bg-ink-700 px-2.5 py-1 text-xs font-semibold text-white/70">{range} <ChevronDown size={14} /></button>
+          <button onClick={() => setRange((r) => (r === '4 Weeks' ? '12 Weeks' : '4 Weeks'))} className="flex shrink-0 items-center gap-1 rounded-lg border border-white/10 bg-ink-700 px-2.5 py-1 text-xs font-semibold text-white/70">{range} <ChevronDown size={14} /></button>
         </div>
 
-        <div className="h-40 w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={chart} margin={{ top: 10, right: 6, left: -22, bottom: 0 }}>
-              <defs>
-                <linearGradient id="wt" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="rgb(var(--brand-400))" stopOpacity={0.4} />
-                  <stop offset="100%" stopColor="rgb(var(--brand-400))" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(130,130,130,0.18)" vertical={false} />
-              <XAxis dataKey="date" tick={{ fill: 'rgba(140,140,140,0.85)', fontSize: 11 }} axisLine={false} tickLine={false} interval="preserveStartEnd" minTickGap={28} />
-              <YAxis domain={[yMin, yMax]} tick={{ fill: 'rgba(140,140,140,0.85)', fontSize: 11 }} axisLine={false} tickLine={false} width={40} />
-              <Tooltip contentStyle={{ background: '#1A1B1E', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, fontSize: 12, color: '#fff' }} labelStyle={{ color: '#fff' }} formatter={(v: number) => [`${v} ${weightUnit(units)}`, 'Weight']} />
-              <Area type="monotone" dataKey="weight" stroke="rgb(var(--brand-400))" strokeWidth={3} fill="url(#wt)" dot={false} activeDot={{ r: 5 }} />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
+        {cd.points.length >= 2 ? (
+          <div className="h-40 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={cd.points} margin={{ top: 10, right: 6, left: -22, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="wt" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="rgb(var(--brand-400))" stopOpacity={0.4} />
+                    <stop offset="100%" stopColor="rgb(var(--brand-400))" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(130,130,130,0.18)" vertical={false} />
+                <XAxis dataKey="date" tick={{ fill: 'rgba(140,140,140,0.85)', fontSize: 11 }} axisLine={false} tickLine={false} interval="preserveStartEnd" minTickGap={28} />
+                <YAxis domain={cd.domain ?? ['auto', 'auto']} tick={{ fill: 'rgba(140,140,140,0.85)', fontSize: 11 }} axisLine={false} tickLine={false} width={40} tickFormatter={(v: number) => (v >= 1000 ? `${Math.round(v / 1000)}k` : `${v}`)} />
+                <Tooltip contentStyle={{ background: '#1A1B1E', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, fontSize: 12, color: '#fff' }} labelStyle={{ color: '#fff' }} formatter={(v: number) => [`${v.toLocaleString()} ${cd.unit}`, cd.title]} />
+                <Area type="monotone" dataKey="value" stroke="rgb(var(--brand-400))" strokeWidth={3} fill="url(#wt)" dot={false} activeDot={{ r: 5 }} />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        ) : (
+          <div className="flex h-40 flex-col items-center justify-center text-center">
+            <p className="text-sm font-semibold text-white/55">Not enough data yet</p>
+            <p className="mt-1 text-[12px] text-white/35">Log a few more to see this trend.</p>
+          </div>
+        )}
 
-        {/* Goal progress bar */}
-        <div className="mt-3 border-t border-white/5 pt-3.5">
-          <div className="mb-2 flex items-end justify-between text-[12px]">
-            <div><p className="text-white/40">Start</p><p className="font-bold">{fmtWeightNum(w.start, units, 1)}</p></div>
-            <div className="text-center"><p className="text-white/40">Current</p><p className="font-bold text-brand-400">{fmtWeightNum(w.current, units, 1)}</p></div>
-            <div className="text-right"><p className="text-white/40">Target</p><p className="font-bold">{fmtWeightNum(goalKg, units, 1)}</p></div>
+        {/* Goal progress bar (body weight only) */}
+        {cd.isWeight && (
+          <div className="mt-3 border-t border-white/5 pt-3.5">
+            <div className="mb-2 flex items-end justify-between text-[12px]">
+              <div><p className="text-white/40">Start</p><p className="font-bold">{fmtWeightNum(w.start, units, 1)}</p></div>
+              <div className="text-center"><p className="text-white/40">Current</p><p className="font-bold text-brand-400">{fmtWeightNum(w.current, units, 1)}</p></div>
+              <div className="text-right"><p className="text-white/40">Target</p><p className="font-bold">{fmtWeightNum(goalKg, units, 1)}</p></div>
+            </div>
+            <ProgressBar value={goalPct} height={8} />
+            <div className="mt-2.5 flex items-center justify-between">
+              <p className="text-[12px] text-white/50">{reachedGoal ? 'Target reached' : `${fmtWeight(toGo, units, 1)} to go`}</p>
+              <button onClick={() => nav.open('logWeight')} className="flex items-center gap-1 rounded-lg bg-brand-400/15 px-3 py-1.5 text-xs font-bold text-brand-400 active:bg-brand-400/25"><Plus size={13} /> Add weight</button>
+            </div>
           </div>
-          <ProgressBar value={goalPct} height={8} />
-          <div className="mt-2.5 flex items-center justify-between">
-            <p className="text-[12px] text-white/50">{reachedGoal ? 'Target reached' : `${fmtWeight(toGo, units, 1)} to go`}</p>
-            <button onClick={() => nav.open('logWeight')} className="flex items-center gap-1 rounded-lg bg-brand-400/15 px-3 py-1.5 text-xs font-bold text-brand-400 active:bg-brand-400/25"><Plus size={13} /> Add weight</button>
-          </div>
-        </div>
+        )}
       </div>
 
       {/* ---------------- Snapshot tiles ---------------- */}
