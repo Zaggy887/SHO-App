@@ -860,14 +860,10 @@ function MyMealsTab() {
   const [creating, setCreating] = useState(false)
   const [name, setName] = useState('')
   const [notes, setNotes] = useState('')
-  const [kcal, setKcal] = useState('')
-  const [protein, setProtein] = useState('')
-  const [carbs, setCarbs] = useState('')
-  const [fat, setFat] = useState('')
   const [ingLine, setIngLine] = useState('')
 
   function resetForm() {
-    setName(''); setNotes(''); setKcal(''); setProtein(''); setCarbs(''); setFat(''); setIngLine('')
+    setName(''); setNotes(''); setIngLine('')
     setCreating(false)
   }
 
@@ -879,14 +875,14 @@ function MyMealsTab() {
       meal: {
         name: n,
         notes: notes.trim() || undefined,
-        kcal: Number(kcal) || 0,
-        p: Number(protein) || 0,
-        c: Number(carbs) || 0,
-        f: Number(fat) || 0,
+        kcal: 0,
+        p: 0,
+        c: 0,
+        f: 0,
         ingredients: ingLine.split('\n').map((s) => s.trim()).filter(Boolean),
       },
     })
-    toast(`"${n}" saved`)
+    toast(`"${n}" added`)
     resetForm()
   }
 
@@ -924,13 +920,6 @@ function MyMealsTab() {
                   <div className="min-w-0 flex-1">
                     <p className="font-bold leading-tight">{m.name}</p>
                     {m.notes && <p className="mt-0.5 text-[12px] leading-snug text-white/50">{m.notes}</p>}
-                    {(m.kcal > 0 || m.p > 0) && (
-                      <p className="mt-1 text-[12px] font-semibold text-brand-400">
-                        {m.kcal > 0 ? `${m.kcal} kcal` : ''}
-                        {m.kcal > 0 && m.p > 0 ? ' · ' : ''}
-                        {m.p > 0 ? `${m.p}g protein` : ''}
-                      </p>
-                    )}
                     {m.ingredients.length > 0 && (
                       <div className="mt-1.5 flex flex-wrap gap-1">
                         {m.ingredients.map((ing, i) => (
@@ -953,12 +942,6 @@ function MyMealsTab() {
               <p className="text-[12px] font-bold uppercase tracking-wide text-white/40">New recipe</p>
               <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Meal name *" className={`${inputCls} w-full`} />
               <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Description (optional)" rows={2} className={`${inputCls} w-full resize-none`} />
-              <div className="grid grid-cols-2 gap-2">
-                <input value={kcal} onChange={(e) => setKcal(e.target.value)} type="number" min="0" placeholder="Calories" className={inputCls} />
-                <input value={protein} onChange={(e) => setProtein(e.target.value)} type="number" min="0" placeholder="Protein (g)" className={inputCls} />
-                <input value={carbs} onChange={(e) => setCarbs(e.target.value)} type="number" min="0" placeholder="Carbs (g)" className={inputCls} />
-                <input value={fat} onChange={(e) => setFat(e.target.value)} type="number" min="0" placeholder="Fat (g)" className={inputCls} />
-              </div>
               <textarea value={ingLine} onChange={(e) => setIngLine(e.target.value)} placeholder={"Ingredients (one per line)\ne.g. 2 eggs\n100g oats"} rows={4} className={`${inputCls} w-full resize-none`} />
               <div className="flex gap-2">
                 <button onClick={save} disabled={!name.trim()} className="btn-primary flex-1"><Plus size={15} /> Save meal</button>

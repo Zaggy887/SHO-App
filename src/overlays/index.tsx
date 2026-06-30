@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   Bell, Moon, Sun, GraduationCap, Wallet, RotateCcw, Trash2, Camera, Trophy,
-  Flame, Search, ScanLine, Plus, Check, Share2, ChevronRight, User, Sparkles, Dumbbell,
+  Flame, Plus, Check, Share2, ChevronRight, User, Sparkles, Dumbbell,
   Droplet, Footprints, BedDouble, Leaf, Clock, Play, Award, BellRing, Crown,
   HeartPulse, Activity, Zap,
 } from 'lucide-react'
@@ -13,21 +13,20 @@ import { Chip } from '../components/ui'
 import { useStore } from '../store/store'
 import { useToast } from '../components/Toast'
 import { useNav } from '../nav'
-import { FOODS, QUICK_WORKOUTS } from '../data/catalog'
-import { pick, makeRng } from '../lib/rng'
+import { QUICK_WORKOUTS } from '../data/catalog'
 import { todayKey, relativeLabel, shortDate } from '../lib/date'
 import {
   fmtWeight, fmtWeightNum, toKg, weightUnit, fmtFluid,
   weightVal,
 } from '../lib/format'
 import {
-  weightStats, workoutsThisWeek, totalVolumeRange, streakStats, todayHabit,
-  habitConsistencyWeek, leaderboardSorted, strengthProgress, activitiesInRange,
+  weightStats, workoutsInRange, totalVolumeRange, streakStats, todayHabit,
+  habitConsistency7d, leaderboardSorted, strengthProgress, activitiesInRange,
 } from '../store/selectors'
 import { ActivityIcon } from '../components/ActivityIcon'
-import { examState, dailyTargets, defaultExamWindow } from '../store/training'
+import { examState, defaultExamWindow } from '../store/training'
 import { translator, LANGUAGES, type Language } from '../lib/i18n'
-import type { MealName, Units, Theme } from '../store/types'
+import type { Units, Theme } from '../store/types'
 
 const INTEGRATIONS: { id: string; name: string; sub: string; icon: JSX.Element }[] = [
   { id: 'appleHealth', name: 'Apple Health', sub: 'Steps, workouts, sleep & heart rate', icon: <HeartPulse size={18} className="text-red-400" /> },
@@ -252,87 +251,6 @@ export function ProfileSheet({ open, onClose }: Props) {
   )
 }
 
-/* ============================ Add Food ============================ */
-export function AddFoodSheet({ open, onClose, params }: Props) {
-  const { state, dispatch } = useStore()
-  const toast = useToast()
-  const [meal, setMeal] = useState<MealName>((params?.meal as MealName) || 'Snack')
-  const [q, setQ] = useState('')
-  const [budgetOnly, setBudgetOnly] = useState(state.profile.budgetMode)
-  const [scanned, setScanned] = useState<string | null>(null)
-
-  const results = useMemo(() => {
-    return FOODS.filter((f) => f.name.toLowerCase().includes(q.toLowerCase())).filter((f) => (budgetOnly ? f.budget : true))
-  }, [q, budgetOnly])
-
-  function add(foodId: string) {
-    const f = FOODS.find((x) => x.id === foodId)!
-    dispatch({ type: 'ADD_MEAL', meal: { meal, name: f.name, qty: 1, kcal: f.kcal, p: f.p, c: f.c, f: f.f } })
-    toast(`Added to ${meal}`)
-    onClose()
-  }
-
-  function scan() {
-    // simulate a barcode scan resolving to a product
-    const f = pick(makeRng(Date.now() % 100000), FOODS.filter((x) => x.barcode))
-    setScanned(f.id)
-    setQ('')
-  }
-
-  return (
-    <Sheet open={open} onClose={onClose} title="Add food">
-      <div className="no-scrollbar -mx-1 mb-3 flex gap-2 overflow-x-auto px-1">
-        {(['Breakfast', 'Lunch', 'Snack', 'Dinner'] as MealName[]).map((m) => (
-          <button key={m} onClick={() => setMeal(m)} className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-semibold ${meal === m ? 'bg-brand-400 text-black' : 'bg-ink-700 text-white/60'}`}>
-            {m}
-          </button>
-        ))}
-      </div>
-
-      <div className="mb-3 flex gap-2">
-        <div className="flex flex-1 items-center gap-2 rounded-xl border border-white/8 bg-ink-800 px-3">
-          <Search size={18} className="text-white/40" />
-          <input value={q} onChange={(e) => { setQ(e.target.value); setScanned(null) }} placeholder="Search foods…" className="w-full bg-transparent py-3 text-sm focus:outline-none" />
-        </div>
-        <button onClick={scan} className="grid h-[46px] w-[46px] place-items-center rounded-xl bg-brand-400 text-black active:scale-95">
-          <ScanLine size={20} />
-        </button>
-      </div>
-
-      <button onClick={() => setBudgetOnly((b) => !b)} className={`mb-3 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ${budgetOnly ? 'bg-brand-400/20 text-brand-400' : 'bg-ink-700 text-white/55'}`}>
-        <Wallet size={13} /> Budget meals {budgetOnly ? 'on' : 'off'}
-      </button>
-
-      {scanned && (
-        <div className="mb-3 rounded-2xl border border-brand-400/30 bg-brand-400/10 p-3">
-          <p className="mb-1 text-[12px] font-semibold text-brand-400">✓ Barcode matched</p>
-          <FoodRow id={scanned} onAdd={add} />
-        </div>
-      )}
-
-      <div className="space-y-2">
-        {results.map((f) => (
-          <FoodRow key={f.id} id={f.id} onAdd={add} />
-        ))}
-        {results.length === 0 && <p className="py-6 text-center text-sm text-white/40">No foods found.</p>}
-      </div>
-    </Sheet>
-  )
-}
-
-function FoodRow({ id, onAdd }: { id: string; onAdd: (id: string) => void }) {
-  const f = FOODS.find((x) => x.id === id)!
-  return (
-    <button onClick={() => onAdd(id)} className="flex w-full items-center gap-3 rounded-2xl border border-white/5 bg-ink-800 p-3 text-left active:scale-[0.99]">
-      <div className="min-w-0 flex-1">
-        <p className="truncate font-bold leading-tight">{f.name}</p>
-        <p className="text-[12px] text-white/45">{f.serving} · {f.kcal} kcal · {f.p}P {f.c}C {f.f}F</p>
-      </div>
-      {f.budget && <Wallet size={14} className="text-brand-400" />}
-      <div className="grid h-7 w-7 place-items-center rounded-full bg-brand-400 text-black"><Plus size={16} strokeWidth={3} /></div>
-    </button>
-  )
-}
 
 /* ============================ Log Weight ============================ */
 export function LogWeightSheet({ open, onClose }: Props) {
@@ -345,7 +263,7 @@ export function LogWeightSheet({ open, onClose }: Props) {
   function save() {
     const kg = toKg(parseFloat(val) || current, units)
     dispatch({ type: 'LOG_WEIGHT', kg: Math.round(kg * 10) / 10 })
-    toast('Weight logged')
+    toast('Weight added')
     onClose()
   }
 
@@ -542,10 +460,10 @@ export function WeeklyRecapSheet({ open, onClose }: Props) {
   const { state } = useStore()
   const toast = useToast()
   const units = state.settings.units
-  const workouts = workoutsThisWeek(state)
+  const workouts = workoutsInRange(state, 7)
   const vol = totalVolumeRange(state, 7)
   const streak = streakStats(state)
-  const hc = habitConsistencyWeek(state)
+  const hc = habitConsistency7d(state)
   const w = weightStats(state)
   const top = strengthProgress(state)[0]
   const acts = activitiesInRange(state, 7)
@@ -562,7 +480,7 @@ export function WeeklyRecapSheet({ open, onClose }: Props) {
   return (
     <Sheet open={open} onClose={onClose} title="Your week">
       <div className="rounded-3xl bg-gradient-to-br from-brand-600 to-brand-400 p-5 text-black">
-        <p className="text-sm font-bold opacity-80">THIS WEEK</p>
+        <p className="text-sm font-bold opacity-80">LAST 7 DAYS</p>
         <p className="mt-1 text-4xl font-extrabold">{workouts} workouts</p>
         <p className="font-semibold opacity-80">{streak.current}-day streak · top 20% of users</p>
         <div className="mt-4 grid grid-cols-2 gap-3">
@@ -764,7 +682,6 @@ export function ExamModeSheet({ open, onClose }: Props) {
   const fallback = defaultExamWindow()
   const [start, setStart] = useState(state.profile.examStartKey ?? fallback.startKey)
   const [end, setEnd] = useState(state.profile.examEndKey ?? fallback.endKey)
-  const t = dailyTargets(state)
   const p = state.profile
 
   function save() {
@@ -812,7 +729,7 @@ export function ExamModeSheet({ open, onClose }: Props) {
       <p className="mt-5 mb-2 text-[12px] font-bold uppercase tracking-wide text-white/40">While exams are on</p>
       <div className="space-y-2.5">
         <AdaptRow label="Sessions" value="Trimmed to your 3 key lifts" />
-        <AdaptRow label="Calories" value={`${t.adjusted ? t.calorie.toLocaleString() : (p.calorieTarget + (p.goal === 'build-muscle' ? -250 : 0)).toLocaleString()} kcal, toward maintenance`} />
+        <AdaptRow label="Eating" value="Keep it simple: protein, veg, enough fuel" />
         <AdaptRow label="Sleep target" value={`${Math.min(9, p.sleepTargetH + 0.5)} hours, prioritised`} />
         <AdaptRow label="Step target" value={`${Math.round(p.stepTarget * 0.7).toLocaleString()}, eased off`} />
       </div>

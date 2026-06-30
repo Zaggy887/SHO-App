@@ -5,7 +5,6 @@ export type Overlay =
   | 'settings'
   | 'profile'
   | 'activeWorkout'
-  | 'addFood'
   | 'logWeight'
   | 'logHabit'
   | 'logActivity'

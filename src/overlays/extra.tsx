@@ -14,7 +14,7 @@ import { useToast } from '../components/Toast'
 import { useNav } from '../nav'
 import {
   BUDGET_MEALS, BEGINNER_LESSONS, exerciseDetail, exById, REP_TARGETS, BASE_WEIGHTS,
-  ACTIVITY_PRESETS, activityPreset, INTENSITY_MULT,
+  ACTIVITY_PRESETS, activityPreset,
 } from '../data/catalog'
 import { ActivityIcon } from '../components/ActivityIcon'
 import { nextSetRecommendation } from '../store/training'
@@ -23,7 +23,7 @@ import { CHAT_SUGGESTIONS, coachReply } from '../lib/coachChat'
 import { askCoach } from '../lib/coachApi'
 import { todaySession, leaderboardSorted, youRank } from '../store/selectors'
 import { relativeLabel } from '../lib/date'
-import type { CoachKind, MealName } from '../store/types'
+import type { CoachKind } from '../store/types'
 
 type Props = { open: boolean; onClose: () => void; params?: Record<string, unknown> }
 
@@ -133,15 +133,7 @@ export function BeginnerSheet({ open, onClose }: Props) {
 
 /* ======================== Budget eats ============================= */
 export function BudgetEatsSheet({ open, onClose }: Props) {
-  const { dispatch } = useStore()
-  const toast = useToast()
   const [openId, setOpenId] = useState<string | null>(null)
-
-  function logMeal(id: string) {
-    const m = BUDGET_MEALS.find((x) => x.id === id)!
-    dispatch({ type: 'ADD_MEAL', meal: { meal: 'Lunch' as MealName, name: m.name, qty: 1, kcal: m.kcal, p: m.p, c: m.c, f: m.f } })
-    toast('Logged to lunch')
-  }
 
   return (
     <Sheet open={open} onClose={onClose} title="Easy recipes">
@@ -186,7 +178,6 @@ export function BudgetEatsSheet({ open, onClose }: Props) {
                       <Lightbulb size={16} className="shrink-0 text-brand-400" /> {m.cookOnce}
                     </div>
                   )}
-                  <button onClick={() => logMeal(m.id)} className="btn-primary w-full py-2.5 text-sm"><Plus size={15} /> Log to today</button>
                 </div>
               )}
             </div>
@@ -593,12 +584,11 @@ export function LogActivitySheet({ open, onClose }: Props) {
   const isCustom = key === 'other'
   const name = isCustom ? customName.trim() || 'Activity' : preset.name
   const mins = parseInt(minutes) || 0
-  const kcal = Math.round(mins * preset.kcalPerMin * INTENSITY_MULT[intensity])
 
   function save() {
     if (mins <= 0) { toast('Add a duration first'); return }
-    dispatch({ type: 'ADD_ACTIVITY', activity: { type: key, name, icon: isCustom ? 'other' : key, minutes: mins, intensity, calories: kcal, note: note.trim() || undefined, weekly } })
-    toast(`${name} logged`)
+    dispatch({ type: 'ADD_ACTIVITY', activity: { type: key, name, icon: isCustom ? 'other' : key, minutes: mins, intensity, calories: 0, note: note.trim() || undefined, weekly } })
+    toast(`${name} added`)
     setKey('run'); setCustomName(''); setMinutes('30'); setIntensity('moderate'); setNote(''); setWeekly(false)
     onClose()
   }
@@ -670,12 +660,7 @@ export function LogActivitySheet({ open, onClose }: Props) {
         </span>
       </button>
 
-      <div className="mt-4 flex items-center justify-between rounded-2xl border border-white/5 bg-ink-800 p-4">
-        <span className="text-[13px] text-white/55">Estimated burn</span>
-        <span className="text-lg font-extrabold text-brand-400">≈ {kcal} kcal</span>
-      </div>
-
-      <button onClick={save} className="btn-primary mt-5 w-full"><Plus size={16} /> Log activity</button>
+      <button onClick={save} className="btn-primary mt-6 w-full"><Plus size={16} /> Log activity</button>
     </Sheet>
   )
 }

@@ -63,10 +63,9 @@ function TodayTab() {
               <span className="font-semibold text-white">{prog.pct}%</span>
             </div>
             <ProgressBar value={prog.pct} />
-            <div className="mt-4 grid grid-cols-3 gap-3 rounded-2xl border border-white/5 bg-ink-800 p-4">
+            <div className="mt-4 grid grid-cols-2 gap-3 rounded-2xl border border-white/5 bg-ink-800 p-4">
               <Stat icon="dumbbell" color="rgb(var(--brand-400))" label="Volume" value={fmtVolume(session.volumeKg, units)} />
               <Stat icon="clock" color="#9AA0A6" label="Duration" value={`${session.durationMin} min`} />
-              <Stat icon="flame" color="#9AA0A6" label="Calories" value={`${session.calories} kcal`} />
             </div>
           </div>
 
@@ -150,7 +149,7 @@ function OtherActivities() {
                   <p className="truncate font-bold leading-tight">{a.name}</p>
                   {a.weekly && <span className="flex shrink-0 items-center gap-1 rounded-full bg-brand-400/15 px-1.5 py-0.5 text-[10px] font-bold text-brand-300"><Repeat size={10} /> Weekly</span>}
                 </div>
-                <p className="text-[12px] capitalize text-white/50">{a.minutes} min · {a.intensity} · {a.calories} kcal</p>
+                <p className="text-[12px] capitalize text-white/50">{a.minutes} min · {a.intensity}</p>
                 {a.note && <p className="truncate text-[12px] text-white/40">{a.note}</p>}
               </div>
               <button onClick={() => dispatch({ type: 'TOGGLE_ACTIVITY_WEEKLY', id: a.id })} aria-label="Toggle weekly activity" className={`grid h-8 w-8 shrink-0 place-items-center rounded-full active:scale-90 ${a.weekly ? 'bg-brand-400/20 text-brand-400' : 'bg-white/5 text-white/40'}`}><Repeat size={15} /></button>
@@ -249,8 +248,8 @@ function HistoryTab() {
               </>
             ) : (
               <>
-                <p className="text-sm font-semibold">{h.calories} kcal</p>
-                <p className="text-[12px] text-white/45">{h.minutes} min</p>
+                <p className="text-sm font-semibold">{h.minutes} min</p>
+                <p className="text-[12px] capitalize text-white/45">activity</p>
               </>
             )}
           </div>

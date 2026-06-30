@@ -5,11 +5,11 @@ import { Icon } from '../components/Icon'
 import { ProgressRing, ProgressBar, ScreenHeader, SectionHeader } from '../components/ui'
 import { useStore } from '../store/store'
 import { useNav } from '../nav'
-import { dayKey, shortDate, weekday, currentWeekKeys } from '../lib/date'
+import { dayKey, shortDate, weekday } from '../lib/date'
 import { fmtWeight, fmtWeightNum, weightUnit, weightVal } from '../lib/format'
 import {
-  weightStats, strengthProgress, habitConsistencyWeek, streakStats,
-  workoutsInRange, nutritionForDay, volumeByWeek,
+  weightStats, strengthProgress, habitConsistency7d, streakStats,
+  workoutsInRange, volumeByWeek,
 } from '../store/selectors'
 
 export default function Progress() {
@@ -23,13 +23,9 @@ export default function Progress() {
   const sp = strengthProgress(state)
   const strengthAvg = sp.length ? Math.round(sp.reduce((a, s) => a + s.pct, 0) / sp.length) : 0
   const maxPct = Math.max(1, ...sp.map((s) => s.pct))
-  const hc = habitConsistencyWeek(state)
+  const hc = habitConsistency7d(state)
   const streak = streakStats(state)
   const workouts4w = workoutsInRange(state, 28)
-
-  // avg calories over last 28 days
-  const calDays = Array.from({ length: 28 }, (_, d) => nutritionForDay(state, dayKey(d)).kcal).filter((x) => x > 0)
-  const avgCals = calDays.length ? Math.round(calDays.reduce((a, b) => a + b, 0) / calDays.length) : 0
 
   // Weight trend chart
   const days = range === '4 Weeks' ? 28 : 84
@@ -48,18 +44,18 @@ export default function Progress() {
   const reachedGoal = losing ? w.current <= goalKg : w.current >= goalKg
   const toGo = Math.max(0, Math.abs(w.current - goalKg))
 
-  // This-week steps (custom weekly bars)
+  // Last 7 days of steps (custom weekly bars), oldest to today
   const todayK = dayKey(0)
-  const week = currentWeekKeys().map((k) => {
+  const week = Array.from({ length: 7 }, (_, i) => dayKey(6 - i)).map((k) => {
     const h = state.habits.find((x) => x.dateKey === k)
     const steps = h?.steps ?? 0
-    return { k, label: weekday(k).slice(0, 1), steps, hit: steps >= p.stepTarget, today: k === todayK, future: k > todayK }
+    return { k, label: weekday(k).slice(0, 1), steps, hit: steps >= p.stepTarget, today: k === todayK }
   })
   const maxStep = Math.max(p.stepTarget, ...week.map((d) => d.steps), 1)
   const stepGoalPct = (p.stepTarget / maxStep) * 100
   const daysHit = week.filter((d) => d.hit).length
-  const pastDays = week.filter((d) => !d.future && d.steps > 0)
-  const avgSteps = pastDays.length ? Math.round(pastDays.reduce((a, d) => a + d.steps, 0) / pastDays.length) : 0
+  const stepDays = week.filter((d) => d.steps > 0)
+  const avgSteps = stepDays.length ? Math.round(stepDays.reduce((a, d) => a + d.steps, 0) / stepDays.length) : 0
 
   // 8-week training volume
   const volWeeks = volumeByWeek(state, 8).map((v) => ({ label: v.label, volume: Math.round(weightVal(v.volume, units)) }))
@@ -67,8 +63,8 @@ export default function Progress() {
   const tiles = [
     { icon: 'trending', label: 'Strength', value: `+${strengthAvg}%`, sub: 'last 4 weeks' },
     { icon: 'footprints', label: 'Workouts', value: String(workouts4w), sub: 'last 4 weeks' },
-    { icon: 'flame', label: 'Calories', value: avgCals ? avgCals.toLocaleString() : '--', sub: 'avg / day' },
-    { icon: 'bed', label: 'Sleep', value: hc.avgSleep ? `${hc.avgSleep.toFixed(1)}h` : '--', sub: 'avg this week' },
+    { icon: 'footprints', label: 'Steps', value: hc.avgSteps ? hc.avgSteps.toLocaleString() : '--', sub: 'avg / day' },
+    { icon: 'bed', label: 'Sleep', value: hc.avgSleep ? `${hc.avgSleep.toFixed(1)}h` : '--', sub: 'avg last 7 days' },
   ]
 
   const rings = [
@@ -142,8 +138,8 @@ export default function Progress() {
         ))}
       </div>
 
-      {/* ---------------- This week: steps weekly bars + ring ---------------- */}
-      <SectionHeader title="This week" />
+      {/* ---------------- Last 7 days: steps weekly bars + ring ---------------- */}
+      <SectionHeader title="Last 7 days" />
       <div className="card p-4">
         <div className="flex items-start justify-between">
           <div>

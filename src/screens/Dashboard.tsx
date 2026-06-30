@@ -9,7 +9,7 @@ import { useNav } from '../nav'
 import { currentWeekKeys, todayKey, longDate, shortDate, fromKey, TODAY } from '../lib/date'
 import { fmtFluid, fmtWeightNum, weightUnit, fmtVolume, pct } from '../lib/format'
 import {
-  todayHabit, habitForDay, todaySession, sessionForDay, activitiesForDay, weightStats, regularWorkoutsInWeek,
+  todayHabit, habitForDay, todaySession, sessionForDay, activitiesForDay, weightStats, regularWorkoutsInRange,
   strengthProgress, unreadChat, streakStats, foodReviewForDay, weeklyIndex, nutritionTagsForDay,
 } from '../store/selectors'
 import { tagById, TAG_TONE_VAR } from '../data/nutrition'
@@ -42,8 +42,8 @@ export default function Dashboard() {
   const habit = todayHabit(state)
   const session = todaySession(state)
   const w = weightStats(state)
-  const thisWeek = regularWorkoutsInWeek(state, 0)
-  const lastWeek = regularWorkoutsInWeek(state, 1)
+  const thisWeek = regularWorkoutsInRange(state, 6, 0)
+  const lastWeek = regularWorkoutsInRange(state, 13, 7)
   const sp = strengthProgress(state)
   const strengthAvg = sp.length ? Math.round(sp.reduce((a, s) => a + s.pct, 0) / sp.length) : 0
   const unread = unreadChat(state)
@@ -247,7 +247,6 @@ export default function Dashboard() {
               <div key={a.id} className="flex items-center gap-3 rounded-2xl border border-white/5 bg-ink-800 p-3">
                 <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand-400/15"><ActivityIcon name={a.icon} size={18} className="text-brand-400" /></div>
                 <div className="min-w-0 flex-1"><p className="truncate font-semibold">{a.name}</p><p className="text-[12px] capitalize text-white/50">{a.minutes} min · {a.intensity}</p></div>
-                <span className="text-[12px] text-white/55">{a.calories} kcal</span>
               </div>
             ))}
           </div>
@@ -356,7 +355,7 @@ export default function Dashboard() {
       <Reveal delay={360}>
         <Section title="Progress overview" action="See all" onAction={() => nav.goTab('progress')} />
         <div className="grid grid-cols-3 gap-3">
-          <OverviewCard icon="dumbbell" label="Workouts" value={String(thisWeek)} sub="This week" delta={`${thisWeek >= lastWeek ? '↑' : '↓'} ${Math.abs(thisWeek - lastWeek)}`} />
+          <OverviewCard icon="dumbbell" label="Workouts" value={String(thisWeek)} sub="Last 7 days" delta={`${thisWeek >= lastWeek ? '↑' : '↓'} ${Math.abs(thisWeek - lastWeek)}`} />
           <OverviewCard icon="trending" label="Strength" value={`+${strengthAvg}%`} sub="4 weeks" delta="↑" />
           <OverviewCard icon="scale" label="Body weight" value={fmtWeightNum(w.current, units)} unit={weightUnit(units)} sub="" delta={`${w.delta <= 0 ? '↓' : '↑'} ${Math.abs(w.delta).toFixed(1)}`} />
         </div>

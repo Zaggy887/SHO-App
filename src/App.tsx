@@ -15,7 +15,6 @@ import {
   NotificationsSheet,
   SettingsSheet,
   ProfileSheet,
-  AddFoodSheet,
   LogWeightSheet,
   LogHabitSheet,
   LogActivitySheet,
@@ -88,7 +87,6 @@ function Shell() {
       <NotificationsSheet open={overlay === 'notifications'} onClose={nav.close} />
       <SettingsSheet open={overlay === 'settings'} onClose={nav.close} />
       <ProfileSheet open={overlay === 'profile'} onClose={nav.close} />
-      <AddFoodSheet open={overlay === 'addFood'} onClose={nav.close} params={params} />
       <LogWeightSheet open={overlay === 'logWeight'} onClose={nav.close} />
       <LogHabitSheet open={overlay === 'logHabit'} onClose={nav.close} params={params} />
       <LogActivitySheet open={overlay === 'logActivity'} onClose={nav.close} />

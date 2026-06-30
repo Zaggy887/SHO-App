@@ -159,6 +159,17 @@ export function regularWorkoutsInWeek(s: AppState, offset = 0) {
   return sessions + weeklyActivitiesInWeek(s, offset).length
 }
 
+/** Prescribed sessions + weekly activities in a rolling window of days,
+ *  e.g. (6, 0) = the last 7 days, (13, 7) = the 7 days before that. */
+export function regularWorkoutsInRange(s: AppState, fromDays: number, toDays = 0) {
+  const lo = dayKey(fromDays)
+  const hi = dayKey(toDays)
+  const inWin = (k: string) => k >= lo && k <= hi
+  const sessions = completedSessions(s).filter((x) => inWin(x.dateKey)).length
+  const acts = (s.activities ?? []).filter((a) => a.weekly && inWin(a.dateKey)).length
+  return sessions + acts
+}
+
 /* -------------------------- Strength progress -------------------------- */
 /** Epley 1RM estimate from a session's best set of an exercise. */
 function best1RM(session: WorkoutSession, defId: string): number | null {
@@ -245,6 +256,22 @@ export function volumeByWeek(s: AppState, weeks = 8) {
 }
 
 /* -------------------------- Habit consistency (this week) -------------------------- */
+/** Habit consistency over the last 7 calendar days (rolling, always out of 7),
+ *  so the figure is meaningful even early in a calendar week. */
+export function habitConsistency7d(s: AppState) {
+  const keys = Array.from({ length: 7 }, (_, i) => dayKey(i))
+  const byKey = new Map(s.habits.map((h) => [h.dateKey, h]))
+  const days = keys.map((k) => byKey.get(k)).filter(Boolean) as HabitDay[]
+  const total = 7
+  const workouts = days.filter((h) => h.workout).length
+  const steps = days.filter((h) => h.steps >= s.profile.stepTarget * 0.9).length
+  const sleep = days.filter((h) => h.sleepH >= s.profile.sleepTargetH * 0.85).length
+  const nutrition = days.filter((h) => h.nutritionScore >= 7).length
+  const avgSteps = days.length ? Math.round(days.reduce((a, h) => a + h.steps, 0) / days.length) : 0
+  const avgSleep = days.length ? days.reduce((a, h) => a + h.sleepH, 0) / days.length : 0
+  return { total, workouts, steps, sleep, nutrition, avgSteps, avgSleep }
+}
+
 export function habitConsistencyWeek(s: AppState) {
   const wk = currentWeekKeys().filter((k) => k <= todayKey)
   const byKey = new Map(s.habits.map((h) => [h.dateKey, h]))
