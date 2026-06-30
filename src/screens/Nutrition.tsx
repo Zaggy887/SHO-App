@@ -406,43 +406,10 @@ function LearnTab() {
   return (
     <div className="space-y-7">
 
-      {/* The balanced plate: a visual that does the explaining */}
+      {/* The balanced plate: a big, tappable visual that does the explaining */}
       <section>
         <SectionLabel>The balanced plate</SectionLabel>
-        <div className="rounded-2xl border border-white/8 bg-ink-800 p-5">
-          <div className="flex items-center gap-5">
-            <PlateDonut />
-            <div className="min-w-0 flex-1 space-y-2.5">
-              {PLATE_GUIDE.slice(0, 3).map((s) => (
-                <div key={s.title} className="flex items-center gap-2.5">
-                  <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: s.color }} />
-                  <p className="text-[13px] leading-tight">
-                    <span className="font-bold" style={{ color: s.color }}>{s.portion} </span>
-                    <span className="text-white/80">{s.title}</span>
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-          <p className="mt-4 text-[12.5px] leading-snug text-white/55">
-            A simple template for most meals. Fill half with veg, a quarter with protein and a quarter with carbs, plus a little healthy fat. Not every meal, just a rough aim.
-          </p>
-        </div>
-
-        {/* What goes where */}
-        <div className="mt-3 space-y-2.5">
-          {PLATE_GUIDE.map((s) => (
-            <div key={s.title} className="flex items-center gap-3 rounded-2xl border border-white/5 bg-ink-800 p-3.5">
-              <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl text-[18px] font-black" style={{ backgroundColor: 'rgba(255,255,255,0.05)', color: s.color }}>
-                {s.portion}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="font-bold leading-tight" style={{ color: s.color }}>{s.title}</p>
-                <p className="mt-0.5 text-[12px] leading-snug text-white/55">{s.examples}</p>
-              </div>
-            </div>
-          ))}
-        </div>
+        <BalancedPlate />
       </section>
 
       {/* Portion sizes by hand */}
@@ -539,28 +506,84 @@ function LearnTab() {
   )
 }
 
-/* A small donut that shows the balanced-plate split at a glance. */
-function PlateDonut() {
-  // Half veg, a quarter protein, a quarter carbs. pathLength=100 lets us use
-  // percentages directly for the arc lengths.
-  const segments = [
-    { len: 50, start: 0, color: 'rgb(var(--brand-400))' },
-    { len: 25, start: 50, color: 'rgb(var(--accent-blue))' },
-    { len: 25, start: 75, color: 'rgb(var(--accent-orange))' },
-  ]
+/* The big, tappable balanced-plate donut. Tap a colour (or a legend chip) to
+   see how much of that food group to aim for, plus what counts. The arcs draw
+   themselves in when the Help tab opens. */
+const PLATE_SEGMENTS = [
+  { len: 50, start: 0 },  // veg
+  { len: 25, start: 50 }, // protein
+  { len: 25, start: 75 }, // carbs
+]
+
+function BalancedPlate() {
+  const [sel, setSel] = useState(0)
+  const [drawn, setDrawn] = useState(false)
+
+  // Trigger the draw-in once mounted (i.e. when the Help tab opens).
+  useEffect(() => {
+    const id = window.setTimeout(() => setDrawn(true), 60)
+    return () => window.clearTimeout(id)
+  }, [])
+
+  const active = PLATE_GUIDE[sel]
+
   return (
-    <svg viewBox="0 0 42 42" className="h-[92px] w-[92px] shrink-0 -rotate-90">
-      <circle cx="21" cy="21" r="15.915" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="6" />
-      {segments.map((s, i) => (
-        <circle
-          key={i}
-          cx="21" cy="21" r="15.915" fill="none"
-          stroke={s.color} strokeWidth="6" pathLength={100}
-          strokeDasharray={`${s.len} ${100 - s.len}`}
-          strokeDashoffset={-s.start}
-        />
-      ))}
-    </svg>
+    <div className="rounded-2xl border border-white/8 bg-ink-800 p-5">
+      {/* Donut */}
+      <div className="relative mx-auto h-[224px] w-[224px] animate-fade-in">
+        <svg viewBox="0 0 42 42" className="h-full w-full -rotate-90">
+          <circle cx="21" cy="21" r="15.915" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="5" />
+          {PLATE_SEGMENTS.map((s, i) => {
+            const isSel = sel === i
+            return (
+              <circle
+                key={i}
+                cx="21" cy="21" r="15.915" fill="none" pathLength={100}
+                stroke={PLATE_GUIDE[i].color}
+                strokeWidth={isSel ? 6.6 : 4.6}
+                strokeDasharray={drawn ? `${s.len} ${100 - s.len}` : '0 100'}
+                strokeDashoffset={-s.start}
+                onClick={() => setSel(i)}
+                className="cursor-pointer"
+                style={{
+                  transition: `stroke-dasharray 0.75s cubic-bezier(0.22,1,0.36,1) ${i * 0.13}s, stroke-width 0.3s ease 0s`,
+                }}
+              />
+            )
+          })}
+        </svg>
+        {/* Centre read-out (does not block taps on the ring) */}
+        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
+          <span key={`p-${sel}`} className="animate-pop-in text-[52px] font-black leading-none" style={{ color: active.color }}>{active.portion}</span>
+          <span key={`t-${sel}`} className="animate-fade-in mt-1.5 max-w-[8rem] text-[13px] font-bold leading-tight text-white/85">{active.title}</span>
+        </div>
+      </div>
+
+      {/* Tappable legend */}
+      <div className="mt-5 grid grid-cols-2 gap-2">
+        {PLATE_GUIDE.map((s, i) => {
+          const on = sel === i
+          return (
+            <button
+              key={s.title}
+              onClick={() => setSel(i)}
+              className="flex items-center gap-2 rounded-xl border px-3 py-2 text-left transition active:scale-[0.98]"
+              style={{
+                borderColor: on ? s.color : 'rgba(255,255,255,0.08)',
+                backgroundColor: on ? s.color.replace(/\)$/, ' / 0.12)') : 'rgba(255,255,255,0.02)',
+              }}
+            >
+              <span className="grid h-6 w-6 shrink-0 place-items-center rounded-lg text-[13px] font-black" style={{ color: s.color }}>{s.portion}</span>
+              <span className="truncate text-[12.5px] font-semibold" style={{ color: on ? s.color : 'rgb(var(--fg) / 0.7)' }}>{s.title}</span>
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Examples for the selected group */}
+      <p key={`e-${sel}`} className="animate-fade-in mt-3 text-[12.5px] leading-snug text-white/60">{active.examples}</p>
+      <p className="mt-2.5 text-[11.5px] leading-snug text-white/35">Tap a colour to see what goes where. Not every meal needs to be perfect, it is just a rough aim.</p>
+    </div>
   )
 }
 
