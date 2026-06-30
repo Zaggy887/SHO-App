@@ -851,14 +851,14 @@ export function CustomizeSheet({ open, onClose }: Props) {
 
       {/* Main chart metric */}
       <p className="mb-2 mt-6 text-[12px] font-bold uppercase tracking-wide text-white/40">Main chart shows</p>
-      <div className="space-y-2">
+      <div className="grid grid-cols-2 gap-2.5">
         {CHART_METRICS.map((m) => {
           const on = metric === m.id
           return (
-            <button key={m.id} onClick={() => pickMetric(m.id)} className={`flex w-full items-center gap-3 rounded-2xl border p-3.5 text-left transition active:scale-[0.99] ${on ? 'border-brand-400 bg-brand-400/10' : 'border-white/8 bg-ink-800'}`}>
-              <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-brand-400/15"><Icon name={m.icon} size={18} color="rgb(var(--brand-400))" /></div>
-              <span className="flex-1 font-semibold">{m.label}</span>
-              {on && <Check size={18} strokeWidth={3} className="text-brand-400" />}
+            <button key={m.id} onClick={() => pickMetric(m.id)} className={`relative flex flex-col items-center gap-2 rounded-2xl border p-3 text-center transition active:scale-[0.98] ${on ? 'border-brand-400 bg-brand-400/10' : 'border-white/8 bg-ink-800'}`}>
+              {on && <Check size={15} strokeWidth={3} className="absolute right-2 top-2 text-brand-400" />}
+              <div className="grid h-9 w-9 place-items-center rounded-xl bg-brand-400/15"><Icon name={m.icon} size={18} color="rgb(var(--brand-400))" /></div>
+              <span className="text-[12.5px] font-semibold leading-tight">{m.label}</span>
             </button>
           )
         })}
@@ -869,18 +869,18 @@ export function CustomizeSheet({ open, onClose }: Props) {
         <p className="text-[12px] font-bold uppercase tracking-wide text-white/40">Dashboard stats</p>
         <p className="text-[11px] text-white/35">Pick 3</p>
       </div>
-      <div className="space-y-2">
+      <div className="grid grid-cols-2 gap-2.5">
         {STAT_METRICS.map((m) => {
           const on = stats.includes(m.id)
           return (
             <button
               key={m.id}
               onClick={() => toggleStat(m.id)}
-              className={`flex w-full items-center gap-3 rounded-2xl border p-3.5 text-left transition active:scale-[0.99] ${on ? 'border-brand-400 bg-brand-400/10' : 'border-white/8 bg-ink-800'}`}
+              className={`relative flex flex-col items-center gap-2 rounded-2xl border p-3 text-center transition active:scale-[0.98] ${on ? 'border-brand-400 bg-brand-400/10' : 'border-white/8 bg-ink-800'}`}
             >
-              <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-brand-400/15"><Icon name={m.icon} size={18} color="rgb(var(--brand-400))" /></div>
-              <span className="flex-1 font-semibold">{m.label}</span>
-              <span className={`grid h-5 w-5 place-items-center rounded-md border ${on ? 'border-brand-400 bg-brand-400 text-black' : 'border-white/20'}`}>{on && <Check size={13} strokeWidth={3.5} />}</span>
+              <span className={`absolute right-2 top-2 grid h-[18px] w-[18px] place-items-center rounded-md border ${on ? 'border-brand-400 bg-brand-400 text-black' : 'border-white/20'}`}>{on && <Check size={11} strokeWidth={3.5} />}</span>
+              <div className="grid h-9 w-9 place-items-center rounded-xl bg-brand-400/15"><Icon name={m.icon} size={18} color="rgb(var(--brand-400))" /></div>
+              <span className="text-[12.5px] font-semibold leading-tight">{m.label}</span>
             </button>
           )
         })}
