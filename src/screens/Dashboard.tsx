@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react'
-import { Menu, MessageCircle, Clock, Play, GraduationCap, ChevronRight, Sparkles, Leaf, Check, Flame } from 'lucide-react'
+import { Menu, MessageCircle, Clock, Play, GraduationCap, ChevronRight, Leaf, Check, Flame } from 'lucide-react'
 import { Icon } from '../components/Icon'
 import { ActivityIcon } from '../components/ActivityIcon'
 import { ProgressRing } from '../components/ui'
@@ -15,7 +15,6 @@ import {
 } from '../store/selectors'
 import { tagById, TAG_TONE_VAR } from '../data/nutrition'
 import { dashboardStatIds, statById } from '../lib/metrics'
-import { coachDaily } from '../store/coach'
 import { dailyTargets, examState } from '../store/training'
 import { Wordmark } from '../components/Logo'
 
@@ -44,7 +43,6 @@ export default function Dashboard() {
   const habit = todayHabit(state)
   const session = todaySession(state)
   const unread = unreadChat(state)
-  const coach = coachDaily(state)
   const t = dailyTargets(state)
   const exam = examState(state)
   const streak = streakStats(state)
@@ -347,26 +345,6 @@ export default function Dashboard() {
         </div>
       </Reveal>
 
-      {/* Coach presence: the human touch */}
-      <Reveal delay={300}>
-        <button onClick={() => nav.open('coach')} className="mt-5 w-full overflow-hidden rounded-2xl border border-brand-400/20 bg-brand-400/[0.06] p-4 text-left transition active:scale-[0.99]">
-          <div className="flex items-center gap-2.5">
-            <span className="grid h-7 w-7 place-items-center rounded-full bg-brand-400 text-black"><Sparkles size={15} /></span>
-            <span className="text-[13px] font-bold text-brand-400">Coach</span>
-            <ChevronRight size={16} className="ml-auto text-white/30" />
-          </div>
-          <p className="mt-2 font-bold leading-snug">{coach.title}</p>
-          <p className="mt-0.5 text-[14px] leading-snug text-white/65">{coach.body}</p>
-          {coach.cta && (
-            <span
-              onClick={(e) => { e.stopPropagation(); nav.open(coach.cta!.overlay as Parameters<typeof nav.open>[0]) }}
-              className="mt-3 inline-flex items-center gap-1 rounded-full bg-brand-400 px-3.5 py-1.5 text-sm font-bold text-black active:scale-95"
-            >
-              {coach.cta.label} <ChevronRight size={15} />
-            </span>
-          )}
-        </button>
-      </Reveal>
 
       {/* Progress overview */}
       <Reveal delay={360}>
