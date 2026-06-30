@@ -850,7 +850,7 @@ export function CustomizeSheet({ open, onClose }: Props) {
       </div>
 
       {/* Main chart metric */}
-      <p className="mb-2 mt-6 text-[12px] font-bold uppercase tracking-wide text-white/40">Main chart shows</p>
+      <p className="mb-2 mt-6 text-[12px] font-bold uppercase tracking-wide text-white/40">Top progress chart</p>
       <div className="grid grid-cols-2 gap-2.5">
         {CHART_METRICS.map((m) => {
           const on = metric === m.id
