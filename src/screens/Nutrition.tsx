@@ -662,7 +662,7 @@ function RecipeModal({ meal, onClose }: { meal: BudgetMeal; onClose: () => void 
         </div>
 
         {/* Footer */}
-        <div className="shrink-0 border-t border-white/8 p-3" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 0.75rem)' }}>
+        <div className="shrink-0 p-3" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 0.75rem)' }}>
           <button onClick={copyRecipe} className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-400/15 py-3 text-sm font-semibold text-brand-400 active:bg-brand-400/25">
             <Share2 size={15} /> Copy recipe
           </button>
