@@ -16,7 +16,7 @@ import { todayHabit, nutritionTagsForDay } from '../store/selectors'
 import { dailyTargets } from '../store/training'
 import { fmtFluid, pct } from '../lib/format'
 import { coachRespond, STARTER_QUESTIONS, type DayReview } from '../lib/nutritionCoach'
-import type { MealName, MealCategory } from '../store/types'
+import type { MealName, MealCategory, BudgetMeal } from '../store/types'
 
 const TABS = ['Coach', 'Help', 'Eats', 'My Meal Plan']
 const PLAN_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
@@ -500,7 +500,6 @@ function LearnTab() {
 const MEAL_CATEGORIES: (MealCategory | 'All')[] = ['All', 'Breakfast', 'Lunch', 'Dinner', 'Snack', 'Sweet']
 
 function BudgetTab() {
-  const toast = useToast()
   const [cat, setCat] = useState<MealCategory | 'All'>('All')
   const [q, setQ] = useState('')
   const [openId, setOpenId] = useState<string | null>(null)
@@ -512,6 +511,8 @@ function BudgetTab() {
       return catOk && qOk
     })
   }, [cat, q])
+
+  const openMeal = BUDGET_MEALS.find((m) => m.id === openId) ?? null
 
   return (
     <>
@@ -546,68 +547,21 @@ function BudgetTab() {
       {/* Recipe cards */}
       <p className="mt-4 text-[12px] font-bold uppercase tracking-[0.14em] text-white/35">{meals.length} {meals.length === 1 ? 'recipe' : 'recipes'}</p>
       <div className="mt-2 space-y-2.5">
-        {meals.map((m) => {
-          const open = openId === m.id
-          return (
-            <div key={m.id} className="overflow-hidden rounded-2xl border border-white/5 bg-ink-800">
-              <button onClick={() => setOpenId(open ? null : m.id)} className="flex w-full items-center gap-3 p-3 text-left">
-                <img src={m.image} alt="" className="h-16 w-16 rounded-xl object-cover" loading="lazy" />
-                <div className="min-w-0 flex-1">
-                  <p className="font-bold leading-tight">{m.name}</p>
-                  {m.flavour && <p className="mt-0.5 line-clamp-2 text-[12px] leading-snug text-white/55">{m.flavour}</p>}
-                  <p className="mt-1 flex items-center gap-2 text-[12px] font-semibold text-brand-400">
-                    <span className="inline-flex items-center gap-1"><Clock size={12} /> {m.minutes} min</span>
-                    <span className="text-white/25">·</span>
-                    <span>Serves {m.serves}</span>
-                  </p>
-                </div>
-                <ChevronDown size={18} className={`shrink-0 text-white/30 transition-transform ${open ? 'rotate-180' : ''}`} />
-              </button>
-              {open && (
-                <div className="space-y-3 border-t border-white/5 px-4 py-3.5 text-[14px]">
-                  <div className="flex flex-wrap gap-1.5">
-                    {m.tags.map((t) => <span key={t} className="rounded-full bg-brand-400/15 px-2.5 py-1 text-[11px] font-semibold text-brand-300">{t}</span>)}
-                  </div>
-                  <div>
-                    <p className="mb-1.5 text-[12px] font-bold uppercase tracking-wide text-white/40">Ingredients</p>
-                    <ul className="space-y-1">
-                      {m.ingredients.map((ing) => (
-                        <li key={ing} className="flex items-start gap-2 text-white/70">
-                          <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-brand-400" /> {ing}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  <div>
-                    <p className="mb-1.5 text-[12px] font-bold uppercase tracking-wide text-white/40">Method</p>
-                    <ol className="space-y-2">
-                      {m.steps.map((s, i) => (
-                        <li key={i} className="flex items-start gap-2.5 text-white/75">
-                          <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-brand-400/15 text-[11px] font-bold text-brand-400">{i + 1}</span>
-                          <span className="leading-snug">{s}</span>
-                        </li>
-                      ))}
-                    </ol>
-                  </div>
-                  {m.cookOnce && (
-                    <div className="flex gap-2 rounded-xl bg-brand-400/10 p-3 text-[13px] text-white/70">
-                      <Lightbulb size={16} className="shrink-0 text-brand-400" /> {m.cookOnce}
-                    </div>
-                  )}
-                  <button
-                    onClick={() => {
-                      const txt = `${m.name}\n\nIngredients\n${m.ingredients.map((i) => `- ${i}`).join('\n')}\n\nMethod\n${m.steps.map((s, i) => `${i + 1}. ${s}`).join('\n')}`
-                      navigator.clipboard?.writeText(txt).then(() => toast('Recipe copied')).catch(() => {})
-                    }}
-                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-400/15 py-2.5 text-sm font-semibold text-brand-400 active:bg-brand-400/25"
-                  >
-                    <Share2 size={15} /> Copy recipe
-                  </button>
-                </div>
-              )}
+        {meals.map((m) => (
+          <button key={m.id} onClick={() => setOpenId(m.id)} className="flex w-full items-center gap-3 rounded-2xl border border-white/5 bg-ink-800 p-3 text-left transition active:scale-[0.99]">
+            <img src={m.image} alt="" className="h-16 w-16 rounded-xl object-cover" loading="lazy" />
+            <div className="min-w-0 flex-1">
+              <p className="font-bold leading-tight">{m.name}</p>
+              {m.flavour && <p className="mt-0.5 line-clamp-2 text-[12px] leading-snug text-white/55">{m.flavour}</p>}
+              <p className="mt-1 flex items-center gap-2 text-[12px] font-semibold text-brand-400">
+                <span className="inline-flex items-center gap-1"><Clock size={12} /> {m.minutes} min</span>
+                <span className="text-white/25">·</span>
+                <span>Serves {m.serves}</span>
+              </p>
             </div>
-          )
-        })}
+            <ChevronRight size={18} className="shrink-0 text-white/30" />
+          </button>
+        ))}
         {meals.length === 0 && (
           <div className="flex flex-col items-center rounded-2xl border border-dashed border-white/12 px-6 py-10 text-center">
             <Salad size={26} className="text-white/30" />
@@ -617,7 +571,105 @@ function BudgetTab() {
         )}
       </div>
       <div className="h-2" />
+
+      {openMeal && <RecipeModal meal={openMeal} onClose={() => setOpenId(null)} />}
     </>
+  )
+}
+
+/* A floating recipe card that pops over the screen, dimming what's behind it. */
+function RecipeModal({ meal, onClose }: { meal: BudgetMeal; onClose: () => void }) {
+  const toast = useToast()
+  const [closing, setClosing] = useState(false)
+
+  function close() {
+    setClosing(true)
+    window.setTimeout(onClose, 170)
+  }
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') close() }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+
+  function copyRecipe() {
+    const txt = `${meal.name}\n\nIngredients\n${meal.ingredients.map((i) => `- ${i}`).join('\n')}\n\nMethod\n${meal.steps.map((s, i) => `${i + 1}. ${s}`).join('\n')}`
+    navigator.clipboard?.writeText(txt).then(() => toast('Recipe copied')).catch(() => {})
+  }
+
+  return createPortal(
+    <div
+      onClick={close}
+      className={`absolute inset-0 z-[60] flex items-center justify-center p-4 ${closing ? 'animate-fade-out' : 'animate-fade-in'}`}
+      style={{ background: 'rgba(0,0,0,0.62)', backdropFilter: 'blur(3px)', WebkitBackdropFilter: 'blur(3px)' }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className={`relative flex max-h-[86vh] w-full max-w-[400px] flex-col overflow-hidden rounded-3xl border border-white/10 bg-ink-800 shadow-2xl ${closing ? 'animate-pop-out' : 'animate-pop-in'}`}
+      >
+        {/* Hero */}
+        <div className="relative h-40 shrink-0">
+          <img src={meal.image} alt="" className="h-full w-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-ink-800 via-ink-800/30 to-transparent" />
+          <button onClick={close} className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-black/45 text-white backdrop-blur-sm active:bg-black/65"><X size={18} /></button>
+          <div className="absolute inset-x-4 bottom-3">
+            <p className="text-[19px] font-extrabold leading-tight">{meal.name}</p>
+            <p className="mt-1 flex items-center gap-2 text-[12.5px] font-semibold text-brand-300">
+              <span className="inline-flex items-center gap-1"><Clock size={13} /> {meal.minutes} min</span>
+              <span className="opacity-40">·</span>
+              <span>Serves {meal.serves}</span>
+            </p>
+          </div>
+        </div>
+
+        {/* Scrollable detail */}
+        <div className="no-scrollbar flex-1 space-y-4 overflow-y-auto px-4 py-4 text-[14px]">
+          {meal.flavour && <p className="text-[13.5px] leading-snug text-white/65">{meal.flavour}</p>}
+
+          <div className="flex flex-wrap gap-1.5">
+            {meal.tags.map((t) => <span key={t} className="rounded-full bg-brand-400/15 px-2.5 py-1 text-[11px] font-semibold text-brand-300">{t}</span>)}
+          </div>
+
+          <div>
+            <p className="mb-1.5 text-[12px] font-bold uppercase tracking-wide text-white/40">Ingredients</p>
+            <ul className="space-y-1">
+              {meal.ingredients.map((ing) => (
+                <li key={ing} className="flex items-start gap-2 text-white/75">
+                  <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-brand-400" /> {ing}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div>
+            <p className="mb-1.5 text-[12px] font-bold uppercase tracking-wide text-white/40">Method</p>
+            <ol className="space-y-2.5">
+              {meal.steps.map((s, i) => (
+                <li key={i} className="flex items-start gap-2.5 text-white/80">
+                  <span className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-brand-400/15 text-[12px] font-bold text-brand-400">{i + 1}</span>
+                  <span className="leading-snug">{s}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+
+          {meal.cookOnce && (
+            <div className="flex gap-2 rounded-xl bg-brand-400/10 p-3 text-[13px] text-white/70">
+              <Lightbulb size={16} className="shrink-0 text-brand-400" /> {meal.cookOnce}
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="shrink-0 border-t border-white/8 p-3" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 0.75rem)' }}>
+          <button onClick={copyRecipe} className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-400/15 py-3 text-sm font-semibold text-brand-400 active:bg-brand-400/25">
+            <Share2 size={15} /> Copy recipe
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.getElementById('app-frame') ?? document.body,
   )
 }
 
