@@ -9,7 +9,7 @@ import { ProgressRing, SegmentedTabs, ScreenHeader } from '../components/ui'
 import { useStore } from '../store/store'
 import { useToast } from '../components/Toast'
 import {
-  PLATE_GUIDE, FOOD_TIERS, GOAL_GUIDES, NUTRITION_LESSONS, NUTRITION_TAGS, TAG_TONE_VAR,
+  PLATE_GUIDE, FOOD_TIERS, PORTION_GUIDE, EATING_PRINCIPLES, NUTRITION_LESSONS, NUTRITION_TAGS, TAG_TONE_VAR,
 } from '../data/nutrition'
 import { BUDGET_MEALS, FOODS } from '../data/catalog'
 import { todayHabit, nutritionTagsForDay } from '../store/selectors'
@@ -401,36 +401,50 @@ function ReviewBubble({ review }: { review: DayReview }) {
 
 /* ============================ Learn tab ============================ */
 function LearnTab() {
-  const { state } = useStore()
-  const goal = state.profile.goal
-  const guide = GOAL_GUIDES[goal]
   const [openLesson, setOpenLesson] = useState<string | null>(null)
 
   return (
-    <div className="space-y-6">
-      {/* Goal guidance */}
-      <div>
-        <SectionLabel>For your goal</SectionLabel>
-        <div className="rounded-2xl border border-brand-400/20 bg-brand-400/[0.06] p-4">
-          <p className="font-extrabold text-brand-400">{guide.headline}</p>
-          <ul className="mt-2.5 space-y-2">
-            {guide.points.map((p, i) => (
-              <li key={i} className="flex items-start gap-2.5 text-[13px] leading-snug text-white/75">
-                <Check size={16} strokeWidth={3} className="mt-0.5 shrink-0 text-brand-400" /> {p}
-              </li>
-            ))}
-          </ul>
+    <div className="space-y-7">
+      {/* Welcoming intro: sets a light, approachable tone */}
+      <div className="overflow-hidden rounded-2xl border border-brand-400/25 bg-gradient-to-br from-brand-400/[0.12] to-brand-400/[0.03] p-5">
+        <div className="flex items-center gap-2">
+          <span className="grid h-7 w-7 place-items-center rounded-full bg-brand-400 text-black"><Salad size={15} /></span>
+          <p className="text-[17px] font-extrabold tracking-tight">Eating well, made simple</p>
         </div>
+        <p className="mt-2 text-[13.5px] leading-relaxed text-white/75">
+          No fads and no calorie counting. Just the handful of basics that help you feel good and make easy, healthier choices, whatever is on your plate.
+        </p>
       </div>
 
-      {/* Build your plate */}
-      <div>
-        <SectionLabel>Build your plate</SectionLabel>
-        <div className="space-y-2.5">
+      {/* The balanced plate: a visual that does the explaining */}
+      <section>
+        <SectionLabel>The balanced plate</SectionLabel>
+        <div className="rounded-2xl border border-white/8 bg-ink-800 p-5">
+          <div className="flex items-center gap-5">
+            <PlateDonut />
+            <div className="min-w-0 flex-1 space-y-2.5">
+              {PLATE_GUIDE.slice(0, 3).map((s) => (
+                <div key={s.title} className="flex items-center gap-2.5">
+                  <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: s.color }} />
+                  <p className="text-[13px] leading-tight">
+                    <span className="font-bold" style={{ color: s.color }}>{s.portion} </span>
+                    <span className="text-white/80">{s.title}</span>
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+          <p className="mt-4 text-[12.5px] leading-snug text-white/55">
+            A simple template for most meals. Fill half with veg, a quarter with protein and a quarter with carbs, plus a little healthy fat. Not every meal, just a rough aim.
+          </p>
+        </div>
+
+        {/* What goes where */}
+        <div className="mt-3 space-y-2.5">
           {PLATE_GUIDE.map((s) => (
             <div key={s.title} className="flex items-center gap-3 rounded-2xl border border-white/5 bg-ink-800 p-3.5">
-              <div className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-white/5 text-[11px] font-black uppercase" style={{ color: s.color }}>
-                {s.portion.split(' ')[0]}
+              <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl text-[18px] font-black" style={{ backgroundColor: 'rgba(255,255,255,0.05)', color: s.color }}>
+                {s.portion}
               </div>
               <div className="min-w-0 flex-1">
                 <p className="font-bold leading-tight" style={{ color: s.color }}>{s.title}</p>
@@ -439,39 +453,78 @@ function LearnTab() {
             </div>
           ))}
         </div>
-      </div>
+      </section>
 
-      {/* Good / moderation / limit */}
-      <div>
-        <SectionLabel>Good · in moderation · occasional</SectionLabel>
+      {/* Portion sizes by hand */}
+      <section>
+        <SectionLabel>Portion sizes, by hand</SectionLabel>
+        <p className="-mt-1 mb-3 text-[12.5px] leading-snug text-white/50">No scales needed. Your own hand is a guide that scales with you.</p>
+        <div className="grid grid-cols-2 gap-2.5">
+          {PORTION_GUIDE.map((p) => (
+            <div key={p.title} className="rounded-2xl border border-white/5 bg-ink-800 p-3.5">
+              <div className="flex items-center gap-2">
+                <span className="text-[22px] leading-none">{p.emoji}</span>
+                <div className="min-w-0">
+                  <p className="text-[14px] font-bold leading-tight" style={{ color: p.color }}>{p.title}</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-white/35">{p.hand}</p>
+                </div>
+              </div>
+              <p className="mt-2 text-[12px] leading-snug text-white/60">{p.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Eat more / balance / sometimes */}
+      <section>
+        <SectionLabel>What to eat more, and less, of</SectionLabel>
         <div className="space-y-2.5">
           {FOOD_TIERS.map((t) => (
-            <div key={t.tier} className="rounded-2xl border border-white/5 bg-ink-800 p-4">
-              <div className="flex items-center gap-2">
-                <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: t.color }} />
-                <p className="font-bold" style={{ color: t.color }}>{t.title}</p>
-              </div>
-              <p className="mt-1 text-[12px] leading-snug text-white/55">{t.desc}</p>
-              <div className="mt-2.5 flex flex-wrap gap-1.5">
-                {t.items.map((it) => (
-                  <span key={it} className="rounded-full bg-white/[0.05] px-2.5 py-1 text-[11px] font-medium text-white/70">{it}</span>
-                ))}
+            <div key={t.tier} className="overflow-hidden rounded-2xl border border-white/5 bg-ink-800">
+              <div className="h-1 w-full" style={{ backgroundColor: t.color }} />
+              <div className="p-4">
+                <div className="flex items-center gap-2">
+                  <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: t.color }} />
+                  <p className="font-bold" style={{ color: t.color }}>{t.title}</p>
+                </div>
+                <p className="mt-1 text-[12.5px] leading-snug text-white/60">{t.desc}</p>
+                <div className="mt-2.5 flex flex-wrap gap-1.5">
+                  {t.items.map((it) => (
+                    <span key={it} className="rounded-full bg-white/[0.05] px-2.5 py-1 text-[11px] font-medium text-white/70">{it}</span>
+                  ))}
+                </div>
               </div>
             </div>
           ))}
         </div>
-      </div>
+      </section>
 
-      {/* Lessons */}
-      <div>
-        <SectionLabel>Quick lessons</SectionLabel>
+      {/* Simple everyday wins */}
+      <section>
+        <SectionLabel>Simple everyday wins</SectionLabel>
+        <div className="space-y-2.5">
+          {EATING_PRINCIPLES.map((p) => (
+            <div key={p.title} className="flex items-start gap-3 rounded-2xl border border-white/5 bg-ink-800 p-3.5">
+              <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-brand-400/15"><Icon name={p.icon} size={18} color="rgb(var(--brand-400))" /></div>
+              <div className="min-w-0 flex-1">
+                <p className="text-[14px] font-bold leading-tight">{p.title}</p>
+                <p className="mt-0.5 text-[12.5px] leading-snug text-white/60">{p.text}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Go deeper: short reads */}
+      <section>
+        <SectionLabel>Go deeper</SectionLabel>
         <div className="space-y-2.5">
           {NUTRITION_LESSONS.map((l) => {
             const open = openLesson === l.id
             return (
               <div key={l.id} className="overflow-hidden rounded-2xl border border-white/5 bg-ink-800">
                 <button onClick={() => setOpenLesson(open ? null : l.id)} className="flex w-full items-center gap-3 p-4 text-left">
-                  <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-accent-purple/15"><Icon name={l.icon} size={20} color="#8B5CF6" /></div>
+                  <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-brand-400/15"><Icon name={l.icon} size={20} color="rgb(var(--brand-400))" /></div>
                   <div className="min-w-0 flex-1">
                     <p className="font-bold leading-tight">{l.title}</p>
                     <p className="truncate text-[12px] text-white/55">{l.summary}</p>
@@ -490,9 +543,34 @@ function LearnTab() {
             )
           })}
         </div>
-      </div>
+      </section>
       <div className="h-2" />
     </div>
+  )
+}
+
+/* A small donut that shows the balanced-plate split at a glance. */
+function PlateDonut() {
+  // Half veg, a quarter protein, a quarter carbs. pathLength=100 lets us use
+  // percentages directly for the arc lengths.
+  const segments = [
+    { len: 50, start: 0, color: 'rgb(var(--brand-400))' },
+    { len: 25, start: 50, color: 'rgb(var(--accent-blue))' },
+    { len: 25, start: 75, color: 'rgb(var(--accent-orange))' },
+  ]
+  return (
+    <svg viewBox="0 0 42 42" className="h-[92px] w-[92px] shrink-0 -rotate-90">
+      <circle cx="21" cy="21" r="15.915" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="6" />
+      {segments.map((s, i) => (
+        <circle
+          key={i}
+          cx="21" cy="21" r="15.915" fill="none"
+          stroke={s.color} strokeWidth="6" pathLength={100}
+          strokeDasharray={`${s.len} ${100 - s.len}`}
+          strokeDashoffset={-s.start}
+        />
+      ))}
+    </svg>
   )
 }
 
