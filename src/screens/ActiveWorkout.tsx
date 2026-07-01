@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import {
   Check, Plus, Minus, Flag, Info, Bell, BookOpen, Play, Target,
-  ChevronLeft, Timer, Dumbbell, ListChecks, CircleHelp as HelpCircle, X,
+  ChevronLeft, ChevronDown, Timer, Dumbbell, ListChecks, CircleHelp as HelpCircle, X,
 } from 'lucide-react'
 import { Sheet } from '../components/Sheet'
 import { TechniqueClip } from '../components/TechniqueClip'
@@ -122,6 +122,7 @@ export default function ActiveWorkout({ open, onClose }: { open: boolean; onClos
   const [total, setTotal] = useState(0)
   const [detailIdx, setDetailIdx] = useState<number | null>(null)
   const [finishing, setFinishing] = useState(false)
+  const [goalOpen, setGoalOpen] = useState(false)
   const [finishPR, setFinishPR] = useState<PR | null>(null)
   const finishStatsRef = useRef<{ time: number; volume: number; sets: number } | null>(null)
   const finishHandled = useRef(false)
@@ -347,9 +348,9 @@ export default function ActiveWorkout({ open, onClose }: { open: boolean; onClos
       {!allDone && (
         <button
           onClick={startGuided}
-          className="mb-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-400 py-4 text-[15px] font-bold text-black shadow-glow transition active:scale-[0.98]"
+          className="mb-4 flex w-full items-center justify-center gap-2 rounded-xl bg-brand-500 py-3 text-[14px] font-bold text-white transition active:scale-[0.98] hover:bg-brand-500/90"
         >
-          <Play size={18} fill="currentColor" />
+          <Play size={16} fill="currentColor" />
           {rest !== null ? 'Resume rest' : prog.done > 0 ? 'Resume workout' : 'Start workout'}
         </button>
       )}
@@ -363,15 +364,18 @@ export default function ActiveWorkout({ open, onClose }: { open: boolean; onClos
         </div>
       )}
 
-      {/* What today's session is for, tied to the user's overall goal */}
-      <div className="mb-4 overflow-hidden rounded-2xl border border-brand-400/15 bg-gradient-to-br from-brand-400/[0.08] to-transparent p-4">
-        <div className="mb-1.5 flex items-center gap-1.5">
-          <Target size={14} className="text-brand-400" />
-          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-brand-400">Today's goal</p>
-        </div>
-        <p className="text-[13.5px] leading-snug text-white/75">
-          {workoutGoalLine(session.name, session.focus, state.profile.goal)}
-        </p>
+      {/* What today's session is for. Collapsed by default so the list leads. */}
+      <div className="mb-4 overflow-hidden rounded-xl border border-white/[0.07] bg-white/[0.03]">
+        <button onClick={() => setGoalOpen((o) => !o)} className="flex w-full items-center gap-1.5 px-3.5 py-2.5 active:bg-white/[0.03]">
+          <Target size={13} className="text-brand-400/80" />
+          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-brand-400/90">Today's goal</p>
+          <ChevronDown size={15} className={`ml-auto text-white/40 transition-transform ${goalOpen ? 'rotate-180' : ''}`} />
+        </button>
+        {goalOpen && (
+          <p className="px-3.5 pb-3 text-[13px] leading-snug text-white/70">
+            {workoutGoalLine(session.name, session.focus, state.profile.goal)}
+          </p>
+        )}
       </div>
 
       <p className="mb-3 text-[12px] font-bold uppercase tracking-[0.18em] text-white/35">{session.exercises.length} exercises</p>
@@ -388,12 +392,12 @@ export default function ActiveWorkout({ open, onClose }: { open: boolean; onClos
             ? `${fmtWeightNum(weights[0], units, units === 'imperial' ? 0 : 1)}${weightUnit(units)} × ${ex.sets.map((s) => s.reps).join(', ')}`
             : ex.sets.map((s) => `${fmtWeightNum(s.weightKg, units, units === 'imperial' ? 0 : 1)}${weightUnit(units)}×${s.reps}`).join(', ')
           return (
-            <div key={ex.defId} className={`rounded-2xl border bg-ink-800 p-3.5 transition ${isActive ? 'border-brand-400/45 bg-brand-400/[0.03]' : 'border-white/[0.06]'} ${isOptional ? 'opacity-70' : ''}`}>
+            <div key={ex.defId} className={`rounded-2xl border p-3.5 transition ${isActive ? 'border-brand-400/50 bg-brand-400/[0.05] shadow-[0_0_22px_-8px_rgba(126,217,87,0.55)]' : 'border-white/[0.07] bg-ink-700'} ${isOptional ? 'opacity-70' : ''}`}>
               <div className="flex gap-3.5">
-                <div className="relative shrink-0">
-                  <img src={ex.image} alt="" className="h-16 w-16 rounded-xl object-cover" loading="lazy" />
+                <div className="relative shrink-0 self-start">
+                  <img src={ex.image} alt="" className="h-[72px] w-[72px] rounded-xl object-cover brightness-110 ring-1 ring-white/10" loading="lazy" />
                   {exDone && (
-                    <span className="absolute -bottom-1.5 -right-1.5 grid h-6 w-6 place-items-center rounded-full bg-brand-400 ring-2 ring-ink-800">
+                    <span className="absolute bottom-1 right-1 grid h-[22px] w-[22px] place-items-center rounded-full bg-brand-400 ring-2 ring-black/50">
                       <Check size={13} strokeWidth={3.5} className="text-black" />
                     </span>
                   )}
