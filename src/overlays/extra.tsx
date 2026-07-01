@@ -465,7 +465,7 @@ export function CoachChatSheet({ open, onClose }: Props) {
 
       {/* Messages */}
       <div ref={scrollRef} className="no-scrollbar flex-1 overflow-y-auto px-3 pb-3 pt-2">
-        {/* Thread intro — gives the empty thread warmth, like IG/Messenger */}
+        {/* Thread intro. Gives the empty thread warmth, like IG/Messenger */}
         <div className="flex flex-col items-center px-6 pb-5 pt-4 text-center">
           <div className="relative">
             <div className="grid h-[68px] w-[68px] place-items-center rounded-full bg-gradient-to-br from-brand-300 to-brand-500 text-black shadow-[0_6px_20px_-6px_rgba(126,217,87,0.6)]"><Sparkles size={32} /></div>
@@ -527,7 +527,7 @@ export function CoachChatSheet({ open, onClose }: Props) {
         )}
       </div>
 
-      {/* Suggested questions — premium quick-start chips */}
+      {/* Suggested questions: premium quick-start chips */}
       {showSuggestions && !typing && (
         <div className="px-3 pb-2">
           <p className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-wide text-white/35">Ask your coach</p>

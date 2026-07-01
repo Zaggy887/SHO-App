@@ -121,7 +121,7 @@ function CoachTab() {
 
   return (
     <>
-      {/* Quick day tags — fast, tap-only "how did your eating today go" */}
+      {/* Quick day tags: fast, tap-only "how did your eating today go" */}
       <DayTagsCard />
 
       {/* Unified nutrition coach: one chat for "what I ate" and "ask anything" */}
@@ -914,7 +914,7 @@ function MyMealsTab() {
             <div className="flex flex-col items-center px-6 py-8 text-center">
               <Salad size={26} className="text-white/25" />
               <p className="mt-2 text-[14px] font-semibold text-white/50">No saved meals yet</p>
-              <p className="mt-1 text-[12px] leading-snug text-white/35">Add a recipe below — it'll appear in the Plan tab too.</p>
+              <p className="mt-1 text-[12px] leading-snug text-white/35">Add a recipe below and it shows up in the Plan tab too.</p>
             </div>
           ) : (
             <div className="divide-y divide-white/5">

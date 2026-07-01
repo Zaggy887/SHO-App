@@ -144,6 +144,19 @@
   animation: screen-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+/* Directional tab transitions: content glides in the way you are travelling,
+   carrying the same premium slide as the side menu across the whole app. */
+@keyframes tab-right {
+  from { opacity: 0; transform: translateX(26px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes tab-left {
+  from { opacity: 0; transform: translateX(-26px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.animate-tab-right { animation: tab-right 0.34s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.animate-tab-left { animation: tab-left 0.34s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
 @keyframes screen-out {
   from {
     opacity: 1;

@@ -30,10 +30,10 @@ export function BottomNav({
               <Icon
                 size={24}
                 strokeWidth={isActive ? 2.6 : 2}
-                className={isActive ? 'text-brand-400' : 'text-white/45'}
+                className={`transition-all duration-300 ease-out ${isActive ? '-translate-y-0.5 scale-110 text-brand-400' : 'text-white/45'}`}
               />
               <span
-                className={`text-[11px] font-semibold ${
+                className={`text-[11px] font-semibold transition-colors duration-300 ${
                   isActive ? 'text-brand-400' : 'text-white/45'
                 }`}
               >
