@@ -44,11 +44,14 @@ function TodayTab() {
         <>
           <div className="relative overflow-hidden rounded-2xl border border-white/5">
             <img src={session.image} alt="" className="absolute inset-0 h-full w-full object-cover" loading="lazy" />
+            <div className="absolute right-3 top-3 z-10 flex items-center gap-1.5 rounded-full bg-black/45 px-3 py-1.5 text-[13px] font-semibold text-white backdrop-blur-md">
+              <Clock size={14} /> ~{session.durationMin} min
+            </div>
             <div className="relative bg-gradient-to-r from-ink-900 via-ink-900/92 to-ink-900/30 p-5">
               <p className="text-sm font-semibold text-brand-400">{session.focus}</p>
               <h3 className="mt-1 text-3xl font-extrabold">{session.name}</h3>
               <div className="mt-2 flex items-center gap-1.5 text-sm text-white/65">
-                <Clock size={15} /> {session.exercises.length} exercises • ~{session.durationMin} min
+                <Clock size={15} /> {session.exercises.length} exercises
               </div>
               <button onClick={() => nav.open('activeWorkout')} className="btn-primary mt-4">
                 {session.completed ? 'Review Workout' : prog.done > 0 ? 'Resume Workout' : 'Start Workout'} <Play size={16} fill="currentColor" />
