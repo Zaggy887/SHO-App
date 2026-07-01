@@ -362,12 +362,12 @@ export default function ActiveWorkout({ open, onClose }: { open: boolean; onClos
       )}
 
       {/* What today's session is for, tied to the user's overall goal */}
-      <div className="mb-4 rounded-2xl border border-brand-400/20 bg-brand-400/[0.06] p-4">
+      <div className="mb-4 rounded-2xl border border-white/8 bg-white/[0.03] p-4">
         <div className="mb-1.5 flex items-center gap-1.5">
-          <Target size={14} className="text-brand-400" />
-          <p className="text-[11px] font-black uppercase tracking-[0.18em] text-brand-400">Today's goal</p>
+          <Target size={14} className="text-white/45" />
+          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-white/45">Today's goal</p>
         </div>
-        <p className="text-[13.5px] leading-snug text-white/75">
+        <p className="text-[13.5px] leading-snug text-white/70">
           {workoutGoalLine(session.name, session.focus, state.profile.goal)}
         </p>
       </div>
@@ -379,12 +379,12 @@ export default function ActiveWorkout({ open, onClose }: { open: boolean; onClos
           const isOptional = trim?.optionalIds.has(ex.defId)
           const exDone = ex.sets.length > 0 && ex.sets.every((s) => s.done)
           return (
-            <div key={ex.defId} className={`overflow-hidden rounded-2xl border bg-ink-800 transition ${exDone ? 'border-brand-400/30' : 'border-white/5'} ${isOptional ? 'opacity-70' : ''}`}>
+            <div key={ex.defId} className={`overflow-hidden rounded-2xl border bg-ink-800 transition ${exDone ? 'border-white/10' : 'border-white/5'} ${isOptional ? 'opacity-70' : ''}`}>
               {/* Header */}
               <div className="flex items-center gap-3 p-3.5">
                 <div className="relative">
                   <img src={ex.image} alt="" className="h-14 w-14 rounded-xl object-cover" loading="lazy" />
-                  <span className="absolute -left-1.5 -top-1.5 grid h-6 w-6 place-items-center rounded-lg bg-ink-900 text-[11px] font-black text-brand-400 ring-1 ring-white/10">
+                  <span className="absolute -left-1.5 -top-1.5 grid h-6 w-6 place-items-center rounded-lg bg-ink-900 text-[11px] font-black text-white/70 ring-1 ring-white/10">
                     {String(exIdx + 1).padStart(2, '0')}
                   </span>
                   {exDone && (
@@ -398,9 +398,9 @@ export default function ActiveWorkout({ open, onClose }: { open: boolean; onClos
                     <p className="truncate font-bold leading-tight">{ex.name}</p>
                     {isOptional && <span className="shrink-0 rounded-full bg-white/8 px-2 py-0.5 text-[10px] font-semibold text-white/55">Optional</span>}
                   </div>
-                  <p className="mt-0.5 text-[12px] font-semibold text-brand-400">{ex.targetSets} sets · {ex.targetReps} reps</p>
-                  <p className="mt-1.5 flex items-start gap-1.5 text-[12px] leading-snug text-white/60">
-                    <Target size={12} className="mt-0.5 shrink-0 text-brand-400" />
+                  <p className="mt-0.5 text-[12px] font-semibold text-white/55">{ex.targetSets} sets · {ex.targetReps} reps</p>
+                  <p className="mt-1.5 flex items-start gap-1.5 text-[12px] leading-snug text-white/55">
+                    <Target size={12} className="mt-0.5 shrink-0 text-white/30" />
                     <span>{exerciseWhy(ex.defId, state.profile.goal)}</span>
                   </p>
                 </div>
@@ -411,9 +411,7 @@ export default function ActiveWorkout({ open, onClose }: { open: boolean; onClos
                 {ex.sets.map((set, i) => (
                   <span
                     key={i}
-                    className={`rounded-lg px-2 py-1 text-[11px] font-bold tabular-nums ${
-                      set.done ? 'bg-brand-400/15 text-brand-300' : 'bg-white/[0.06] text-white/60'
-                    }`}
+                    className="rounded-lg bg-white/[0.05] px-2 py-1 text-[11px] font-bold tabular-nums text-white/60"
                   >
                     {fmtWeightNum(set.weightKg, units, units === 'imperial' ? 0 : 1)}{weightUnit(units)} × {set.reps}
                   </span>
@@ -425,8 +423,8 @@ export default function ActiveWorkout({ open, onClose }: { open: boolean; onClos
                 <button onClick={() => setDetailIdx(exIdx)} className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-white/[0.04] py-2.5 text-[12px] font-semibold text-white/65 active:bg-white/[0.08]">
                   <BookOpen size={14} /> Form & video
                 </button>
-                <button onClick={() => startAt(exIdx)} className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-brand-400/15 py-2.5 text-[12px] font-bold text-brand-400 active:bg-brand-400/25">
-                  <Play size={13} fill="currentColor" /> {exDone ? 'Redo' : 'Start'}
+                <button onClick={() => startAt(exIdx)} className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-white/[0.04] py-2.5 text-[12px] font-semibold text-white/80 active:bg-white/[0.08]">
+                  <Play size={13} fill="currentColor" className="text-brand-400/80" /> {exDone ? 'Redo' : 'Start'}
                 </button>
               </div>
             </div>
