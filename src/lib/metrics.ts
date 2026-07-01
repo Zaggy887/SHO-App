@@ -1,4 +1,4 @@
-import type { AppState, Units } from '../store/types'
+import type { AppState, Units, HabitDay } from '../store/types'
 import {
   weightStats, strengthProgress, habitConsistency7d, streakStats,
   regularWorkoutsInRange, oneRMSeries,
@@ -85,6 +85,8 @@ export const CHART_METRICS: ChartMetric[] = [
   { id: 'deadlift', label: 'Deadlift', icon: 'dumbbell' },
   { id: 'ohp', label: 'Overhead press', icon: 'dumbbell' },
   { id: 'steps', label: 'Daily steps', icon: 'footprints' },
+  { id: 'water', label: 'Water', icon: 'droplet' },
+  { id: 'sleep', label: 'Sleep', icon: 'bed' },
 ]
 
 export interface ChartData {
@@ -107,10 +109,20 @@ export function progressMetricId(s: AppState): string {
 export function buildChartData(s: AppState, metricId: string, days: number, units: Units): ChartData {
   const cutoff = dayKey(days)
 
-  if (metricId === 'steps') {
+  // Daily habit metrics: steps, water, sleep (one value logged per day)
+  if (metricId === 'steps' || metricId === 'water' || metricId === 'sleep') {
+    const imperialWater = units === 'imperial'
+    const conf =
+      metricId === 'steps'
+        ? { get: (h?: HabitDay) => h?.steps ?? 0, unit: 'steps', title: 'Daily steps', dec: 0 }
+        : metricId === 'water'
+          ? { get: (h?: HabitDay) => (h?.waterL ?? 0) * (imperialWater ? 33.814 : 1), unit: imperialWater ? 'oz' : 'L', title: 'Water', dec: 1 }
+          : { get: (h?: HabitDay) => h?.sleepH ?? 0, unit: 'h', title: 'Sleep', dec: 1 }
+    const round = (v: number) => (conf.dec ? Math.round(v * 10) / 10 : Math.round(v))
+    const fmt = (v: number) => (conf.dec ? v.toFixed(conf.dec) : v.toLocaleString())
     const points = Array.from({ length: days + 1 }, (_, i) => dayKey(days - i)).map((k) => {
       const h = s.habits.find((x) => x.dateKey === k)
-      return { date: shortDate(k), value: h?.steps ?? 0 }
+      return { date: shortDate(k), value: round(conf.get(h)) }
     })
     const vals = points.map((p) => p.value)
     const current = vals.length ? vals[vals.length - 1] : 0
@@ -118,10 +130,11 @@ export function buildChartData(s: AppState, metricId: string, days: number, unit
     const delta = current - first
     const max = Math.max(1, ...vals)
     return {
-      points, unit: 'steps', title: 'Daily steps',
-      currentLabel: current.toLocaleString(),
-      deltaText: `${delta >= 0 ? '↑' : '↓'} ${Math.abs(delta).toLocaleString()}`,
-      deltaGood: delta >= 0, isWeight: false, domain: [0, Math.ceil(max / 1000) * 1000],
+      points, unit: conf.unit, title: conf.title,
+      currentLabel: fmt(current),
+      deltaText: `${delta >= 0 ? '↑' : '↓'} ${fmt(Math.abs(round(delta)))}`,
+      deltaGood: delta >= 0, isWeight: false,
+      domain: [0, metricId === 'steps' ? Math.ceil(max / 1000) * 1000 : Math.ceil(max + 1)],
     }
   }
 
