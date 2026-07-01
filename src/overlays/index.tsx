@@ -403,21 +403,7 @@ export function LogHabitSheet({ open, onClose }: Props) {
           goalLabel={`${state.profile.sleepTargetH}h`} goalPct={(state.profile.sleepTargetH / 12) * 100}
         />
 
-        {/* Mindset: quick chips */}
-        <div className="rounded-2xl border border-white/5 bg-ink-800 p-4">
-          <div className="flex items-center gap-2">
-            <Leaf size={18} className="text-brand-400" />
-            <p className="flex-1 font-bold">Mindset</p>
-            <p className="text-2xl font-extrabold tabular-nums text-brand-400">{mindset}<span className="ml-1 text-[13px] font-semibold text-white/40">min</span></p>
-          </div>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {[0, 5, 10, 15, 20, 30, 45].map((m) => (
-              <button key={m} onClick={() => setMindset(m)} className={`min-w-[44px] rounded-xl px-3 py-2 text-sm font-bold transition active:scale-95 ${mindset === m ? 'bg-brand-400 text-black' : 'bg-ink-700 text-white/60'}`}>
-                {m === 0 ? 'None' : m}
-              </button>
-            ))}
-          </div>
-        </div>
+
       </div>
 
       <button onClick={save} className="btn-primary mt-6 w-full">Save habits</button>
