@@ -14,7 +14,7 @@ import ActiveWorkout from './screens/ActiveWorkout'
 import {
   NotificationsSheet,
   SettingsSheet,
-  ProfileSheet,
+  MenuDrawer,
   LogWeightSheet,
   LogHabitSheet,
   LogActivitySheet,
@@ -52,6 +52,7 @@ function Shell() {
   const [tab, setTab] = useState<TabKey>('dashboard')
   const [overlay, setOverlay] = useState<Overlay | null>(null)
   const [params, setParams] = useState<Record<string, unknown>>({})
+  const [menuOpen, setMenuOpen] = useState(false)
 
   const nav = {
     open: (o: Overlay, p: Record<string, unknown> = {}) => {
@@ -61,8 +62,12 @@ function Shell() {
     close: () => setOverlay(null),
     goTab: (t: TabKey) => {
       setOverlay(null)
+      setMenuOpen(false)
       setTab(t)
     },
+    menuOpen,
+    openMenu: () => setMenuOpen(true),
+    closeMenu: () => setMenuOpen(false),
   }
 
   if (!state.profile.onboarded) {
@@ -87,7 +92,7 @@ function Shell() {
       <ActiveWorkout open={overlay === 'activeWorkout'} onClose={nav.close} />
       <NotificationsSheet open={overlay === 'notifications'} onClose={nav.close} />
       <SettingsSheet open={overlay === 'settings'} onClose={nav.close} />
-      <ProfileSheet open={overlay === 'profile'} onClose={nav.close} />
+      <MenuDrawer open={menuOpen} onClose={nav.closeMenu} />
       <LogWeightSheet open={overlay === 'logWeight'} onClose={nav.close} />
       <LogHabitSheet open={overlay === 'logHabit'} onClose={nav.close} params={params} />
       <LogActivitySheet open={overlay === 'logActivity'} onClose={nav.close} />

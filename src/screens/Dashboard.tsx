@@ -124,7 +124,7 @@ export default function Dashboard() {
   return (
     <div className="px-5 pt-2">
       <div className="mb-4 flex items-center justify-between">
-        <button onClick={() => nav.open('profile')} className="grid h-10 w-10 place-items-center rounded-xl text-white/80 active:scale-90 active:bg-white/5"><Menu size={24} /></button>
+        <button onClick={() => nav.openMenu()} aria-label="Open menu" className="grid h-10 w-10 place-items-center rounded-xl text-white/80 active:scale-90 active:bg-white/5"><Menu size={24} /></button>
         <Wordmark size="sm" />
         <button onClick={() => nav.open('coachChat')} aria-label="Message your coach" className="relative grid h-10 w-10 place-items-center rounded-xl text-white/80 active:scale-90 active:bg-white/5">
           <MessageCircle size={23} />

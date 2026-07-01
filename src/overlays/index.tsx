@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import {
   Bell, Moon, Sun, GraduationCap, Wallet, RotateCcw, Trash2, Camera, Trophy,
-  Flame, Plus, Check, Share2, ChevronRight, User, Sparkles, Dumbbell,
+  Flame, Plus, Check, Share2, ChevronRight, X, User, Sparkles, Dumbbell,
   Droplet, Footprints, BedDouble, Leaf, Clock, Play, Award, BellRing, Crown,
   HeartPulse, Activity, Zap,
 } from 'lucide-react'
@@ -13,7 +13,7 @@ import { useStore } from '../store/store'
 import { useToast } from '../components/Toast'
 import { useNav } from '../nav'
 import { QUICK_WORKOUTS } from '../data/catalog'
-import { todayKey, relativeLabel, shortDate } from '../lib/date'
+import { todayKey, relativeLabel, shortDate, fromKey } from '../lib/date'
 import {
   fmtWeight, fmtWeightNum, toKg, weightUnit, fmtFluid,
   weightVal,
@@ -205,56 +205,81 @@ export function SettingsSheet({ open, onClose }: Props) {
   )
 }
 
-/* ============================ Profile ============================ */
-export function ProfileSheet({ open, onClose }: Props) {
+/* ===================== Menu (full-screen drawer) ================= */
+export function MenuDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { state } = useStore()
   const nav = useNav()
   const p = state.profile
   const earned = state.badges.filter((b) => b.earned).length
   const unread = state.notifications.filter((n) => !n.read).length
   const goalLabel: Record<string, string> = { 'build-muscle': 'Build Muscle', 'lose-fat': 'Lose Fat', 'gain-strength': 'Get Stronger', 'stay-healthy': 'Stay Healthy' }
+  const joined = fromKey(p.createdAtKey).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+  // Open items as sheets layered over the drawer, so closing them returns here.
   const go = (o: Parameters<typeof nav.open>[0]) => () => nav.open(o)
   const greenIcon = 'text-brand-400'
 
+  // Keep the drawer mounted through its slide-out animation.
+  const [render, setRender] = useState(open)
+  const [closing, setClosing] = useState(false)
+  useEffect(() => {
+    if (open) { setRender(true); setClosing(false) }
+    else { setClosing(true); const t = window.setTimeout(() => setRender(false), 260); return () => window.clearTimeout(t) }
+  }, [open])
+  if (!render) return null
+
   return (
-    <Sheet open={open} onClose={onClose} title="Menu">
-      {/* Who you are */}
-      <div className="flex items-center gap-3.5 rounded-2xl border border-white/5 bg-ink-800 p-4">
-        <Avatar name={`${p.name} M`} size={54} />
-        <div className="min-w-0">
-          <p className="truncate text-[17px] font-extrabold leading-tight">{p.name} Morgan</p>
-          <p className="mt-0.5 truncate text-[12.5px] text-white/50">{goalLabel[p.goal]} · {p.university}</p>
-        </div>
+    <div
+      className={`absolute inset-0 z-40 flex flex-col bg-ink-900 text-white ${closing ? 'animate-drawer-out' : 'animate-drawer-in'}`}
+      style={{ paddingTop: 'env(safe-area-inset-top)' }}
+    >
+      {/* Header */}
+      <div className="flex items-center gap-2 px-3 py-2.5">
+        <button onClick={onClose} aria-label="Close menu" className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-white/70 active:bg-white/10"><X size={22} /></button>
+        <p className="text-[17px] font-bold">Menu</p>
       </div>
 
-      <MenuSection title="Your progress">
-        <MenuRow icon={<Sparkles size={17} className={greenIcon} />} title="Weekly recap" sub="Your week in numbers" onClick={go('recap')} />
-        <MenuRow icon={<Award size={17} className={greenIcon} />} title="Badges" sub={`${earned} earned`} onClick={go('badges')} />
-        <MenuRow icon={<Camera size={17} className={greenIcon} />} title="Progress photos" sub={`${state.photos.length} photos`} onClick={go('photos')} />
-      </MenuSection>
+      <div className="no-scrollbar flex-1 overflow-y-auto px-4 pb-8">
+        {/* Who you are */}
+        <div className="flex items-center gap-4 pt-1">
+          <Avatar name={`${p.name} M`} size={64} />
+          <div className="min-w-0">
+            <p className="truncate text-xl font-extrabold leading-tight">{p.name} Morgan</p>
+            <p className="mt-0.5 truncate text-[13px] text-white/50">{p.university} · Age {p.age}</p>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <span className="rounded-full bg-brand-400/15 px-2.5 py-1 text-[11px] font-bold text-brand-400">{goalLabel[p.goal]}</span>
+              <span className="text-[12px] text-white/40">Member since {joined}</span>
+            </div>
+          </div>
+        </div>
 
-      <MenuSection title="Coaching">
-        <MenuRow icon={<Sparkles size={17} className={greenIcon} />} title="Your coach" sub="Daily check-ins and milestones" onClick={go('coach')} />
-        <MenuRow icon={<GraduationCap size={17} className={greenIcon} />} title="Exam Survival Protocol" sub={p.examMode ? 'On' : 'Off'} onClick={go('examMode')} />
-        {p.newToGym && <MenuRow icon={<Leaf size={17} className={greenIcon} />} title="New to the gym" sub="Your first 90 days" onClick={go('beginner')} />}
-      </MenuSection>
+        <MenuSection title="Your progress">
+          <MenuRow icon={<Sparkles size={17} className={greenIcon} />} title="Weekly recap" sub="Your week in numbers" onClick={go('recap')} />
+          <MenuRow icon={<Award size={17} className={greenIcon} />} title="Badges" sub={`${earned} earned`} onClick={go('badges')} />
+          <MenuRow icon={<Camera size={17} className={greenIcon} />} title="Progress photos" sub={`${state.photos.length} photos`} onClick={go('photos')} />
+        </MenuSection>
 
-      <MenuSection title="Community">
-        <MenuRow icon={<Trophy size={17} className={greenIcon} />} title="Campus leaderboard" sub={p.university} onClick={go('leaderboard')} />
-        <MenuRow
-          icon={<Bell size={17} className={greenIcon} />}
-          title="Notifications"
-          sub="Reminders, streaks & social"
-          onClick={go('notifications')}
-          badge={unread > 0 ? <span className="grid h-5 min-w-[20px] place-items-center rounded-full bg-brand-400 px-1.5 text-[11px] font-bold text-black">{unread}</span> : undefined}
-        />
-      </MenuSection>
+        <MenuSection title="Coaching">
+          <MenuRow icon={<Sparkles size={17} className={greenIcon} />} title="Your coach" sub="Daily check-ins and milestones" onClick={go('coach')} />
+          <MenuRow icon={<GraduationCap size={17} className={greenIcon} />} title="Exam Survival Protocol" sub={p.examMode ? 'On' : 'Off'} onClick={go('examMode')} />
+          {p.newToGym && <MenuRow icon={<Leaf size={17} className={greenIcon} />} title="New to the gym" sub="Your first 90 days" onClick={go('beginner')} />}
+        </MenuSection>
 
-      <MenuSection title="App">
-        <MenuRow icon={<User size={17} className="text-white/70" />} title="Settings" sub="Units, theme and data" onClick={go('settings')} />
-      </MenuSection>
-      <div className="h-2" />
-    </Sheet>
+        <MenuSection title="Community">
+          <MenuRow icon={<Trophy size={17} className={greenIcon} />} title="Campus leaderboard" sub={p.university} onClick={go('leaderboard')} />
+          <MenuRow
+            icon={<Bell size={17} className={greenIcon} />}
+            title="Notifications"
+            sub="Reminders, streaks & social"
+            onClick={go('notifications')}
+            badge={unread > 0 ? <span className="grid h-5 min-w-[20px] place-items-center rounded-full bg-brand-400 px-1.5 text-[11px] font-bold text-black">{unread}</span> : undefined}
+          />
+        </MenuSection>
+
+        <MenuSection title="App">
+          <MenuRow icon={<User size={17} className="text-white/70" />} title="Settings" sub="Units, theme and data" onClick={go('settings')} />
+        </MenuSection>
+      </div>
+    </div>
   )
 }
 

@@ -158,6 +158,18 @@
   animation: screen-out 0.25s cubic-bezier(0.4, 0, 1, 1) both;
 }
 
+/* Full-screen side menu: slides in from the left and back out. */
+@keyframes drawer-in {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+.animate-drawer-in { animation: drawer-in 0.28s cubic-bezier(0.22, 1, 0.36, 1) both; }
+@keyframes drawer-out {
+  from { transform: translateX(0); }
+  to { transform: translateX(-100%); }
+}
+.animate-drawer-out { animation: drawer-out 0.24s cubic-bezier(0.4, 0, 1, 1) both; }
+
 /* Bottom-sheet slide-up + backdrop fade. */
 @keyframes sheet-up {
   from { transform: translateY(100%); }
