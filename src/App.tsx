@@ -120,8 +120,8 @@ function Shell() {
 export default function App() {
   return (
     <StoreProvider>
-      <div className="flex min-h-screen w-full items-center justify-center p-0 sm:p-6" style={{ background: 'var(--frame)' }}>
-        <div id="app-frame" className="relative flex h-[100dvh] w-full max-w-[440px] flex-col overflow-hidden bg-ink-900 text-white sm:h-[920px] sm:rounded-[44px] sm:border-[10px] sm:border-zinc-800 sm:shadow-2xl app-frame-safe-top">
+      <div className="flex min-h-[100dvh] w-full justify-center sm:min-h-screen sm:items-center sm:p-6" style={{ background: 'var(--frame)' }}>
+        <div id="app-frame" className="relative flex h-[100dvh] w-full flex-col overflow-hidden bg-ink-900 text-white app-frame-safe-top sm:h-[920px] sm:max-w-[440px] sm:rounded-[44px] sm:border-[10px] sm:border-zinc-800 sm:shadow-2xl">
           <ToastProvider>
             <Shell />
           </ToastProvider>
