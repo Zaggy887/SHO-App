@@ -348,7 +348,7 @@ export default function ActiveWorkout({ open, onClose }: { open: boolean; onClos
       {!allDone && (
         <button
           onClick={startGuided}
-          className="mb-4 flex w-full items-center justify-center gap-2.5 rounded-xl bg-brand-500 px-6 py-3.5 text-[15px] font-bold text-white transition active:scale-[0.98] hover:bg-brand-500/90"
+          className="mb-4 flex w-full items-center justify-center gap-2.5 rounded-xl bg-brand-500 px-6 py-4 text-[15px] font-bold text-white transition active:scale-[0.98] hover:bg-brand-500/90"
         >
           <Play size={17} fill="currentColor" />
           {rest !== null ? 'Resume rest' : prog.done > 0 ? 'Resume workout' : 'Start workout'}
