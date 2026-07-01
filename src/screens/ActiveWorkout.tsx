@@ -434,7 +434,7 @@ export default function ActiveWorkout({ open, onClose }: { open: boolean; onClos
         })}
       </div>
 
-      <button onClick={finish} className={`mt-5 flex w-full items-center justify-center gap-2 rounded-full py-3.5 font-bold transition active:scale-[0.98] ${allDone ? 'bg-brand-400 text-black shadow-glow' : 'border border-white/10 bg-white/[0.04] text-white'}`}>
+      <button onClick={finish} className={`mt-5 flex w-full items-center justify-center gap-2 rounded-full py-3.5 font-bold transition active:scale-[0.98] ${allDone ? 'bg-brand-400 text-black shadow-glow' : 'border border-white/10 bg-green-600 text-white'}`}>
         <Flag size={16} /> Finish workout
       </button>
       <div className="h-2" />
