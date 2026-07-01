@@ -66,10 +66,6 @@ function TodayTab() {
               <span className="font-semibold text-white">{prog.pct}%</span>
             </div>
             <ProgressBar value={prog.pct} />
-            <div className="mt-4 grid grid-cols-2 gap-3 rounded-2xl border border-white/5 bg-ink-800 p-4">
-              <Stat icon="dumbbell" color="rgb(var(--brand-400))" label="Volume" value={fmtVolume(session.volumeKg, units)} />
-              <Stat icon="clock" color="#9AA0A6" label="Duration" value={`${session.durationMin} min`} />
-            </div>
           </div>
 
           <div className="mt-6">
@@ -262,12 +258,3 @@ function HistoryTab() {
   )
 }
 
-function Stat({ icon, color, label, value }: { icon: string; color: string; label: string; value: string }) {
-  return (
-    <div>
-      <Icon name={icon} size={18} color={color} />
-      <p className="mt-1.5 text-[12px] text-white/55">{label}</p>
-      <p className="text-lg font-extrabold leading-tight">{value}</p>
-    </div>
-  )
-}
