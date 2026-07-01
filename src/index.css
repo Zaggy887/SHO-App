@@ -2,6 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
+/* On mobile browsers, push content below the device status bar.
+   On desktop (sm+) the fake StatusBar component handles this instead. */
+.app-frame-safe-top {
+  padding-top: max(env(safe-area-inset-top, 0px), 44px);
+}
+@media (min-width: 640px) {
+  .app-frame-safe-top {
+    padding-top: 0;
+  }
+}
+
 @layer base {
   :root {
     color-scheme: dark;
