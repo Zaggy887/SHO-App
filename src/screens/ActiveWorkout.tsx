@@ -341,25 +341,14 @@ export default function ActiveWorkout({ open, onClose }: { open: boolean; onClos
   /* ================================ Overview ================================ */
   return (
     <Sheet open={open} onClose={onClose} title={session.name} full>
-      {/* The bold primary CTA that launches the follow-along flow */}
+      {/* A clean, single-line CTA to launch the follow-along flow */}
       {!allDone && (
         <button
           onClick={startGuided}
-          className="group relative mb-5 w-full overflow-hidden rounded-2xl bg-brand-400 p-5 text-left text-black shadow-glow transition active:scale-[0.99]"
+          className="mb-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-400 py-4 text-[15px] font-bold text-black shadow-glow transition active:scale-[0.98]"
         >
-          <div className="absolute -right-6 -top-8 h-32 w-32 rounded-full bg-black/10" />
-          <div className="absolute -bottom-10 right-10 h-24 w-24 rounded-full bg-white/10" />
-          <p className="relative text-[11px] font-black uppercase tracking-[0.2em] text-black/55">
-            {rest !== null ? 'Resume, resting' : prog.done > 0 ? 'Pick up where you left off' : "Let's move"}
-          </p>
-          <div className="relative mt-1 flex items-center justify-between">
-            <span className="text-[26px] font-black leading-none tracking-tight">
-              {rest !== null ? 'Resume rest' : prog.done > 0 ? 'Resume workout' : 'Start workout'}
-            </span>
-            <span className="grid h-12 w-12 place-items-center rounded-full bg-black text-brand-400 transition group-active:scale-90">
-              <Play size={22} fill="currentColor" />
-            </span>
-          </div>
+          <Play size={18} fill="currentColor" />
+          {rest !== null ? 'Resume rest' : prog.done > 0 ? 'Resume workout' : 'Start workout'}
         </button>
       )}
 
