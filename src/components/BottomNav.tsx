@@ -18,7 +18,7 @@ export function BottomNav({
 }) {
   return (
     <nav className="absolute inset-x-0 bottom-0 z-20 border-t border-white/8 bg-ink-900/95 backdrop-blur-xl">
-      <div className="flex items-center justify-around px-2 pt-2.5" style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 1.5rem)' }}>
+      <div className="flex items-center justify-around px-2 pt-2.5" style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 0.5rem)' }}>
         {items.map(({ key, label, Icon }) => {
           const isActive = key === active
           return (

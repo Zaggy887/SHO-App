@@ -2,10 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
-/* On mobile browsers, push content below the device status bar.
-   On desktop (sm+) the fake StatusBar component handles this instead. */
+/* On mobile browsers, clear the notch/status bar using the real safe-area
+   inset (0 in a normal browser, so no empty black strip). On desktop (sm+)
+   the fake StatusBar component handles this instead. */
 .app-frame-safe-top {
-  padding-top: max(env(safe-area-inset-top, 0px), 44px);
+  padding-top: env(safe-area-inset-top, 0px);
 }
 @media (min-width: 640px) {
   .app-frame-safe-top {
