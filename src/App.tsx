@@ -47,21 +47,12 @@ const screens: Record<TabKey, React.ComponentType> = {
   community: Community,
 }
 
-const TAB_ORDER: TabKey[] = ['dashboard', 'workout', 'nutrition', 'progress', 'community']
-
 function Shell() {
   const { state } = useStore()
   const [tab, setTab] = useState<TabKey>('dashboard')
-  const [dir, setDir] = useState<1 | -1>(1)
   const [overlay, setOverlay] = useState<Overlay | null>(null)
   const [params, setParams] = useState<Record<string, unknown>>({})
   const [menuOpen, setMenuOpen] = useState(false)
-
-  // Switch tabs with a directional slide, so navigation feels alive.
-  const changeTab = (next: TabKey) => {
-    setDir(TAB_ORDER.indexOf(next) >= TAB_ORDER.indexOf(tab) ? 1 : -1)
-    setTab(next)
-  }
 
   const nav = {
     open: (o: Overlay, p: Record<string, unknown> = {}) => {
@@ -72,7 +63,7 @@ function Shell() {
     goTab: (t: TabKey) => {
       setOverlay(null)
       setMenuOpen(false)
-      changeTab(t)
+      setTab(t)
     },
     menuOpen,
     openMenu: () => setMenuOpen(true),
@@ -92,10 +83,10 @@ function Shell() {
   return (
     <NavProvider value={nav}>
       <StatusBar />
-      <main key={tab} className={`no-scrollbar flex-1 overflow-y-auto ${dir === 1 ? 'animate-tab-right' : 'animate-tab-left'}`} style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 7rem)' }}>
+      <main key={tab} className="no-scrollbar flex-1 overflow-y-auto animate-screen-in" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 7rem)' }}>
         <Screen />
       </main>
-      <BottomNav active={tab} onChange={changeTab} />
+      <BottomNav active={tab} onChange={setTab} />
 
       {/* Overlays */}
       <ActiveWorkout open={overlay === 'activeWorkout'} onClose={nav.close} />
