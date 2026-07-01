@@ -310,7 +310,6 @@ export default function ActiveWorkout({ open, onClose }: { open: boolean; onClos
         coachHint={rec?.hasHistory ? rec : null}
         exIndex={cursor.exIdx}
         exTotal={session.exercises.length}
-        nextExName={session.exercises[cursor.exIdx + 1]?.name}
         detail={exerciseDetail(cursorEx.defId)}
         onBack={backToList}
         onAdjust={adjust}
@@ -545,7 +544,7 @@ export default function ActiveWorkout({ open, onClose }: { open: boolean; onClos
 
 /* ============================ Work screen ============================ */
 function WorkScreen({
-  ex, cursor, set, elapsed, sessionTotal, units, coachHint, exIndex, exTotal, nextExName, detail,
+  ex, cursor, set, elapsed, sessionTotal, units, coachHint, exIndex, exTotal, detail,
   onBack, onAdjust, onApplyCoach, onStartRest,
 }: {
   ex: WorkoutSession['exercises'][number]
@@ -557,7 +556,6 @@ function WorkScreen({
   coachHint: { suggestedWeightKg: number; suggestedReps: number } | null
   exIndex: number
   exTotal: number
-  nextExName?: string
   detail: { desc: string; cues: string[]; commonMistake: string; video?: string }
   onBack: () => void
   onAdjust: (field: 'weightKg' | 'reps', dir: 1 | -1) => void
@@ -638,11 +636,6 @@ function WorkScreen({
         <button onClick={onStartRest} className="flex w-full items-center justify-center gap-2.5 rounded-2xl bg-brand-400 py-5 text-[18px] font-black uppercase tracking-wide text-black shadow-glow transition active:scale-[0.98]">
           <Check size={20} strokeWidth={3} /> {lastSet ? 'Done, finish exercise' : 'Done, start rest'}
         </button>
-        <p className="mt-3 text-center text-[12px] font-semibold text-white/40">
-          {lastSet
-            ? (nextExName ? <>Up next: <span className="text-white/70">{nextExName}</span></> : <span className="text-brand-400">Last exercise. Finish strong</span>)
-            : <>Then: <span className="text-white/70">Set {cursor.setIdx + 2} of {ex.sets.length}</span></>}
-        </p>
       </div>
 
       {/* On-demand "how to do this", keeps the main screen simple */}
