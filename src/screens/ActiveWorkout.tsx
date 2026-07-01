@@ -449,7 +449,7 @@ export default function ActiveWorkout({ open, onClose }: { open: boolean; onClos
             <div className="fixed inset-0 z-[70] flex flex-col justify-end" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
               <button aria-label="Close" onClick={close} className="absolute inset-0 bg-black/65 backdrop-blur-sm animate-fade-in" />
               <div className="animate-sheet-up relative flex max-h-[90%] flex-col rounded-t-3xl border-t border-white/10 bg-ink-900">
-                <div className="flex items-center justify-between gap-3 px-5 pb-3 pt-4">
+                <div className="flex shrink-0 items-center justify-between gap-3 px-5 pb-3 pt-4">
                   <span className="absolute left-1/2 top-2 h-1 w-10 -translate-x-1/2 rounded-full bg-white/20" />
                   <div className="min-w-0">
                     <p className="truncate text-[17px] font-bold leading-tight">{ex.name}</p>
@@ -458,7 +458,7 @@ export default function ActiveWorkout({ open, onClose }: { open: boolean; onClos
                   <button onClick={close} className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/8 text-white/70 active:bg-white/15"><X size={18} /></button>
                 </div>
 
-                <div className="no-scrollbar flex-1 overflow-y-auto px-5 pb-8">
+                <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto px-5 pb-8">
                   <TechniqueClip poster={ex.image} videoUrl={detail.video} label="Form clip coming soon" />
 
                   {/* Why this exercise serves your goal */}
@@ -630,11 +630,11 @@ function WorkScreen({
       {/* On-demand "how to do this", keeps the main screen simple */}
       {showHow && (
         <div className="absolute inset-0 z-10 flex flex-col bg-ink-900/98 backdrop-blur-sm" style={{ animation: 'screen-in 0.2s ease-out', paddingTop: 'env(safe-area-inset-top)' }}>
-          <div className="flex items-center justify-between px-5 pb-3 pt-4">
+          <div className="flex shrink-0 items-center justify-between px-5 pb-3 pt-4">
             <p className="text-[15px] font-bold">How to: {ex.name}</p>
             <button onClick={() => setShowHow(false)} className="grid h-8 w-8 place-items-center rounded-full bg-white/8 text-white/70 active:bg-white/15"><X size={18} /></button>
           </div>
-          <div className="no-scrollbar flex-1 overflow-y-auto px-5 pb-8">
+          <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto px-5 pb-8">
             <TechniqueClip poster={ex.image} videoUrl={detail.video} label="Form clip coming soon" />
             <p className="mt-3 text-[14px] leading-snug text-white/75">{detail.desc}</p>
             <p className="mb-2 mt-5 text-[12px] font-bold uppercase tracking-wide text-white/40">Step by step</p>

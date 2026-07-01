@@ -36,14 +36,14 @@ export function Sheet({
           full ? 'h-[92%]' : 'max-h-[88%]'
         }`}
       >
-        <div className="flex items-center justify-between px-5 pb-2 pt-4">
+        <div className="flex shrink-0 items-center justify-between px-5 pb-2 pt-4">
           <div className="absolute left-1/2 top-2 h-1 w-10 -translate-x-1/2 rounded-full bg-white/20" />
           <h3 className="text-lg font-bold">{title}</h3>
           <button onClick={onClose} className="grid h-8 w-8 place-items-center rounded-full bg-white/8 text-white/70 active:bg-white/15">
             <X size={18} />
           </button>
         </div>
-        <div className="no-scrollbar flex-1 overflow-y-auto px-5 pb-8">{children}</div>
+        <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto px-5 pb-8">{children}</div>
       </div>
     </div>
   )

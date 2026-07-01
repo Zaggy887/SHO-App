@@ -226,12 +226,12 @@ export function MenuDrawer({ open, onClose }: { open: boolean; onClose: () => vo
       style={{ paddingTop: 'env(safe-area-inset-top)' }}
     >
       {/* Header */}
-      <div className="flex items-center gap-2 px-3 py-2.5">
+      <div className="flex shrink-0 items-center gap-2 px-3 py-2.5">
         <button onClick={onClose} aria-label="Close menu" className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-white/70 active:bg-white/10"><X size={22} /></button>
         <p className="text-[17px] font-bold">Menu</p>
       </div>
 
-      <div className="no-scrollbar flex-1 overflow-y-auto px-4 pb-8">
+      <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto px-4 pb-8">
         {/* Who you are */}
         <div className="flex items-center gap-4 pt-1">
           <Avatar name={`${p.name} M`} size={64} />
