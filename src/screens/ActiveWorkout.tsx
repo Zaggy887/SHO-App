@@ -395,16 +395,18 @@ export default function ActiveWorkout({ open, onClose }: { open: boolean; onClos
             <div key={ex.defId} className={`rounded-2xl border p-3.5 transition ${isActive ? 'border-brand-400/50 bg-brand-400/[0.05] shadow-[0_0_22px_-8px_rgba(126,217,87,0.55)]' : 'border-white/[0.07] bg-ink-700'} ${isOptional ? 'opacity-70' : ''}`}>
               <div className="flex gap-3.5">
                 <div className="relative shrink-0 self-start">
-                  <img src={ex.image} alt="" className="h-[72px] w-[72px] rounded-xl object-cover brightness-110 ring-1 ring-white/10" loading="lazy" />
+                  <img src={ex.image} alt="" className="h-20 w-20 rounded-xl object-cover brightness-110 ring-1 ring-white/10" loading="lazy" />
                   {exDone && (
-                    <span className="absolute bottom-1 right-1 grid h-[22px] w-[22px] place-items-center rounded-full bg-brand-400 ring-2 ring-black/50">
-                      <Check size={13} strokeWidth={3.5} className="text-black" />
-                    </span>
+                    <div className="absolute inset-0 grid place-items-center rounded-xl bg-black/45 ring-1 ring-brand-400/40">
+                      <span className="grid h-7 w-7 place-items-center rounded-full bg-brand-400 shadow-[0_2px_8px_rgba(0,0,0,0.4)]">
+                        <Check size={16} strokeWidth={3.5} className="text-black" />
+                      </span>
+                    </div>
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <p className="truncate font-bold leading-tight">{ex.name}</p>
+                    <p className="truncate text-[17px] font-bold leading-tight">{ex.name}</p>
                     {isActive && <span className="shrink-0 rounded-full bg-brand-400/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-brand-300">Now</span>}
                     {isOptional && <span className="shrink-0 rounded-full bg-white/8 px-2 py-0.5 text-[10px] font-semibold text-white/55">Optional</span>}
                   </div>
@@ -418,10 +420,10 @@ export default function ActiveWorkout({ open, onClose }: { open: boolean; onClos
 
                   {/* Actions */}
                   <div className="mt-3 flex gap-2">
-                    <button onClick={() => setDetailIdx(exIdx)} className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-white/[0.05] py-2 text-[12px] font-semibold text-white/70 active:bg-white/[0.09]">
+                    <button onClick={() => setDetailIdx(exIdx)} className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-white/[0.09] py-2 text-[12px] font-semibold text-white/85 active:bg-white/[0.14]">
                       <BookOpen size={14} /> Form & video
                     </button>
-                    <button onClick={() => startAt(exIdx)} className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2 text-[12px] font-bold transition ${isActive ? 'bg-brand-400 text-black active:bg-brand-300' : 'bg-white/[0.05] text-white/70 active:bg-white/[0.09]'}`}>
+                    <button onClick={() => startAt(exIdx)} className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2 text-[12px] font-bold transition ${isActive ? 'bg-brand-400 text-black active:bg-brand-300' : 'bg-white/[0.09] text-white/85 active:bg-white/[0.14]'}`}>
                       <Play size={13} fill="currentColor" /> {exDone ? 'Redo' : 'Start'}
                     </button>
                   </div>
