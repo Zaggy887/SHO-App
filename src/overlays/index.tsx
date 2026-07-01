@@ -3,7 +3,7 @@ import {
   Bell, Moon, Sun, GraduationCap, Wallet, RotateCcw, Trash2, Camera, Trophy,
   Flame, Plus, Check, Share2, ChevronRight, X, User, Sparkles, Dumbbell,
   Droplet, Footprints, BedDouble, Leaf, Clock, Play, Award, BellRing, Crown,
-  HeartPulse, Activity, Zap,
+  HeartPulse, Activity, Zap, Globe,
 } from 'lucide-react'
 import { Sheet, EmptyState } from '../components/Sheet'
 import { Avatar } from '../components/Avatar'
@@ -111,27 +111,6 @@ export function SettingsSheet({ open, onClose }: Props) {
 
   return (
     <Sheet open={open} onClose={onClose} title={t('settings.title')}>
-      <Group label={t('settings.language')}>
-        <div className="grid grid-cols-2 gap-2">
-          {LANGUAGES.map((l) => {
-            const active = l.code === lang
-            return (
-              <button
-                key={l.code}
-                onClick={() => setLang(l.code)}
-                className={`flex items-center justify-between rounded-2xl border p-3 text-left transition active:scale-[0.98] ${active ? 'border-brand-400 bg-brand-400/10' : 'border-white/8 bg-ink-800'}`}
-              >
-                <div className="min-w-0">
-                  <p className="truncate font-bold leading-tight" style={l.rtl ? { direction: 'rtl' } : undefined}>{l.native}</p>
-                  <p className="text-[11px] text-white/45">{l.english}</p>
-                </div>
-                {active && <Check size={16} strokeWidth={3} className="shrink-0 text-brand-400" />}
-              </button>
-            )
-          })}
-        </div>
-      </Group>
-
       <Group label={t('settings.units')}>
         <Segmented<Units>
           value={units}
@@ -178,6 +157,20 @@ export function SettingsSheet({ open, onClose }: Props) {
         <Row icon={<Crown size={18} className="text-brand-400" />} title={t('settings.premium')} sub={t('settings.premiumSub')}>
           <Toggle on={state.profile.premium} onClick={() => dispatch({ type: 'SET_PROFILE', patch: { premium: !state.profile.premium } })} />
         </Row>
+      </Group>
+
+      <Group label={t('settings.language')}>
+        <div className="flex items-center gap-3 rounded-2xl border border-white/5 bg-ink-800 p-4">
+          <Globe size={18} className="shrink-0 text-brand-400" />
+          <span className="flex-1 font-semibold">{t('settings.language')}</span>
+          <select
+            value={lang}
+            onChange={(e) => setLang(e.target.value as Language)}
+            className="rounded-xl border border-white/10 bg-ink-700 px-3 py-1.5 text-sm font-semibold text-white focus:border-brand-400/60 focus:outline-none"
+          >
+            {LANGUAGES.map((l) => <option key={l.code} value={l.code}>{l.native}</option>)}
+          </select>
+        </div>
       </Group>
 
       <Group label={t('settings.data')}>
@@ -832,8 +825,15 @@ function Row({ icon, title, sub, children }: { icon: JSX.Element; title: string;
 
 function Toggle({ on, onClick }: { on: boolean; onClick: () => void }) {
   return (
-    <button onClick={onClick} className={`relative h-7 w-12 rounded-full transition-colors ${on ? 'bg-brand-400' : 'bg-white/15'}`}>
-      <span className={`absolute top-0.5 h-6 w-6 rounded-full bg-white transition-transform ${on ? 'translate-x-[22px]' : 'translate-x-0.5'}`} />
+    <button
+      onClick={onClick}
+      role="switch"
+      aria-checked={on}
+      className={`relative h-7 w-[46px] shrink-0 rounded-full transition-colors ${on ? 'bg-brand-400' : 'bg-white/20'}`}
+    >
+      <span
+        className={`absolute left-0 top-1/2 h-5 w-5 -translate-y-1/2 rounded-full bg-white shadow-sm transition-transform ${on ? 'translate-x-[22px]' : 'translate-x-1'}`}
+      />
     </button>
   )
 }
