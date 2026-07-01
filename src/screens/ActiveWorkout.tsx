@@ -392,7 +392,7 @@ export default function ActiveWorkout({ open, onClose }: { open: boolean; onClos
             ? `${fmtWeightNum(weights[0], units, units === 'imperial' ? 0 : 1)}${weightUnit(units)} × ${ex.sets.map((s) => s.reps).join(', ')}`
             : ex.sets.map((s) => `${fmtWeightNum(s.weightKg, units, units === 'imperial' ? 0 : 1)}${weightUnit(units)}×${s.reps}`).join(', ')
           return (
-            <div key={ex.defId} className={`rounded-2xl border p-3.5 transition ${isActive ? 'border-brand-400/50 bg-brand-400/[0.05] shadow-[0_0_22px_-8px_rgba(126,217,87,0.55)]' : 'border-white/[0.07] bg-ink-700'} ${isOptional ? 'opacity-70' : ''}`}>
+            <div key={ex.defId} className={`rounded-2xl border p-3.5 transition ${isActive ? 'border-brand-400/50 bg-brand-400/[0.05] shadow-[0_0_22px_-8px_rgba(126,217,87,0.55)]' : 'border-white/[0.04] bg-ink-800'} ${isOptional ? 'opacity-70' : ''}`}>
               <div className="flex gap-3.5">
                 <div className="relative shrink-0 self-start">
                   <img src={ex.image} alt="" className="h-[88px] w-[88px] rounded-xl object-cover brightness-110 ring-1 ring-white/10" loading="lazy" />
