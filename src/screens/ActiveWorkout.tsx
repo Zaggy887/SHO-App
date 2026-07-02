@@ -629,7 +629,7 @@ function WorkScreen({
 
       {/* On-demand "how to do this", keeps the main screen simple */}
       {showHow && (
-        <div className="absolute inset-0 z-10 flex flex-col bg-ink-900/98 backdrop-blur-sm" style={{ animation: 'screen-in 0.2s ease-out', paddingTop: 'env(safe-area-inset-top)' }}>
+        <div className="absolute inset-0 z-10 flex flex-col" style={{ backgroundColor: '#0a0a0b', animation: 'screen-in 0.2s ease-out', paddingTop: 'env(safe-area-inset-top)' }}>
           <div className="flex shrink-0 items-center justify-between px-5 pb-3 pt-4">
             <p className="text-[15px] font-bold">How to: {ex.name}</p>
             <button onClick={() => setShowHow(false)} className="grid h-8 w-8 place-items-center rounded-full bg-white/8 text-white/70 active:bg-white/15"><X size={18} /></button>
