@@ -39,9 +39,9 @@ export default {
       },
       fontFamily: {
         sans: [
+          'Inter Variable',
           '-apple-system',
           'BlinkMacSystemFont',
-          'Inter',
           'Segoe UI',
           'Roboto',
           'Helvetica',
