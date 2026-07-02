@@ -627,30 +627,35 @@ function WorkScreen({
         </button>
       </div>
 
-      {/* On-demand "how to do this", keeps the main screen simple */}
+      {/* On-demand "how to do this": a bottom-sheet card over the set, so the
+          workout stays visible (dimmed) behind it rather than a full page. */}
       {showHow && (
-        <div className="absolute inset-0 z-10 flex flex-col" style={{ backgroundColor: '#0a0a0b', animation: 'screen-in 0.2s ease-out', paddingTop: 'env(safe-area-inset-top)' }}>
-          <div className="flex shrink-0 items-center justify-between px-5 pb-3 pt-4">
-            <p className="text-[15px] font-bold">How to: {ex.name}</p>
-            <button onClick={() => setShowHow(false)} className="grid h-8 w-8 place-items-center rounded-full bg-white/8 text-white/70 active:bg-white/15"><X size={18} /></button>
-          </div>
-          <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto px-5 pb-8">
-            <TechniqueClip poster={ex.image} videoUrl={detail.video} label="Form clip coming soon" />
-            <p className="mt-3 text-[14px] leading-snug text-white/75">{detail.desc}</p>
-            <p className="mb-2 mt-5 text-[12px] font-bold uppercase tracking-wide text-white/40">Step by step</p>
-            <ol className="space-y-2.5">
-              {detail.cues.map((c, i) => (
-                <li key={i} className="flex items-start gap-3 text-[14px]">
-                  <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-brand-400/15 text-[12px] font-bold text-brand-400">{i + 1}</span>
-                  <span className="text-white/80">{c}</span>
-                </li>
-              ))}
-            </ol>
-            <div className="mt-4 flex gap-2.5 rounded-2xl border border-white/10 bg-white/[0.04] p-3.5">
-              <Info size={17} className="mt-0.5 shrink-0 text-accent-orange" />
-              <p className="text-[13px] leading-snug text-white/70"><span className="font-semibold text-white/85">Avoid: </span>{detail.commonMistake}</p>
+        <div className="absolute inset-0 z-10 flex flex-col justify-end">
+          <button aria-label="Close" onClick={() => setShowHow(false)} className="absolute inset-0 bg-black/70 backdrop-blur-sm animate-fade-in" />
+          <div className="animate-sheet-up relative flex max-h-[85%] flex-col rounded-t-3xl border-t border-white/10 bg-ink-900">
+            <div className="flex shrink-0 items-center justify-between px-5 pb-3 pt-4">
+              <span className="absolute left-1/2 top-2 h-1 w-10 -translate-x-1/2 rounded-full bg-white/20" />
+              <p className="text-[15px] font-bold">How to: {ex.name}</p>
+              <button onClick={() => setShowHow(false)} className="grid h-8 w-8 place-items-center rounded-full bg-white/8 text-white/70 active:bg-white/15"><X size={18} /></button>
             </div>
-            <button onClick={() => setShowHow(false)} className="btn-primary mt-5 w-full">Got it</button>
+            <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto px-5 pb-8">
+              <TechniqueClip poster={ex.image} videoUrl={detail.video} label="Form clip coming soon" />
+              <p className="mt-3 text-[14px] leading-snug text-white/75">{detail.desc}</p>
+              <p className="mb-2 mt-5 text-[12px] font-bold uppercase tracking-wide text-white/40">Step by step</p>
+              <ol className="space-y-2.5">
+                {detail.cues.map((c, i) => (
+                  <li key={i} className="flex items-start gap-3 text-[14px]">
+                    <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-brand-400/15 text-[12px] font-bold text-brand-400">{i + 1}</span>
+                    <span className="text-white/80">{c}</span>
+                  </li>
+                ))}
+              </ol>
+              <div className="mt-4 flex gap-2.5 rounded-2xl border border-white/10 bg-white/[0.04] p-3.5">
+                <Info size={17} className="mt-0.5 shrink-0 text-accent-orange" />
+                <p className="text-[13px] leading-snug text-white/70"><span className="font-semibold text-white/85">Avoid: </span>{detail.commonMistake}</p>
+              </div>
+              <button onClick={() => setShowHow(false)} className="btn-primary mt-5 w-full">Got it</button>
+            </div>
           </div>
         </div>
       )}
