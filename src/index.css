@@ -2,6 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Self-hosted brand font. One premium typeface across iOS, Android and
+   desktop, served locally so it works offline as a PWA (no CDN, no npm
+   dependency). Variable weight covers the full 100-900 range we use. */
+@font-face {
+  font-family: 'Inter Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url('/fonts/inter-latin-wght-normal.woff2') format('woff2-variations');
+}
+
 /* On mobile browsers, clear the notch/status bar using the real safe-area
    inset (0 in a normal browser, so no empty black strip). On desktop (sm+)
    the fake StatusBar component handles this instead. */
