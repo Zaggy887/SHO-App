@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import {
-  Check, Plus, Minus, Flag, Info, Bell, BookOpen, Play, Target,
-  ChevronLeft, ChevronDown, Timer, Dumbbell, ListChecks, CircleHelp as HelpCircle, X,
+  Check, Plus, Flag, Info, Bell, BookOpen, Play, Target,
+  ChevronLeft, ChevronDown, Timer, ListChecks, CircleHelp as HelpCircle, X,
 } from 'lucide-react'
 import { Sheet } from '../components/Sheet'
 import { TechniqueClip } from '../components/TechniqueClip'
@@ -10,9 +10,9 @@ import { useStore } from '../store/store'
 import { useToast } from '../components/Toast'
 import { useNav } from '../nav'
 import { todaySession, sessionProgress } from '../store/selectors'
-import { nextSetRecommendation, examState, examTrim } from '../store/training'
+import { examState, examTrim } from '../store/training'
 import { prForSession, type PR } from '../store/coach'
-import { exerciseDetail, exerciseWhy, workoutGoalLine, incrementFor } from '../data/catalog'
+import { exerciseDetail, exerciseWhy, workoutGoalLine } from '../data/catalog'
 import { fmtWeightNum, weightUnit, fmtVolume, fmtWeight, toKg } from '../lib/format'
 import type { Units, WorkoutSession } from '../store/types'
 
@@ -199,14 +199,6 @@ export default function ActiveWorkout({ open, onClose }: { open: boolean; onClos
     patch({ ...session, exercises })
   }
 
-  function adjust(field: 'weightKg' | 'reps', dir: 1 | -1) {
-    if (!session || !cursor) return
-    const ex = session.exercises[cursor.exIdx]
-    const cur = ex.sets[cursor.setIdx][field]
-    const step = field === 'weightKg' ? incrementFor(ex.defId) : 1
-    setSet(cursor.exIdx, cursor.setIdx, field, cur + dir * step)
-  }
-
   function toggleSet(exIdx: number, setIdx: number) {
     if (!session) return
     const exercises = session.exercises.map((ex, i) =>
@@ -291,7 +283,6 @@ export default function ActiveWorkout({ open, onClose }: { open: boolean; onClos
 
   const cursorEx = cursor ? session.exercises[cursor.exIdx] : null
   const cursorSet = cursor && cursorEx ? cursorEx.sets[cursor.setIdx] : null
-  const rec = cursorEx ? nextSetRecommendation(state, cursorEx.defId, cursorEx.targetReps, Math.max(...cursorEx.sets.map((s) => s.weightKg))) : null
   const allDone = prog.total > 0 && prog.done === prog.total
   // The current exercise = first one not yet fully done; only it gets highlighted.
   const activeIdx = session ? session.exercises.findIndex((ex) => !(ex.sets.length > 0 && ex.sets.every((s) => s.done))) : -1
@@ -306,17 +297,12 @@ export default function ActiveWorkout({ open, onClose }: { open: boolean; onClos
       <WorkScreen
         ex={cursorEx}
         cursor={cursor}
-        set={cursorSet}
         elapsed={workElapsed}
         sessionTotal={total}
-        units={units}
-        coachHint={rec?.hasHistory ? rec : null}
         exIndex={cursor.exIdx}
         exTotal={session.exercises.length}
         detail={exerciseDetail(cursorEx.defId)}
         onBack={backToList}
-        onAdjust={adjust}
-        onApplyCoach={() => { if (rec) { setSet(cursor.exIdx, cursor.setIdx, 'weightKg', rec.suggestedWeightKg); setSet(cursor.exIdx, cursor.setIdx, 'reps', rec.suggestedReps) } }}
         onStartRest={startRest}
       />
     )
@@ -533,22 +519,17 @@ export default function ActiveWorkout({ open, onClose }: { open: boolean; onClos
 
 /* ============================ Work screen ============================ */
 function WorkScreen({
-  ex, cursor, set, elapsed, sessionTotal, units, coachHint, exIndex, exTotal, detail,
-  onBack, onAdjust, onApplyCoach, onStartRest,
+  ex, cursor, elapsed, sessionTotal, exIndex, exTotal, detail,
+  onBack, onStartRest,
 }: {
   ex: WorkoutSession['exercises'][number]
   cursor: Cursor
-  set: { weightKg: number; reps: number; done: boolean }
   elapsed: number
   sessionTotal: number
-  units: Units
-  coachHint: { suggestedWeightKg: number; suggestedReps: number } | null
   exIndex: number
   exTotal: number
   detail: { desc: string; cues: string[]; commonMistake: string; video?: string }
   onBack: () => void
-  onAdjust: (field: 'weightKg' | 'reps', dir: 1 | -1) => void
-  onApplyCoach: () => void
   onStartRest: () => void
 }) {
   const [showHow, setShowHow] = useState(false)
@@ -606,19 +587,6 @@ function WorkScreen({
         </div>
       </div>
 
-      {/* Editable target: weight × reps */}
-      <div className="relative px-6">
-        <p className="mb-2 text-center text-[11px] font-bold uppercase tracking-[0.16em] text-white/35">Log this set</p>
-        <div className="grid grid-cols-2 gap-3">
-          <Stepper label={weightUnit(units)} value={fmtWeightNum(set.weightKg, units, units === 'imperial' ? 0 : 1)} onMinus={() => onAdjust('weightKg', -1)} onPlus={() => onAdjust('weightKg', 1)} />
-          <Stepper label="reps" value={String(set.reps)} onMinus={() => onAdjust('reps', -1)} onPlus={() => onAdjust('reps', 1)} />
-        </div>
-        {coachHint && (
-          <button onClick={onApplyCoach} className="mx-auto mt-3 flex items-center gap-1.5 rounded-full border border-brand-400/25 bg-brand-400/[0.06] py-1.5 pl-3 pr-3.5 text-[12px] font-semibold text-brand-400 active:scale-95">
-            <Dumbbell size={13} /> Coach suggests {fmtWeightNum(coachHint.suggestedWeightKg, units, units === 'imperial' ? 0 : 1)} {weightUnit(units)} × {coachHint.suggestedReps}
-          </button>
-        )}
-      </div>
 
       {/* Primary action + what's coming */}
       <div className="relative px-6 pb-12 pt-5" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 2.25rem)' }}>
@@ -828,21 +796,6 @@ function SetDots({ sets, current }: { sets: { done: boolean }[]; current: number
           }}
         />
       ))}
-    </div>
-  )
-}
-
-function Stepper({ label, value, onMinus, onPlus }: { label: string; value: string; onMinus: () => void; onPlus: () => void }) {
-  return (
-    <div className="rounded-2xl border border-white/8 bg-white/[0.04] p-2">
-      <div className="flex items-center justify-between gap-1">
-        <button onClick={onMinus} className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/[0.06] active:scale-90 active:bg-white/[0.12]"><Minus size={18} /></button>
-        <div className="min-w-0 text-center">
-          <p className="truncate text-[22px] font-black leading-none tabular-nums">{value}</p>
-          <p className="mt-0.5 text-[11px] font-semibold uppercase tracking-wide text-white/40">{label}</p>
-        </div>
-        <button onClick={onPlus} className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/[0.06] active:scale-90 active:bg-white/[0.12]"><Plus size={18} /></button>
-      </div>
     </div>
   )
 }
