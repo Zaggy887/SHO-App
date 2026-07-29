@@ -33,6 +33,8 @@ export type NavCtx = {
   menuOpen: boolean
   openMenu: () => void
   closeMenu: () => void
+  /** Open the standalone /privacy route. */
+  goPrivacy: () => void
 }
 
 const Ctx = createContext<NavCtx | null>(null)

@@ -84,6 +84,7 @@ export function NotificationsSheet({ open, onClose }: Props) {
 export function SettingsSheet({ open, onClose }: Props) {
   const { state, dispatch } = useStore()
   const toast = useToast()
+  const nav = useNav()
   const { units, theme, notificationsEnabled } = state.settings
   const lang = state.settings.language ?? 'en'
   const t = translator(lang)
@@ -193,6 +194,7 @@ export function SettingsSheet({ open, onClose }: Props) {
       <div className="mt-7 flex flex-col items-center gap-2">
         <LogoMark size={34} />
         <p className="text-[12px] text-white/30">StrengthHub Online · v1.0</p>
+        <button onClick={nav.goPrivacy} className="mt-1 text-[12px] font-semibold text-brand-400 active:opacity-70">Privacy Policy</button>
       </div>
     </Sheet>
   )

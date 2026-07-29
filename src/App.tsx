@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { BottomNav } from './components/BottomNav'
 import { StatusBar } from './components/StatusBar'
 import { StoreProvider, useStore } from './store/store'
@@ -10,6 +10,7 @@ import Nutrition from './screens/Nutrition'
 import Progress from './screens/Progress'
 import Community from './screens/Community'
 import Onboarding from './screens/Onboarding'
+import Privacy from './screens/Privacy'
 import ActiveWorkout from './screens/ActiveWorkout'
 import {
   NotificationsSheet,
@@ -47,7 +48,7 @@ const screens: Record<TabKey, React.ComponentType> = {
   community: Community,
 }
 
-function Shell() {
+function Shell({ onNavigatePrivacy }: { onNavigatePrivacy: () => void }) {
   const { state } = useStore()
   const [tab, setTab] = useState<TabKey>('dashboard')
   const [overlay, setOverlay] = useState<Overlay | null>(null)
@@ -68,6 +69,7 @@ function Shell() {
     menuOpen,
     openMenu: () => setMenuOpen(true),
     closeMenu: () => setMenuOpen(false),
+    goPrivacy: onNavigatePrivacy,
   }
 
   if (!state.profile.onboarded) {
@@ -117,13 +119,34 @@ function Shell() {
   )
 }
 
+function useRoute() {
+  const [path, setPath] = useState(() => window.location.pathname)
+  useEffect(() => {
+    const onPop = () => setPath(window.location.pathname)
+    window.addEventListener('popstate', onPop)
+    return () => window.removeEventListener('popstate', onPop)
+  }, [])
+  return {
+    path,
+    navigate: (p: string) => {
+      if (p !== window.location.pathname) window.history.pushState({}, '', p)
+      setPath(p)
+    },
+  }
+}
+
 export default function App() {
+  const { path, navigate } = useRoute()
   return (
     <StoreProvider>
       <div className="flex min-h-[100dvh] w-full justify-center sm:min-h-screen sm:items-center sm:p-6" style={{ background: 'var(--frame)' }}>
         <div id="app-frame" className="relative flex h-[100dvh] w-full flex-col overflow-hidden bg-ink-900 text-white app-frame-safe-top sm:h-[920px] sm:max-w-[440px] sm:rounded-[44px] sm:border-[10px] sm:border-zinc-800 sm:shadow-2xl">
           <ToastProvider>
-            <Shell />
+            {path === '/privacy' ? (
+              <Privacy onBack={() => navigate('/')} />
+            ) : (
+              <Shell onNavigatePrivacy={() => navigate('/privacy')} />
+            )}
           </ToastProvider>
         </div>
       </div>
